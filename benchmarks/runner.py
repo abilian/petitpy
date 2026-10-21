@@ -4,7 +4,8 @@
 Simple by design (ADR-004 D4 first pass): no SQLite, no YAML, no pyperf —
 just the runner the maintainer asked for. Discovers benchmarks/programs/*.py,
 runs each on each available interpreter (warmup K, timed N), and emits a
-markdown report to docs/benchmarks.md.
+markdown report to benchmarks/report.md (gitignored). The published
+docs/src/benchmarks.md is edited by hand from it.
 
 Usage:
     python3 benchmarks/runner.py          # full report
@@ -26,7 +27,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PROGRAMS_DIR = REPO_ROOT / "benchmarks" / "programs"
-REPORT_PATH = REPO_ROOT / "docs" / "benchmarks.md"
+REPORT_PATH = REPO_ROOT / "benchmarks" / "report.md"
 
 
 def _find_binary(*relative_paths: str) -> Path | None:

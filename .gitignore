@@ -30,3 +30,6 @@ site/
 # release artifacts (`make release-dist`, `make npm-package`)
 /dist/
 npm/dist/
+
+# benchmarks/runner.py output; docs/src/benchmarks.md is edited from it.
+benchmarks/report.md
