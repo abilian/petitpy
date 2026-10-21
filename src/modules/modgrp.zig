@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `grp` module (getgrnam/getgrgid).
 //!
-//! notes/plans/full-unix-profile.md phase 7. Thin libc wrapper.
+//! Full-native only. Thin libc wrapper.
 //!
 //!   grp.getgrnam(name) → struct_group
 //!   grp.getgrgid(gid)  → struct_group

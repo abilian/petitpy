@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `pwd` module (getpwnam/getpwuid).
 //!
-//! notes/plans/full-unix-profile.md phase 7. Thin libc wrapper.
+//! Full-native only. Thin libc wrapper.
 //!
 //!   pwd.getpwnam(name) → struct_passwd
 //!   pwd.getpwuid(uid)  → struct_passwd

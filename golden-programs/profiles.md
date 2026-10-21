@@ -14,7 +14,7 @@ Includes: f-strings, list/dict/set comprehensions, classes (single inheritance +
 
 Mostly programs that raise exceptions caught by a `try/except` going through C-NORETURN raise paths (vendor C still uses `nlr_jump` → `longjmp` for some paths). Native unwinds; wasm cannot.
 
-Closing this profile requires the emscripten-sjlj runtime arc (see `notes/05-wasm-parity-plan.md` bucket 1).
+Closing this profile requires the emscripten-sjlj runtime arc.
 
 ## `needs-stdlib/`
 

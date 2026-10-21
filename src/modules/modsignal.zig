@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `signal` module MVP.
 //!
-//! notes/plans/full-unix-profile.md phase 5 (MVP). Ships the surface
+//! Full-native only. Ships the surface
 //! `hop3-rootd`'s `__main__.py` calls at boot (`signal.signal(SIGTERM,
 //! handler)` etc.) plus the common signal-number constants. Does NOT
 //! actually dispatch the handler on signal delivery — proper delivery

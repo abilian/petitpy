@@ -86,7 +86,7 @@ def _set_status(text, kind=""):
 def _load_high():
     # The bridge never raises: a missing localStorage is a 0 handle, and
     # .to_str() on one yields "null". int() on a corrupt value is the only
-    # catchable failure here. See notes/03-nano-python-cheatsheet.md §3.
+    # catchable failure here.
     store = js.window.localStorage
     if store._h == 0:
         return 0

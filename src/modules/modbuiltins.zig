@@ -1,6 +1,6 @@
-//! nanopython — Zig partial port of py/modbuiltins.c (W6 #4 cluster A).
+//! nanopython — Zig partial port of py/modbuiltins.c.
 //!
-//! Per notes/13: ports the simple raise-path builtin wrappers — 1-line
+//! Ports the simple raise-path builtin wrappers — 1-line
 //! delegations to mp_unary_op / mp_binary_op / mp_obj_str_format. Each
 //! eliminates a C frame from raise paths so at B2 PyError can propagate
 //! purely through Zig `try` chains.

@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `time` module for native POSIX.
 //!
-//! notes/plans/full-unix-profile.md phase 2. Ships the subset stdlib-
+//! Full-native only. Ships the subset stdlib-
 //! only daemons like `hop3-rootd` actually reach for:
 //!
 //!   Functions: time, monotonic, sleep, time_ns, monotonic_ns,

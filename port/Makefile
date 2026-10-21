@@ -39,21 +39,21 @@ CFLAGS += -DNANOPYTHON_FEATURE_JS=1
 # qstrdefs.generated.h. Whether the runtime includes the module is
 # gated at zig-build time by -Dfeature-re.
 CFLAGS += -DNANOPYTHON_FEATURE_RE=1
-# notes/plans/full-unix-profile.md phase 1 — `os` module qstrs. Zig-native;
+# `os` module qstrs. Zig-native;
 # no vendor C compiled. The scanner just needs to see MP_QSTR_os / MP_QSTR_sep
 # / MP_QSTR_environ etc. via the qstr shadow.
 CFLAGS += -DNANOPYTHON_FEATURE_OS=1
-# notes/plans/full-unix-profile.md phase 2 — `time` module qstrs.
+# `time` module qstrs.
 CFLAGS += -DNANOPYTHON_FEATURE_TIME=1
-# notes/plans/full-unix-profile.md phase 3 — `socket` module qstrs.
+# `socket` module qstrs.
 CFLAGS += -DNANOPYTHON_FEATURE_SOCKET=1
-# notes/plans/full-unix-profile.md phase 4 — `select` module qstrs.
+# `select` module qstrs.
 CFLAGS += -DNANOPYTHON_FEATURE_SELECT=1
-# notes/plans/full-unix-profile.md phase 5 — `signal` module qstrs.
+# `signal` module qstrs.
 CFLAGS += -DNANOPYTHON_FEATURE_SIGNAL=1
-# notes/plans/full-unix-profile.md phase 7 — `pwd` + `grp` module qstrs.
+# `pwd` + `grp` module qstrs.
 CFLAGS += -DNANOPYTHON_FEATURE_PWD_GRP=1
-# notes/plans/full-unix-profile.md phase 6 — `_subprocess` low-level module qstrs.
+# `_subprocess` low-level module qstrs.
 CFLAGS += -DNANOPYTHON_FEATURE_SUBPROCESS=1
 
 # `zig_qstr_shadow.c` is auto-generated from src/**/*.zig by
@@ -90,7 +90,6 @@ gate-optional-modules: micropython-embed-package
 
 # nanopython patch — extend the MicroPython grammar with PEP 448
 # `{**d}` dict-unpacking. See grammar-patched/patch_grammar.py.
-# notes/plans/full-unix-profile.md finding A.3b.
 .PHONY: patch-grammar
 patch-grammar: micropython-embed-package
 	$(Q)python3 grammar-patched/patch_grammar.py $(PACKAGE_DIR)/py/grammar.h
@@ -108,7 +107,6 @@ copy-extmod-extras: micropython-embed-package
 	# nanopython patch — overlay re1.5 with widened (int16) jump
 	# offsets so long alternation groups compile without hitting the
 	# original int8 limit. Sources in port/re1.5-patched/.
-	# notes/plans/full-unix-profile.md finding A.5.
 	$(Q)cp re1.5-patched/*.c re1.5-patched/*.h $(PACKAGE_DIR)/lib/re1.5/
 
 all: gate-optional-modules copy-extmod-extras patch-grammar

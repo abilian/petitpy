@@ -8,7 +8,7 @@
 // firing for the lifetime of the page.
 //
 // Mouse paint: the JS bridge currently drops callback args when wasm has
-// no malloc/free exports (see web/lib/js-bridge.js + notes/03). A Python
+// no malloc/free exports (see web/lib/js-bridge.js). A Python
 // mousedown handler attached via addEventListener therefore receives no
 // event object. Workaround: Python publishes a 0-arg `window._py_paint`,
 // and the listeners below stash the canvas-relative coords on

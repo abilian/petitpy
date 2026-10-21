@@ -1,5 +1,5 @@
-//! nanopython — Zig port of py/smallint.c (Step 4: the object-model
-//! strangle, the FIRST unit — see notes/10-objectmodel-strangle.md).
+//! nanopython — Zig port of py/smallint.c (the first unit of the
+//! object-model strangle).
 //!
 //! Two pure `mp_int_t` arithmetic functions: no mp_obj, no nlr, no
 //! MicroPython headers → the simplest possible strangle: NO shim, NO

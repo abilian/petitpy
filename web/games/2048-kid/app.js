@@ -9,8 +9,7 @@
 //      The keydown handler is the same length as before — but it's
 //      generic, not per-game.
 //
-// The eventual home for this shim is `web/lib/demo-loader.js`
-// (Tier 1 #1 in notes/07-js-vs-nanopython-games.md).
+// The eventual home for this shim is `web/lib/demo-loader.js`.
 
 import {
   WASI,

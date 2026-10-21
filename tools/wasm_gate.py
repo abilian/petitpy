@@ -15,8 +15,8 @@ does not (yet). To prevent quality drift, this script:
           the list before landing),
       (c) a test in skip-on-wasm32 now passes (skip is stale — same).
 
-The discipline mirrors the byte-exact oracle's role-shift (TR-001 §3.8)
-applied to the WASM target: we freeze a regression-detector snapshot
+The discipline mirrors the byte-exact oracle, applied to the WASM
+target: we freeze a regression-detector snapshot
 and never let the list grow. Closing items requires fixing the test
 AND removing it from the known-fails list in the same commit.
 

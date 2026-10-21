@@ -101,7 +101,7 @@
   </div>
 
   <h2>Notes</h2>
-  <p class="lede">Each <code>li</code> carries its todo id on a <code>data-id</code> attribute. A single delegated click handler on the <code>ul</code> reads <code>e.target.closest("li").dataset.id</code> and the action (<code>toggle</code> or <code>delete</code>) from the clicked element, stashes them on <code>window._todoId</code>/<code>window._todoAction</code>, then invokes the zero-arg <code>window._py_action</code> &mdash; the standard globals-stash workaround documented in <code>notes/03</code> for the bridge's dropped-args caveat.</p>
+  <p class="lede">Each <code>li</code> carries its todo id on a <code>data-id</code> attribute. A single delegated click handler on the <code>ul</code> reads <code>e.target.closest("li").dataset.id</code> and the action (<code>toggle</code> or <code>delete</code>) from the clicked element, stashes them on <code>window._todoId</code>/<code>window._todoAction</code>, then invokes the zero-arg <code>window._py_action</code> &mdash; the standard globals-stash workaround for the bridge dropping callback arguments.</p>
 
   <section class="source" data-files="main.py"></section>
 </main>

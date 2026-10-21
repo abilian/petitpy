@@ -26,7 +26,7 @@ CASES = [
     # The playground's foundation: it compiles in the browser by running
     # this, then decodes the base64 off stdout. base64 rather than a file
     # because the browser WASI shim and wasmtime disagree about write
-    # capability on a preopened directory (notes/plans/adr-018-playground.md).
+    # capability on a preopened directory.
     #
     # Checked on the wasm arm too, which is the one that matters here.
     # The base64 is pinned, not merely non-empty: it decodes to 'M', 6,
@@ -1295,7 +1295,7 @@ CASES = [
     ),
     # An out-of-range store raised IndexError but still wrote element 0:
     # the B2 bridge makes mp_get_index return 0 after a raise, and these
-    # callers didn't poll pending_exc (notes/15-performance-observations.md).
+    # callers didn't poll pending_exc.
     (
         "index_error_store_leaves_container_intact",
         (

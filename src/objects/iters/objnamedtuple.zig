@@ -39,7 +39,7 @@ extern fn mp_printf(print: ?*const anyopaque, fmt: [*:0]const u8, ...) callconv(
 extern fn mp_obj_new_exception_msg(t: *const anyopaque, msg: [*:0]const u8) callconv(.c) Obj;
 extern fn mp_obj_new_exception_msg_varg(t: *const anyopaque, fmt: [*:0]const u8, ...) callconv(.c) Obj;
 
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42). One per
+// Raise helpers (PyError convention). One per
 // distinct exception+message. Sets pyerr.pending_exc + returns
 // error.PyRaise. The C-ABI exports wrap the impl with pyerr.bridge
 // which catches and returns the zero sentinel (callers poll

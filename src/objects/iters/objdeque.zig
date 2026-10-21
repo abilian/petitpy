@@ -43,7 +43,7 @@ extern fn m_malloc0(num_bytes: usize) callconv(.c) ?*anyopaque;
 extern fn mp_obj_new_exception(t: *const anyopaque) callconv(.c) Obj;
 extern fn mp_obj_new_exception_msg(t: *const anyopaque, msg: [*:0]const u8) callconv(.c) Obj;
 
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42). One per
+// Raise helpers (PyError convention). One per
 // distinct exception+message. Sets pyerr.pending_exc + returns
 // error.PyRaise — C-ABI exports wrap the impl with pyerr.bridge.
 fn raiseValueErrorNeg() PyError!void {

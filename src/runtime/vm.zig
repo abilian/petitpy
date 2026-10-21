@@ -4,8 +4,7 @@
 //! remaining setjmp host). Design = trampoline-hosted OUTER LOOP:
 //! Zig owns the `for(;;)` + exception_handler; each iteration runs the
 //! opcode dispatch via the proven C `npy_nlr_run` trampoline (§2.4.1).
-//! Full design/ABI/batch plan + the mandatory spike gate:
-//! notes/09-vm-port.md. @cImports ONLY the two bc.h-free headers
+//! @cImports ONLY the two bc.h-free headers
 //! (npy_vm_api.h + npy_nlr_trampoline.h) — `mp_code_state_t` is THE
 //! translate-c flexible-array type, never @cImported.
 //!
@@ -264,9 +263,9 @@ fn exceptionHandler(code_state: ?*anyopaque, exc: Obj) c_int {
     }
 }
 
-const TODO = "vm.zig: opcode dispatch — batch 4 (see notes/09-vm-port.md)";
+const TODO = "vm.zig: opcode dispatch not yet ported";
 
-// R1-validated contract (notes/09 §Design): the dispatch outcome
+// Contract: the dispatch outcome
 // travels OUT-OF-BAND via this ctx (npy_nlr_run discards the body
 // return). The host detects a raise as exc!=null (C-longjmp path) OR
 // outcome==.raised (Zig-RAISE path) — one handler, two detections.
@@ -393,7 +392,7 @@ inline fn instanceMember(o: Obj, q: Qstr) ?Obj {
 // (ADR 020 §2 C3).
 // Threaded dispatch on native: every prong ends in `continue :dispatch
 // fetch(...)`, so each opcode gets its own indirect branch (1.2-1.4x on
-// fibo/bubble, notes/15). On wasm each such continue becomes its own
+// fibo/bubble). On wasm each such continue becomes its own
 // br_table, 1.3x slower under wasmtime than one shared dispatch, so
 // prongs `continue` the enclosing loop instead. PENDING (not a byte
 // value) routes a raise left by a bridge-wrapped call to its prong.

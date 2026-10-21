@@ -790,8 +790,8 @@ def apply_import(export_type, data):
 def on_provider_change(event=None):
     """Handle provider selection change.
 
-    The js bridge drops args to Python callbacks (see notes/03
-    cheat-sheet §3), so we can't read `event.target.value`. Read
+    The js bridge drops args to Python callbacks, so we can't read
+    `event.target.value`. Read
     the provider value off the DOM element directly.
     """
     provider = get_element("provider").value.to_str()

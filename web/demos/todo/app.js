@@ -3,7 +3,7 @@
 // JS boots the wasm instance once, exposes the bridge, then attaches a
 // single delegated click handler on the <ul> that surfaces the clicked
 // li's data-id + action ("toggle" / "delete") into Python via the
-// globals-stash workaround (notes/03). Python owns the todo list, the
+// globals-stash workaround. Python owns the todo list, the
 // filter state, the localStorage round-trip, and the DOM rendering.
 import {
   WASI,

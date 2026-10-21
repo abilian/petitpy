@@ -222,7 +222,7 @@ pub export const mp_sys_implementation_obj_attr: ImplTupleAttr = .{
 
 // ── fn-obj definitions ────────────────────────────────────────────────
 
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42). One per
+// Raise helpers (PyError convention). One per
 // distinct exception+message. Sets pyerr.pending_exc + returns
 // error.PyRaise.
 fn raiseSystemExitNoArg() PyError!void {

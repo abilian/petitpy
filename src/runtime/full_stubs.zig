@@ -12,8 +12,7 @@
 //! avoids exported-symbol collisions while satisfying the linker under full.
 //!
 //! Each stub is grouped by subsystem so triage panic messages tell you which
-//! subsystem to port next. See notes/40-full-arm-rehab.md for the staged
-//! roadmap.
+//! subsystem to port next.
 
 const std = @import("std");
 const build_options = @import("build_options");
@@ -21,11 +20,11 @@ const mirrors = @import("../mp_mirrors.zig");
 
 const Obj = mirrors.Obj;
 
-// ── Long-int / mpz — PORTED (F2a, notes/40) ───────────────────────────
+// ── Long-int / mpz — PORTED ───────────────────────────────────────────
 // The 14 long-int stubs that lived here have been replaced by the real
 // vendor implementations (py/objint.c + py/objint_mpz.c + py/mpz.c),
-// re-added to the compile graph under `is_full` in build.zig. See
-// notes/40 for the trade-off: zero-vendor-C is preserved under nano;
+// re-added to the compile graph under `is_full` in build.zig. The
+// trade-off: zero-vendor-C is preserved under nano;
 // full accepts ~2.8k LOC of vendor C compiled-back-in here.
 
 // ── Complex (4) — full-only ───────────────────────────────────────────
@@ -33,15 +32,15 @@ const Obj = mirrors.Obj;
 
 fn stub_mp_obj_complex_binary_op(op: c_int, lhs_real: f64, lhs_imag: f64, rhs_in: Obj) callconv(.c) Obj {
     _ = .{ op, lhs_real, lhs_imag, rhs_in };
-    @panic("full-arm stub: mp_obj_complex_binary_op — port objcomplex.c (see notes/40)");
+    @panic("full-arm stub: mp_obj_complex_binary_op — port objcomplex.c");
 }
 fn stub_mp_obj_complex_get(self_in: Obj, real: *f64, imag: *f64) callconv(.c) void {
     _ = .{ self_in, real, imag };
-    @panic("full-arm stub: mp_obj_complex_get — port objcomplex.c (see notes/40)");
+    @panic("full-arm stub: mp_obj_complex_get — port objcomplex.c");
 }
 fn stub_mp_obj_new_complex(real: f64, imag: f64) callconv(.c) Obj {
     _ = .{ real, imag };
-    @panic("full-arm stub: mp_obj_new_complex — port objcomplex.c (see notes/40)");
+    @panic("full-arm stub: mp_obj_new_complex — port objcomplex.c");
 }
 // ROM type singleton. Zero-init; reads of `&mp_type_complex` for identity
 // compares succeed; any slot-dispatch would crash, but we never get there
@@ -83,7 +82,7 @@ var stub_cur_exception_storage: ?*anyopaque = null;
 
 // ── Modules + singletons (4) — full-only ─────────────────────────────
 
-// mp_module_io — PORTED (F5, notes/40): now provided by vendor py/modio.c
+// mp_module_io — PORTED: now provided by vendor py/modio.c
 // re-added to the compile graph under is_full in build.zig. Depends on
 // stream.zig's ROM exports + file_io.zig's mp_builtin_open_obj.
 
@@ -107,7 +106,7 @@ var stub_mp_const_notimplemented_obj_storage: MpObjSingletonStub = .{
 // mp_type_code — vendor py/objfun.c: const mp_obj_type_t mp_type_code.
 var stub_mp_type_code_storage: [256]u8 align(8) = [_]u8{0} ** 256;
 
-// mp_warning — PORTED (notes/40 finishing touches): real impl now provided
+// mp_warning — PORTED: real impl now provided
 // by vendor py/warning.c re-added to the compile graph under is_full in
 // build.zig. Routes via &mp_stderr_print (defined in mpprint.zig).
 
@@ -162,7 +161,7 @@ fn stub_mp_obj_is_tuple_compatible(o: Obj) callconv(.c) bool {
 // definitions because their nano callers were strangled. Under full
 // the vendor call sites are live again.
 //
-// F-rehab Fix 5 (notes/40): set pyerr.pending_exc before @panic. The
+// Set pyerr.pending_exc before @panic. The
 // noreturn ABI is preserved; the test still dies, but if any caller
 // path manages to poll pending_exc before the panic propagates, it
 // sees a useful exception object. This is best-effort — full unwinding
@@ -179,7 +178,7 @@ fn stub_mp_raise_msg(t: ?*const anyopaque, msg: ?[*:0]const u8) callconv(.c) nor
             pyerr.pending_exc = mp_obj_new_exception_msg(tp, m);
         }
     }
-    @panic("full-arm stub: mp_raise_msg — NX-3 deleted; see notes/40 F2a");
+    @panic("full-arm stub: mp_raise_msg — NX-3 deleted");
 }
 
 fn stub_mp_raise_msg_varg(t: ?*const anyopaque, fmt: ?[*:0]const u8, ...) callconv(.c) noreturn {
@@ -189,20 +188,20 @@ fn stub_mp_raise_msg_varg(t: ?*const anyopaque, fmt: ?[*:0]const u8, ...) callco
             pyerr.pending_exc = mp_obj_new_exception_msg(tp, m);
         }
     }
-    @panic("full-arm stub: mp_raise_msg_varg — NX-3 deleted; see notes/40 F2a");
+    @panic("full-arm stub: mp_raise_msg_varg — NX-3 deleted");
 }
 
 fn stub_mp_raise_ValueError(msg: ?[*:0]const u8) callconv(.c) noreturn {
     if (msg) |m| {
         pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_ValueError, m);
     }
-    @panic("full-arm stub: mp_raise_ValueError — NX-3 deleted; see notes/40 F2a");
+    @panic("full-arm stub: mp_raise_ValueError — NX-3 deleted");
 }
 
 fn stub_mp_raise_TypeError_int_conversion(arg: Obj) callconv(.c) noreturn {
     _ = arg;
     pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_TypeError, "can't convert to int");
-    @panic("full-arm stub: mp_raise_TypeError_int_conversion — NX-3 deleted; see notes/40 F2a");
+    @panic("full-arm stub: mp_raise_TypeError_int_conversion — NX-3 deleted");
 }
 
 // ── Comptime export gate ─────────────────────────────────────────────

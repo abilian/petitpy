@@ -2,8 +2,7 @@
 #
 # Captures tests that fail under `-Dconfig=full` against the upstream
 # standard oracle's goldens for known-and-explicit reasons. Each entry
-# has a one-line rationale; categories follow the buckets in
-# notes/12-is-full-audit.md.
+# has a one-line rationale.
 #
 # Discipline (mirrors corpus/wasm-known-fails.txt):
 #   - `make check-full` (when wired) runs tools/full_gate.py.

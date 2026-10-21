@@ -120,7 +120,7 @@ comptime {
     _ = @import("runtime/qstr.zig");
     _ = @import("runtime/nlr_glue.zig");
     _ = @import("runtime/jcb_glue.zig");
-    // Phase F0 — full-arm rehab stubs (notes/40-full-arm-rehab.md).
+    // Full-arm link stubs.
     _ = &@import("runtime/full_stubs.zig");
     // Cross-cutting shared
     _ = @import("mp_type_roms.zig");
@@ -329,7 +329,7 @@ pub fn main(init: std.process.Init) !void {
     // `zigpy-compile` already compiles .py to .mpy as a standalone CLI.
     // The overlap is deliberate: the web artifact ships one wasm binary,
     // and a second one for the playground would cost ~300 KB against a
-    // ≤285 KB budget. See notes/plans/adr-018-playground.md.
+    // ≤285 KB budget.
     if (argv.len >= 2 and std.mem.eql(u8, argv[1], "--emit-mpy")) {
         if (argv.len < 3) {
             try std.Io.File.stderr().writeStreamingAll(io, "usage: petitpy --emit-mpy IN.py\n");

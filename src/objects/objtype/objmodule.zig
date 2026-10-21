@@ -123,7 +123,7 @@ export fn mp_module_get_builtin(module_name: Qstr, extensible: bool) callconv(.c
     }
 
     if (comptime build_options.is_full) {
-        // F-rehab Fix 4 (notes/40): stub modules (mp_module_io) live as
+        // Stub modules (mp_module_io) live as
         // zero-init storage in full_stubs.zig — base.type is NULL, so
         // mp_load_method_maybe would crash. Skip __init__ when the module
         // object isn't fully formed.

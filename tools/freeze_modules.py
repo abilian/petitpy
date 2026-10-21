@@ -91,9 +91,8 @@ MODULES = [
     # low-level `_subprocess._spawn_and_wait` primitive. Exposes
     # CompletedProcess, CalledProcessError, TimeoutExpired, and the
     # kwargs-accepting run() function.
-    # notes/plans/full-unix-profile.md phase 6.
     ("subprocess", "nanopython-lib/subprocess.py"),
-    # notes/plans/full-unix-profile.md phase 8 — pure-Python shims.
+    # Pure-Python shims.
     ("typing", "nanopython-lib/typing.py"),
     ("uuid", "nanopython-lib/uuid.py"),
     ("shutil", "nanopython-lib/shutil.py"),
@@ -110,10 +109,9 @@ MODULES = [
     # subclass form. Unblocks hop3-rootd's protocol.ErrorCode (finding A.10).
     ("enum", "nanopython-lib/enum.py"),
     # ipaddress — minimal PEP 3144 subset for CIDR validation.
-    # notes/plans/full-unix-profile.md finding A.7 (hop3-rootd's
-    # validation.py imports it for IPv4Address/IPv4Network isinstance
-    # checks + ip_network(strict=False)). IPv6 stored as 8-group tuple
-    # so this imports under nano (no bignum).
+    # hop3-rootd's validation.py imports it for IPv4Address/IPv4Network
+    # isinstance checks + ip_network(strict=False). IPv6 stored as 8-group
+    # tuple so this imports under nano (no bignum).
     ("ipaddress", "nanopython-lib/ipaddress.py"),
     # os.path — deferred. Needs a mutable os globals dict so
     # mp_store_attr(os, "path", …) can wire the loaded submodule as an

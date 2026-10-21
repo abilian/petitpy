@@ -4,7 +4,7 @@
 //! MICROPY_PY_BUILTINS_STR_UNICODE=0 ⇒ nano-corpus vstr_add_char is the
 //! 1-byte truncate branch (full builds the UTF-8 ladder).
 //!
-//! Raise path on shared PyError transport (notes/11): every fn that
+//! Raise path on shared PyError transport: every fn that
 //! can raise RuntimeError returns `PyError!T`; C-ABI exports are thin
 //! `pyerr.bridge` wrappers. The `m_*` C-side MemoryError raises still
 //! originate in C — they longjmp past Zig frames harmlessly.

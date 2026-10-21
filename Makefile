@@ -9,8 +9,8 @@ BIN      := ./zig-out/bin/nanopython
 ZIGSRC   := build.zig $(wildcard src/*.zig)
 # Host-side (CPython) Python that `make lint` checks. Deliberately NOT the
 # whole tree: nanopython-lib/, web/ and projects/*/src/ target the nano
-# runtime, where host lint rules give the wrong answer (see
-# notes/03-nano-python-cheatsheet.md). tests/qstr_fixture.py is lexer input,
+# runtime, where host lint rules give the wrong answer.
+# tests/qstr_fixture.py is lexer input,
 # not code — same reason corpus/*.out is excluded.
 PYSRC    := $(wildcard tools/*.py) \
             tests/integration.py tests/_integration_runner.py \
@@ -19,7 +19,7 @@ PYSRC    := $(wildcard tools/*.py) \
             projects/ci-build-monitor/serve.py
 
 # Config preset: "nano" (default, the frozen reference) or "full"
-# (everything available — see notes/20-full-features-plan.md). Drives
+# (everything available). Drives
 # the -Dconfig flag on `zig build` which in turn selects which arm of
 # port/mpconfigport.h applies AND which comptime branches activate in
 # src/*.zig (via @import("build_options")).
@@ -130,8 +130,7 @@ port: | vendor/micropython
 ##        Default CONFIG=full per ADR 012 Phase 4b. Use CONFIG=nano for
 ##        the shipping arm. Under full, `nanopython-vm` (an experimental
 ##        variant binary) currently fails to link with 10 float symbols
-##        (deferred per notes/12-is-full-audit.md "Real next-phase work"
-##        #3); the main nanopython binary builds. The `-` prefix tolerates
+##        (deferred); the main nanopython binary builds. The `-` prefix tolerates
 ##        the partial-success exit code; the subsequent test confirms the
 ##        main binary exists.
 build: port
@@ -213,9 +212,8 @@ wasm-check: wasm-small
 ##             passes fail. corpus/full-known-fails.txt only ever
 ##             shrinks. Per ADR 012 the eventual default profile becomes
 ##             full; this gate is the path to making that flip safe.
-##             nanopython-vm's link failure under full is a known issue
-##             (deferred per notes/12-is-full-audit.md "Real next-phase
-##             work" #3) — the main nanopython binary builds and the
+##             nanopython-vm's link failure under full is a known,
+##             deferred issue — the main nanopython binary builds and the
 ##             gate runs against that.
 ## v0.7.1: -Dfrozen-tiny=true so `import random` (needed by
 ## class_setname_hazard_rand) works from build-frozen/random.mpy.
@@ -259,7 +257,7 @@ check-all:
 	$(MAKE) check-split
 
 ## check-split: strict gate for the split (compiler/VM) configuration —
-##              quadrants 1 and 3 of notes/OLD/30-two-track-architecture.md.
+##              quadrants 1 and 3 of the compiler x VM matrix.
 ##              Q1 is zigpy-compile -> nanopython-vm; Q3 is vendor mpy-cross
 ##              -> nanopython-vm, the only check that validates the VM against
 ##              a front-end we didn't write. In a combined binary a compiler
@@ -270,7 +268,7 @@ check-split: freeze-modules
 	@test -x zig-out/bin/nanopython-vm || (echo "nanopython-vm failed to build"; exit 1)
 	python3 tools/quadrant_gate.py
 
-## check-capability: the capability matrix as a gate (notes/14). Compiles a
+## check-capability: the capability matrix as a gate. Compiles a
 ##                    construct set with BOTH front-ends and runs each result on
 ##                    BOTH back-ends, then fails on a back-end gap, a back-end
 ##                    split, or a front-end split, against
@@ -457,7 +455,7 @@ web: freeze-modules gen-gallery
 	@# caller, including dispatchBody (about 3950 in binaryen's measure)
 	@# into mp_execute_bytecode. The loop then never re-enters a function
 	@# and V8 keeps it on Liftoff: bubble retired 1.8x the instructions
-	@# (ADR 020 C2, notes/15 §11). Smaller functions still inline.
+	@# (ADR 020 C2). Smaller functions still inline.
 	@if command -v wasm-opt >/dev/null 2>&1; then \
 	  wasm-opt -Oz --enable-bulk-memory --enable-nontrapping-float-to-int \
 	    -ocimfs 1000 --strip-debug --strip-producers --converge \
@@ -541,12 +539,12 @@ test-integration-wasm: wasm-small
 ## test-e2e: corpus (byte-identical vs frozen .out files) + compile-exec
 ##           (Zig frontend → vendor VM → diff stdout). The corpus is the
 ##           strangler's invariant; compile-exec is informational (2 known
-##           harness-artifact failures, see notes/36).
+##           harness-artifact failures).
 test-e2e: build
 	python3 tools/progress.py --config $(CONFIG) $(BIN)
 	@if [ "$(CONFIG)" = "nano" ]; then \
 		python3 tools/compile-exec-test.py || \
-		echo "(compile-exec informational — see notes/36 for the known harness fails)"; \
+		echo "(compile-exec informational — 2 known harness fails)"; \
 	else \
 		echo "(compile-exec-test runs against the full oracle only)"; \
 	fi

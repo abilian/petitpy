@@ -10,9 +10,8 @@ For each Python test in corpus/basics/:
 Pass means: programs compiled by the Zig-based front-end and run through
 the C VM produce the same observable output as programs compiled by the
 C-based front-end and run through the same C VM. This is the actual goal
-stated in notes/30-two-track-architecture.md (the four-quadrant matrix,
-row "Our bytecode + Vendor VM"). The byte-identity `.mpy` proxy that
-`compile-test` measures is a tighter pre-flight diagnostic only.
+(the "Our bytecode + Vendor VM" quadrant of the compiler x VM matrix).
+The byte-identity `.mpy` proxy that `compile-test` measures is a tighter pre-flight diagnostic only.
 
 Usage:
   python3 tools/compile-exec-test.py [--verbose] [--limit N]

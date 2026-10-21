@@ -5,8 +5,7 @@
 # (via tools/wasm_gate.py + tools/run_wasm.sh + wasmtime) currently
 # reports 468/541 = 86.5% raw passing.
 #
-# Discipline (mirrors the corpus byte-exact gate's role-shift,
-# TR-001 §3.8):
+# Discipline (mirrors the corpus byte-exact gate):
 #   - `make wasm-check` runs tools/wasm_gate.py.
 #   - Rejects any commit that EITHER introduces a new failing test
 #     not in this list (regression) OR keeps a test in this list that

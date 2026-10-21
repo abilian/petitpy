@@ -39,7 +39,7 @@
 //!   MICROPY_PY_MODULE_OVERRIDE_MAIN_IMPORT=0.
 //! One deliberate departure: MICROPY_COMP_{DOUBLE,TRIPLE}_TUPLE_ASSIGN is
 //! off at the port's MINIMUM ROM level but implemented here (see
-//! compileExprStmt, notes/15 section 2).
+//! compileExprStmt).
 //!
 //! STATE-MUTATION MATRIX (auditable via `git grep 'comp\\.[a-z_]* ='`):
 //!
@@ -55,8 +55,7 @@
 //!   have_star                   §20 (compileFuncdefLambdefParam)
 //!   pass                        §33 (compileToRawCode driver)
 //!
-//! Status: see notes/26-c7-compile.md (this is the scaffold; full
-//! parity is the C7 integration sweep).
+//! Status: this is the scaffold; full parity is still to come.
 //!
 //! Pin: vendor py/compile.c v1.22 — mirrors the frozen mpy-cross v6.3
 //! oracle used by `make check`.

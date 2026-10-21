@@ -36,10 +36,9 @@
 #include "py/misc.h"
 #include "py/mpprint.h"
 
-// Zig-side symbols this file references. Declared inline because
-// notes/lessons-learned/ffi-and-shims.md §1 warns against pulling
-// vendor headers into non-Zig shim files when the shim doesn't own
-// the header contract — better to enumerate what we actually use.
+// Zig-side symbols this file references. Declared inline rather than
+// pulling vendor headers into a non-Zig shim file that doesn't own the
+// header contract — better to enumerate what we actually use.
 extern int mp_print_int(const mp_print_t *print, mp_uint_t x, int sgn,
                         int base, int base_char, unsigned int flags,
                         char fill, int width);
@@ -297,8 +296,7 @@ void vstr_printf(vstr_t *vstr, const char *fmt, ...) {
 // Preserving vendor's algorithm (single up-front m_new_maybe of the
 // buffer, m_renew_maybe growth via allow_realloc, direct mp_obj_str_t
 // construction, ROM-alias fallback when buffer alloc fails) instead of
-// substituting our own grow-buffer strategy. See CLAUDE.md invariants
-// and notes/lessons-learned/strangler-mechanics.md — reverse-strangler
+// substituting our own grow-buffer strategy. Reverse-strangler
 // relocations must be verbatim.
 
 extern const mp_obj_type_t mp_type_str;

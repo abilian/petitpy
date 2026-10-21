@@ -4,7 +4,7 @@ The whole set gates on `try: import os` so every case is
 profile-agnostic — under nano's frozen 541/541 (where `os` is absent)
 the ImportError branch prints the same "expected" line.
 
-Cases: 34. See notes/plans/full-unix-profile.md for the module scope.
+Cases: 34.
 """
 
 from __future__ import annotations

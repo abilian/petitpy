@@ -1,4 +1,4 @@
-"""Pins the js-bridge failure semantics from notes/03-nano-python-cheatsheet.md §3.
+"""Pins the js-bridge failure semantics: failures return a null handle, never raise.
 
 These cannot live in tests/integration.py: that suite runs under wasmtime,
 which cannot instantiate the demo artifact at all (no JS host to satisfy
@@ -8,7 +8,7 @@ against the same web/nanopython.wasm the demos load.
 Only the NON-trapping half is assertable. Calling through a null handle and
 JSON.parse on malformed input both trap at the host level and kill the
 instance, which by construction cannot be observed from inside it; those two
-are documented in the cheatsheet and guarded by code review.
+are guarded by code review.
 
 Writes a single verdict line into #out so `--assert-text` can gate the run.
 """

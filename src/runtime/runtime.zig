@@ -4,8 +4,7 @@
 //! MP_QSTR___path__
 //! __qstr_shadow_end__
 //!
-//! Whole-file strangle (40 exported fns, core-internal callers). Plan,
-//! nlr classification, batch sequence & risks: notes/08-runtime-port.md.
+//! Whole-file strangle (40 exported fns, core-internal callers).
 //! @cImports ONLY the two bc.h-free headers (npy_runtime_api.h +
 //! npy_nlr_trampoline.h) — no MicroPython headers. runtime.c is
 //! stateless (operates on MP_STATE via the shim), so there is no private
@@ -39,7 +38,7 @@ const ObjOut = [*c]Obj; // mp_obj_t * (out arrays / dest[2])
 const IterBuf = ?*anyopaque; // mp_obj_iter_buf_t *
 const RomText = ?[*:0]const u8; // mp_rom_error_text_t
 
-const TODO = "runtime.zig: not yet ported — see notes/08 batch 2–5";
+const TODO = "runtime.zig: not yet ported";
 
 // W6 long-tail: direct extern fn calls to eliminate type-cast C wrappers
 // in npy_runtime_shim.c (npy_rt_obj_get_int, _obj_equal, _obj_equal_not_equal).
@@ -694,7 +693,7 @@ fn mpBinaryOpImpl(op_in: c_int, lhs_in: Obj, rhs_in: Obj) PyError!Obj {
         // MICROPY_PY_REVERSE_SPECIAL_METHODS — swap operands, convert __op__
         // → __rop__, retry. On second failure, convert back for error msg.
         // Vendor runtime.c lines 642-655. Default-true on both arms per
-        // ADR 012 D4 / notes/12-is-full-audit.md WRONG #1.
+        // ADR 012 D4.
         if (build_options.reverse_special_methods) {
             if (op >= mp.MP_BINARY_OP_OR and op <= mp.MP_BINARY_OP_POWER) {
                 const t = rhs;
@@ -1135,7 +1134,7 @@ export fn mp_load_method_maybe(obj: Obj, attr: Qstr, dest: ObjOut) callconv(.c) 
     dest[0] = 0; // MP_OBJ_NULL
     dest[1] = 0;
     const t = mp_obj_get_type(obj);
-    // F-rehab Fix 4 (notes/40): zero-init stubs like mp_module_io have
+    // Zero-init stubs like mp_module_io have
     // base.type=NULL. Treat as "no attribute" so the caller raises a
     // normal AttributeError instead of crashing on null-ptr cast.
     if (build_options.is_full and t == null) return;

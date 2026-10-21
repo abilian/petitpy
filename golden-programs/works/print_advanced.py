@@ -19,7 +19,6 @@ print("x", "y", "z", sep="")  # xyz
 
 # Note: print with end="" has known limitation with console.log
 # console.log always adds newline, but Python print with end="" doesn't
-# This is documented in local-notes/issues.md
 
 
 # issubclass tests

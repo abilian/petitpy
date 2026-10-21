@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `os` module for native POSIX.
 //!
-//! notes/plans/full-unix-profile.md phase 1. Ships enough surface for
+//! Full-native only. Ships enough surface for
 //! stdlib-only privileged daemons like `hop3-rootd`:
 //!
 //!   Functions: urandom, open, close, read, write, lseek, fsync, chmod, chown,

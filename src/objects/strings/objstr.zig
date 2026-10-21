@@ -943,7 +943,7 @@ extern fn str_index_to_ptr(t: TypePtr, self_data: [*]const u8, self_len: usize, 
 
 extern fn mp_get_index(t: TypePtr, len: usize, index: Obj, is_slice: bool) callconv(.c) usize;
 
-// ── F-rehab Fix 2 (notes/40): full-arm str_index_to_ptr port ──────────
+// ── Full-arm str_index_to_ptr port ───────────────────────────────────
 // Vendor objstrunicode.c:115. Under STR_UNICODE=1, str is UTF-8; indexing
 // by code-point requires walking the byte stream. For bytes/bytearray the
 // path is identical to the nano version (byte index = code-point index).

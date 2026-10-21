@@ -2,7 +2,7 @@
 //!
 //! Source: `vendor/micropython_embed/py/persistentcode.c` (lines
 //! 159–539). Save path, native code, RV32, ROM, and dynamic-compiler
-//! arms are excluded by config (see `notes/39-nx1-port-plan.md`).
+//! arms are excluded by config.
 //!
 //! Vendor `py/persistentcode.c` was dropped from `build.zig` at
 //! step 9 of NX-1; this file now owns the canonical
@@ -40,7 +40,7 @@ extern const mp_type_ValueError: anyopaque;
 extern const mp_const_empty_bytes_obj: anyopaque;
 extern const mp_const_ellipsis_obj: anyopaque;
 
-// NX-3 N1 raise helper (PyError convention; notes/41, /42). Sets
+// Raise helper (PyError convention). Sets
 // pyerr.pending_exc + returns error.PyRaise — the C-ABI exports
 // (mp_raw_code_load, mp_raw_code_load_mem) wrap their Impls with
 // pyerr.bridge which catches and returns the zero sentinel; C callers
@@ -333,7 +333,7 @@ fn load_raw_code(
         const arr: [*]?*mirrors.MpRawCode = @ptrCast(@alignCast(buf));
         // errdefer: free the children pointer-array buffer if any
         // recursive load_raw_code below raises (closes the leak the
-        // code review flagged; notes/37).
+        // code review flagged).
         errdefer m_free(@as(?*anyopaque, @ptrCast(arr)));
         var i: usize = 0;
         while (i < n_children) : (i += 1) {

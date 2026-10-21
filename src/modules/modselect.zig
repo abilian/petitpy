@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `select` module (select(2) wrapper).
 //!
-//! notes/plans/full-unix-profile.md phase 4. Minimal surface for the
+//! Full-native only. Minimal surface for the
 //! accept loop pattern hop3-rootd uses:
 //!
 //!   select.select(rlist, wlist, xlist, timeout=None)

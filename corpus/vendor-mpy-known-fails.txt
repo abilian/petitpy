@@ -1,7 +1,7 @@
 # Known failures: mpy-cross -> nanopython-vm
 #
-# Quadrant 3 (vendor bytecode + our VM) of the four-quadrant matrix in notes/OLD/30-two-track-architecture.md;
-# rationale in notes/plans/adr-017-bytecode-boundary.md.
+# Quadrant 3 (vendor bytecode + our VM) of the four-quadrant matrix: front-end (ours or
+# vendor's) by VM (ours or vendor's), split at the .mpy bytecode boundary.
 # vendor mpy-cross bytecode executed by our VM. Validates the VM against a
 # front-end we did not write, which is the point of the split.
 #

@@ -1,7 +1,7 @@
-//! nanopython — Zig port of py/obj.c (W6 calibration seam → full port).
+//! nanopython — Zig port of py/obj.c.
 //!
-//! Per notes/13-b2-plan.md: W6 ported raise-path C frames to Zig so that
-//! at B2 (the atomic nlr flip), PyError can propagate naturally via Zig
+//! Raise-path C frames were ported to Zig so that, once the nlr
+//! longjmp transport was removed, PyError can propagate naturally via Zig
 //! `try` chains. This file now fully replaces the obj_shim.c bridge; all
 //! type-slot dispatch + identity/length/equality/print/get-buffer helpers
 //! live here directly, using `mp_mirrors` instead of C accessor wrappers.
@@ -128,11 +128,11 @@ extern fn qstr_data(q: usize, len: *usize) callconv(.c) [*c]const u8;
 // Was: `if (pending_exc) npy_pyerr_nlr_jump(exc)`. NX-3 deleted
 // npy_pyerr_nlr_jump (no NLR), so under full this is now a no-op:
 // pending_exc stays set, callers MUST poll. Vendor C callers that
-// expected noreturn semantics may misbehave (notes/40 F-rehab); for
+// expected noreturn semantics may misbehave; for
 // the best-effort full-arm gate this is preferable to a hard panic.
 inline fn longjmpIfPending() void {}
 
-// ── NX-3 N2 raise helpers (PyError convention; notes/41, /42). ──────
+// ── Raise helpers (PyError convention). ─────────────────────────────
 // Each sets pyerr.pending_exc + returns error.PyRaise. The C-ABI export
 // wraps the impl with pyerr.bridge which catches and returns the zero
 // sentinel (callers poll pending_exc). Under TERSE error reporting

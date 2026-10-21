@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/builtinevex.c (Axis-B B1.5 W3; notes/11).
+//! nanopython — Zig port of py/builtinevex.c.
 //!
 //! Nano config (probed): MICROPY_PY_BUILTINS_COMPILE=0,
 //! MICROPY_PY_BUILTINS_EXECFILE=0, MICROPY_PY_BUILTINS_EVAL_EXEC=1.
@@ -9,7 +9,7 @@
 //! Faithful: the `for i in 1..3 && i<n_args` loop pattern with the
 //! `i==1 → globals = locals` shadowing is preserved exactly. Dict
 //! type-check raises TypeError(NULL) via the PyError convention
-//! (notes/11). The MP_QSTR__lt_string_gt_ filename is folded into
+//! The MP_QSTR__lt_string_gt_ filename is folded into
 //! the shim's npy_evex_lexer_new_from_str. The const fn_obj wrappers
 //! (MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN) stay in the shim — Zig only
 //! defines the body of the 2 callable symbols + the helper.
@@ -139,7 +139,7 @@ fn evalExecHelperImpl(n_args: usize, args: [*c]const Obj, parse_input_kind: Pars
     // for now. Stage 3b retry needs our compiler to detect malformed
     // tokens (`123z`, `'abc`-unterminated, etc.) that surface only
     // through eval/exec test fixtures — bug present today, not a
-    // regression. See notes/33 Stage 3b.
+    // regression.
     var bufinfo: MpBufferInfo = undefined;
     getBufferRaise(args[0], &bufinfo, MP_BUFFER_READ);
     return npy_zig_eval_exec(@ptrCast(bufinfo.buf), bufinfo.len, qstrs.MP_QSTR__lt_string_gt_, parse_input_kind, globals, locals);

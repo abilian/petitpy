@@ -57,7 +57,7 @@ extern fn mp_printf(print: ?*const anyopaque, fmt: [*:0]const u8, ...) callconv(
 extern fn mp_obj_fun_get_name(fun_in: Obj) callconv(.c) usize;
 extern fn mp_obj_fun_bc_attr(self_in: Obj, attr: usize, dest: [*c]Obj) callconv(.c) void;
 
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42). One per
+// Raise helpers (PyError convention). One per
 // distinct exception+message used at a PyError raise site.
 fn raiseStopIteration(arg: Obj) PyError!void {
     if (arg == mirrors.OBJ_NULL) {

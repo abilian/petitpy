@@ -61,7 +61,7 @@ extern fn m_free(ptr: ?*anyopaque) callconv(.c) void;
 
 const MpBoundSlice = extern struct { start: isize, stop: isize, step: isize };
 
-// NX-3 N1 raise helper (PyError convention; notes/41, /42).
+// Raise helper (PyError convention).
 // Sets pyerr.pending_exc + returns error.PyRaise — the C-ABI export
 // wraps the impl with pyerr.bridge which catches and returns the
 // zero sentinel (callers poll pending_exc).

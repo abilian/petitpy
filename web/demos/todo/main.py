@@ -4,8 +4,7 @@ main.py owns the todo list, the filter state, the localStorage round-trip,
 and DOM rendering. JS owns only the wasm loader and a delegated click
 handler on the <ul> that surfaces the clicked li's data-id and action
 ("toggle" / "delete") into Python via window globals (the standard
-globals-stash workaround for the bridge's dropped-args caveat — see
-notes/03).
+globals-stash workaround for the bridge's dropped-args caveat).
 
 localStorage round-trip: the bridge does NOT marshal native Python dicts to
 JS objects, so we hand-roll JSON for the todo list (list of {id, text,

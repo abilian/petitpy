@@ -1,6 +1,6 @@
 //! nanopython — Zig-native `socket` module (BSD sockets subset).
 //!
-//! notes/plans/full-unix-profile.md phase 3. MVP surface for
+//! Full-native only. MVP surface for
 //! `hop3-rootd`'s AF_UNIX RPC listener:
 //!
 //!   Class:      socket.socket(family, type[, proto]) → sock

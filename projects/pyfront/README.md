@@ -2,7 +2,7 @@
 
 An alternative front-end for nanopython: Python source in, MicroPython `.mpy` v6 out, in pure Python.
 
-The runtime already splits at the bytecode boundary (see `notes/plans/adr-017-bytecode-boundary.md`), which makes `.mpy` an interface rather than an internal detail. `zigpy-compile` is the Zig front-end; this is a second one, written to a different design, so the boundary gets exercised by something that shares no code with it.
+The runtime already splits at the bytecode boundary, which makes `.mpy` an interface rather than an internal detail. `zigpy-compile` is the Zig front-end; this is a second one, written to a different design, so the boundary gets exercised by something that shares no code with it.
 
 It compiles a subset, not the language. What it does not handle it refuses by name, so an unsupported construct is a `pyfront: unsupported: ...` on stderr and exit 2, never bytecode that runs and computes the wrong answer.
 
@@ -17,7 +17,7 @@ Exit codes: `0` compiled, `2` refused by name (an unsupported construct, or a `S
 
 ## What it covers
 
-Of the 67 constructs in `tools/capability_matrix.py`, pyfront compiles 65, and both back-ends run the result with output matching CPython. The two it declines are below; `notes/14-capability-matrix.md` carries the full table.
+Of the 67 constructs in `tools/capability_matrix.py`, pyfront compiles 65, and both back-ends run the result with output matching CPython. The two it declines are below; `make check-capability` prints the full table.
 
 The compiled subset spans assignment and arithmetic, control flow, functions and closures, classes and inheritance, dunder methods, comprehensions of all four kinds, generators, `try`/`except`/`finally`, `with`, f-strings including format specs, decorators, default arguments, `*args`/`**kwargs` in both signatures and calls, the walrus, chained comparisons, unpacking, `global`/`nonlocal`, lambdas, and `match`.
 

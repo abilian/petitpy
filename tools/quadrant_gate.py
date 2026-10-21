@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """quadrant_gate.py — strict gate for the split (compiler/VM) configuration.
 
-notes/OLD/30-two-track-architecture.md splits nanopython at the bytecode
-boundary and names the payoff: in one combined binary a compiler bug and a VM
-bug can compensate for each other invisibly. Splitting gives four quadrants,
+nanopython splits at the bytecode boundary, and the payoff is this: in one
+combined binary a compiler bug and a VM bug can compensate for each other invisibly. Splitting gives four quadrants,
 and a divergence localises to one of them.
 
 |                     | our VM              | vendor VM                    |
@@ -14,7 +13,7 @@ Q1 exercises `zigpy-compile` -> `nanopython-vm`. Q3 runs vendor `mpy-cross`
 bytecode through our VM, which is the only check that validates the VM against
 a front-end we did not write.
 
-Metric is the one notes/30's 2026-06 clarification fixes: observable output
+Metric is observable output
 (stdout + stderr + exit status) against the same frozen goldens `make check`
 uses, NOT .mpy byte-identity - two .mpy files can encode one program
 differently and execute identically.

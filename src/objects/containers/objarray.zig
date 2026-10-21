@@ -120,7 +120,7 @@ extern fn mp_arg_check_num_sig(n_args: usize, n_kw: usize, sig: u32) callconv(.c
 extern fn mp_obj_new_exception_msg(t: *const anyopaque, msg: [*:0]const u8) callconv(.c) Obj;
 extern fn mp_obj_new_exception(t: *const anyopaque) callconv(.c) Obj;
 
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42). Each
+// Raise helpers (PyError convention). Each
 // sets pyerr.pending_exc + returns error.PyRaise. C-ABI exports wrap
 // their PyError!T impl with pyerr.bridge.
 fn raiseWrongNumArgs() PyError!void {

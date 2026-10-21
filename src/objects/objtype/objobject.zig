@@ -41,7 +41,7 @@ extern fn mp_obj_new_exception(t: *const anyopaque) callconv(.c) Obj;
 extern fn mp_obj_new_exception_msg(t: *const anyopaque, msg: [*:0]const u8) callconv(.c) Obj;
 extern fn mp_map_lookup(map: *mirrors.MpMap, index: Obj, kind: c_int) callconv(.c) ?*mirrors.MpMap.Elem;
 
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42). Each
+// Raise helpers (PyError convention). Each
 // sets pyerr.pending_exc + returns error.PyRaise; C-ABI exports wrap
 // the impl with pyerr.bridge which catches and returns the zero
 // sentinel (callers poll pending_exc).

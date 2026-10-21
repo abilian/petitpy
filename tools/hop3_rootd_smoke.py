@@ -2,7 +2,7 @@
 """Empirical smoke: try to import hop3-rootd under nanopython, log the
 first blocker at each level.
 
-Reproducible probe for the plan in notes/plans/full-unix-profile.md.
+Reproducible probe for running hop3-rootd on full-native.
 Instead of guessing the dependency order, this script:
 
   1. Builds a shim tree combining hop3-rootd's source, nanopython-lib's

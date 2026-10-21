@@ -1,6 +1,5 @@
-//! nanopython — Zig port of py/parsenumbase.c (Step 4 / Axis-B B1
-//! #1; see notes/11). One pure function, no nlr, no type-def →
-//! shimless `export fn` (the smallint recipe). Runtime-hot: the
+//! nanopython — Zig port of py/parsenumbase.c. One pure function,
+//! no nlr, no type-def → shimless `export fn` (the smallint recipe). Runtime-hot: the
 //! radix-prefix scan for every int/float literal & int()/float().
 //!
 //! `mp_parse_num_base(const char *str, size_t len, int *base)

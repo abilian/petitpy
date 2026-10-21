@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/scheduler.c (Axis-B B1.5 W3; notes/11).
+//! nanopython — Zig port of py/scheduler.c.
 //!
 //! Under nano (probed): SCHEDULER=0, KBD_EXCEPTION=0, VM_ABORT=0,
 //! PY_THREAD=0, the SCHEDULER_STATIC_NODES + EVENT_POLL_HOOK families
@@ -10,7 +10,7 @@
 //!     wrappers around mp_handle_pending under nano (the
 //!     MICROPY_INTERNAL_WFE macro is (void)0).
 //!
-//! The raise is via the shared PyError bridge (notes/11). The
+//! The raise is via the shared PyError bridge. The
 //! MICROPY_BEGIN/END_ATOMIC_SECTION macros under nano are no-ops so
 //! the `atomic_state` local is faithfully kept as a dead var (kept
 //! so the line-by-line correspondence to C is unambiguous; the

@@ -1,6 +1,6 @@
 //! nanopython — Zig-native low-level `_subprocess` module.
 //!
-//! notes/plans/full-unix-profile.md phase 6. Ships the C-side
+//! Full-native only. Ships the C-side
 //! fork+exec+wait+pipes primitive; the Pythonic `subprocess.run`
 //! wrapper (accepting kwargs, CompletedProcess, CalledProcessError,
 //! TimeoutExpired) lives in nanopython-lib/subprocess.py.

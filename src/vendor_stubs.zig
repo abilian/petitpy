@@ -26,8 +26,7 @@ pub export fn mp_hal_stdout_tx_strn_cooked(str: [*]const u8, len: usize) callcon
     _ = std_c.write(1, str, len);
 }
 // mp_obj_float_get is now provided by vendor py/objfloat.c via the
-// float-arm carveout in build.zig (see notes/05-longlong-on-wasm32.md
-// + the float-arm carveout). Panic stub retired.
+// float-arm carveout in build.zig. Panic stub retired.
 // mp_repl_continue_with_input: vendor returns true when more input is
 // expected (unmatched bracket, line continuation, compound statement).
 // Without a port of vendor py/repl.c the REPL falls back to single-line

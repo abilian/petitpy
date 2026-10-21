@@ -74,7 +74,7 @@ const MP_BUFFER_WRITE: c_uint = 2;
 const MP_BUFFER_RAISE_IF_UNSUPPORTED: c_uint = 4;
 const MP_OBJ_FUN_ARGS_MAX: u32 = 0xffff;
 
-// NX-3 N1 raise helper (PyError convention; notes/41, /42). Sets
+// Raise helper (PyError convention). Sets
 // pyerr.pending_exc + returns error.PyRaise — C-ABI exports wrap the
 // impl with pyerr.bridge which catches and returns the zero sentinel
 // (callers poll pending_exc).

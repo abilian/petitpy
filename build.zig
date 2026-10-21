@@ -1,6 +1,6 @@
 //! nanopython build.
 //!
-//! Native-first strangler (see notes/01-design.md). Compiles the generated
+//! Native-first strangler. Compiles the generated
 //! MicroPython embed C package (vendor/micropython_embed) for the host,
 //! linked behind a thin Zig entry point. As the strangler progresses,
 //! individual C sources are dropped here and replaced by Zig modules.
@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) void {
     // Zig-side comptime branch selection in src/*.zig.
     //
     // Default is "nano" — it's the frozen reference + the WASM-clean path.
-    // "full" is the in-progress superset (see notes/20-full-features-plan.md).
+    // "full" is the in-progress superset.
     const ConfigPreset = enum { nano, full };
     const config_preset = b.option(ConfigPreset, "config", "Config preset: full (default, all features) or nano (frozen slice for shipping)") orelse .full;
 
@@ -60,27 +60,27 @@ pub fn build(b: *std.Build) void {
         // surface (`import re`) disappears and re-using code traps with
         // ImportError.
         re: bool,
-        // notes/plans/full-unix-profile.md phase 1 — Zig-native `os` module
+        // Zig-native `os` module
         // for native POSIX (`os.sep`, `os.environ`, `os.urandom`, `os.chmod`
         // etc.). Default ON for full, OFF for nano (nano stays the byte-exact
         // 541/541 reference). Never on for wasm — no POSIX surface there.
         os: bool,
-        // notes/plans/full-unix-profile.md phase 2 — Zig-native `time`
+        // Zig-native `time`
         // module. Same shape as `os`: full-native default on, nano+wasm off.
         time_mod: bool,
-        // notes/plans/full-unix-profile.md phase 3 — Zig-native `socket`
+        // Zig-native `socket`
         // module (BSD sockets subset). Same shape.
         socket_mod: bool,
-        // notes/plans/full-unix-profile.md phase 4 — Zig-native `select`
+        // Zig-native `select`
         // module. Same shape.
         select_mod: bool,
-        // notes/plans/full-unix-profile.md phase 5 — Zig-native `signal`
+        // Zig-native `signal`
         // MVP (store-but-don't-dispatch). Same shape.
         signal_mod: bool,
-        // notes/plans/full-unix-profile.md phase 7 — Zig-native `pwd` +
+        // Zig-native `pwd` +
         // `grp` (libc getpwnam/getgrnam wrappers). Same shape, one flag.
         pwd_grp: bool,
-        // notes/plans/full-unix-profile.md phase 6 — Zig-native low-level
+        // Zig-native low-level
         // `_subprocess` module (fork+exec+wait+pipes). Python `subprocess`
         // wrapper lives in nanopython-lib/subprocess.py (frozen).
         subprocess_mod: bool,
@@ -145,13 +145,13 @@ pub fn build(b: *std.Build) void {
     const feature_gc_module_user = b.option(bool, "feature-gc-module", "Enable the gc module — collect/disable/enable/mem_free etc. (default: on). Note: independent of the GC subsystem itself.");
     const feature_js_user = b.option(bool, "feature-js", "Enable the JS interop bridge (default: on for wasm, off for native). ADR-006.");
     const feature_re_user = b.option(bool, "feature-re", "Enable the `re` regex module — vendor extmod/modre.c + lib/re1.5/ (default: on). ADR 010 §A3a slice 2.");
-    const feature_os_user = b.option(bool, "feature-os", "Enable the Zig-native `os` module — POSIX surface for full-native (default: on for full-native, off elsewhere). notes/plans/full-unix-profile.md.");
-    const feature_time_user = b.option(bool, "feature-time", "Enable the Zig-native `time` module — POSIX clock/sleep wrappers for full-native (default: on for full-native, off elsewhere). notes/plans/full-unix-profile.md phase 2.");
-    const feature_socket_user = b.option(bool, "feature-socket", "Enable the Zig-native `socket` module — BSD sockets subset for full-native (default: on for full-native, off elsewhere). notes/plans/full-unix-profile.md phase 3.");
-    const feature_select_user = b.option(bool, "feature-select", "Enable the Zig-native `select` module — select(2) wrapper for full-native (default: on for full-native, off elsewhere). notes/plans/full-unix-profile.md phase 4.");
-    const feature_signal_user = b.option(bool, "feature-signal", "Enable the Zig-native `signal` module MVP (store-but-don't-dispatch). notes/plans/full-unix-profile.md phase 5.");
-    const feature_pwd_grp_user = b.option(bool, "feature-pwd-grp", "Enable the Zig-native `pwd` + `grp` modules (libc getpwnam/getgrnam). notes/plans/full-unix-profile.md phase 7.");
-    const feature_subprocess_user = b.option(bool, "feature-subprocess", "Enable the Zig-native low-level `_subprocess` module (fork+exec). notes/plans/full-unix-profile.md phase 6.");
+    const feature_os_user = b.option(bool, "feature-os", "Enable the Zig-native `os` module — POSIX surface for full-native (default: on for full-native, off elsewhere).");
+    const feature_time_user = b.option(bool, "feature-time", "Enable the Zig-native `time` module — POSIX clock/sleep wrappers for full-native (default: on for full-native, off elsewhere).");
+    const feature_socket_user = b.option(bool, "feature-socket", "Enable the Zig-native `socket` module — BSD sockets subset for full-native (default: on for full-native, off elsewhere).");
+    const feature_select_user = b.option(bool, "feature-select", "Enable the Zig-native `select` module — select(2) wrapper for full-native (default: on for full-native, off elsewhere).");
+    const feature_signal_user = b.option(bool, "feature-signal", "Enable the Zig-native `signal` module MVP (store-but-don't-dispatch).");
+    const feature_pwd_grp_user = b.option(bool, "feature-pwd-grp", "Enable the Zig-native `pwd` + `grp` modules (libc getpwnam/getgrnam).");
+    const feature_subprocess_user = b.option(bool, "feature-subprocess", "Enable the Zig-native low-level `_subprocess` module (fork+exec).");
     const features: Features = .{
         .math = feature_math_user orelse feature_defaults.math,
         .warning = feature_warning_user orelse feature_defaults.warning,
@@ -291,8 +291,7 @@ pub fn build(b: *std.Build) void {
     // Tri-valued mirror of MICROPY_LONGINT_IMPL — lets parsenum.zig and any
     // future bignum-aware Zig site distinguish MPZ (full) from LONGLONG
     // (nano-wasm). The legacy `longint_none` bool above stays as a derived
-    // alias for existing callers; migrate next cycle (notes/12-is-full-audit.md
-    // Phase 3.5 follow-up).
+    // alias for existing callers; migrate next cycle.
     const LongintImpl = enum { none, longlong, mpz };
     const longint_impl: LongintImpl = if (config_preset == .full) .mpz else if (is_wasm_target) .longlong else .none;
     build_options.addOption(LongintImpl, "longint_impl", longint_impl);
@@ -326,7 +325,7 @@ pub fn build(b: *std.Build) void {
     // the gates from is_full to multiple_inheritance.
     build_options.addOption(bool, "multiple_inheritance", true);
 
-    // notes/06-v0.6-followups.md item Tier 2 #5 — MICROPY_PY_DELATTR_SETATTR
+    // MICROPY_PY_DELATTR_SETATTR
     // on nano. Vendor MP gates user `__setattr__` / `__delattr__` dispatch
     // (plus the HAS_SPECIAL_ACCESSORS flag-set for those keys) on this
     // config. v0.6 kept the corresponding Zig sites under is_full because
@@ -337,7 +336,7 @@ pub fn build(b: *std.Build) void {
     // fire on nano, so `canvas.fillStyle = X` works directly.
     build_options.addOption(bool, "delattr_setattr", true);
 
-    // notes/12-is-full-audit.md WRONG #1 — MICROPY_PY_REVERSE_SPECIAL_METHODS.
+    // MICROPY_PY_REVERSE_SPECIAL_METHODS.
     // Vendor MP runs the reverse-op fallback (`__radd__` / `__rsub__` / …)
     // unconditionally; nano gated it on is_full because the frozen corpus
     // captured the broken behavior. Real CPython semantics — `1 + x` calls
@@ -542,7 +541,7 @@ pub fn build(b: *std.Build) void {
     }
     if (is_full) {
         // Signals to port/mpconfigport.h that the full-features config arm
-        // should be selected (see notes/20-full-features-plan.md). Phase 1
+        // should be selected. Phase 1
         // wires the toggle, subsequent phases add the actual feature flips.
         cflags_list.append(b.allocator, "-DNANOPYTHON_CONFIG_FULL=1") catch @panic("OOM");
         // Critical: Zig's @cImport runs translate-c separately from C source
@@ -676,7 +675,7 @@ pub fn build(b: *std.Build) void {
     }) catch @panic("OOM");
 
     if (is_full) {
-        // F2a (notes/40) — full-only vendor C carveout: the
+        // Full-only vendor C carveout: the
         // arbitrary-precision integer engine. Replaces the 14
         // longint @panic stubs F0 installed in
         // src/runtime/full_stubs.zig (now deleted). Documented
@@ -689,7 +688,7 @@ pub fn build(b: *std.Build) void {
             embed_root ++ "/py/objint_mpz.c", // mpz-flavored ops (gated on MICROPY_LONGINT_IMPL_MPZ)
             embed_root ++ "/py/mpz.c", // the bignum arithmetic engine itself
         }) catch @panic("OOM");
-        // F5 (notes/40) — io module carveout: provides StringIO,
+        // io module carveout: provides StringIO,
         // BytesIO, IOBase, BufferedWriter, and registers the io
         // module. Depends on src/support/stream.zig's exported ROM
         // objects (mp_stream_read_obj etc.) and
@@ -699,7 +698,7 @@ pub fn build(b: *std.Build) void {
             embed_root ++ "/py/modio.c", // IOBase + BufferedWriter + module registration
             embed_root ++ "/py/objstringio.c", // StringIO + BytesIO types
         }) catch @panic("OOM");
-        // builtin_help carveout (notes/40 finishing touches):
+        // builtin_help carveout:
         // provides the real `mp_builtin_help_obj` function-obj.
         // Under nano the stub in vendor_stubs.zig satisfies the link
         // (test is in the 4-FAIL excluded list); under full the test
@@ -768,8 +767,7 @@ pub fn build(b: *std.Build) void {
 
     // NX-3 N3a (2026-06-05): `zig_compile_bridge.c` → ported to
     // `src/runtime/zig_compile_bridge.zig`. `defer mp_globals_set(saved)`
-    // replaces `nlr_push_jump_callback`'s restore-on-unwind (notes/41
-    // §"The architectural pivot", notes/42 §D). Force-analyzed via
+    // replaces `nlr_push_jump_callback`'s restore-on-unwind. Force-analyzed via
     // main.zig's comptime block. Persistent-code loader
     // (`mp_raw_code_load_mem`) is Zig-side as of NX-1.
 
@@ -855,7 +853,7 @@ pub fn build(b: *std.Build) void {
     // see that block for per-file rationale. The only deliberate
     // divergence: vm_mod skips objfloat/formatfloat under is_full
     // (leaves the 10 float symbols unresolved — documented
-    // pre-existing deferred work, notes/12).
+    // pre-existing deferred work).
     var vm_files = std.ArrayList([]const u8).empty;
     vm_files.appendSlice(b.allocator, &.{
         "src/objects/objtype/objmodule_shim.c",
@@ -888,7 +886,7 @@ pub fn build(b: *std.Build) void {
     // Float-arm carveout — differs from the main `nanopython` (which
     // includes float unconditionally). Under is_full the vm binary
     // deliberately omits float; the 10 unresolved float symbols are
-    // the documented pre-existing deferred work in notes/12.
+    // documented pre-existing deferred work.
     vm_files.appendSlice(b.allocator, &.{
         embed_root ++ "/py/objfloat.c",
         embed_root ++ "/py/formatfloat.c",
@@ -913,7 +911,7 @@ pub fn build(b: *std.Build) void {
     if (b.args) |args| vm_run.addArgs(args);
     b.step("run-vm", "Run nanopython-vm").dependOn(&vm_run.step);
 
-    // ── Compiler track (notes/30 + 31) — pure Zig, no C dependency ──
+    // ── Compiler track — pure Zig, no C dependency ──
     // First milestone (C1): `.mpy` round-trip tool.
     // Second milestone (C2): pure-Zig qstr table + differential test.
     const qstrdefs_path = b.path("vendor/micropython_embed/genhdr/qstrdefs.generated.h");
@@ -1073,7 +1071,7 @@ pub fn build(b: *std.Build) void {
     // ── C7: compiler driver ────────────────────────────────────────────────
     // Scaffold: structure + dispatch + 3-pass driver + unit tests land here.
     // Handler bodies that emit divergent bytecode are marked SCAFFOLD/deferred
-    // and tracked in notes/32-c7-completion.md for the C7b sweep.
+    // and still to be completed.
     const compile_mod = b.createModule(.{
         .root_source_file = b.path("src/compiler/compile.zig"),
         .target = target,

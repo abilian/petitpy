@@ -1,10 +1,10 @@
-//! nanopython — Zig port of py/argcheck.c (Axis-B B1 #2; notes/11).
+//! nanopython — Zig port of py/argcheck.c.
 //! 4 class-A exports, 0 nlr-hosts. Struct access goes through the
 //! `mirrors.MpArg` / `MpArgVal` mirrors (no C-shim trip). Nano
 //! ERROR_REPORTING<=TERSE ⇒ every error path is the single terse
 //! mismatch.
 //!
-//! Uses the B0-pinned PyError convention (notes/11) via the shared
+//! Uses the B0-pinned PyError convention via the shared
 //! `pyerr.bridge`. `terse` sets `pyerr.pending_exc` and returns
 //! `error.PyRaise`; it propagates via `try` through the internal
 //! `*Impl` fns. Exported C-ABI symbols are thin `pyerr.bridge`

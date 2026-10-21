@@ -3,7 +3,6 @@
 No front-end in the ecosystem parses `match`: not vendor MicroPython, not
 mpy-cross, not zigpy-compile. The desugaring here needs no opcode that is not
 already in the VM, which is what makes it a measurement rather than a feature.
-See notes/14-capability-matrix.md.
 """
 
 from __future__ import annotations

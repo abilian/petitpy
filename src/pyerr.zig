@@ -1,6 +1,6 @@
 //! nanopython — the B0-pinned nlr→error-union transport convention.
 //! Shared by every B1.5-converted module (the argcheck spike proved
-//! it; notes/11). Internal Zig fns return `PyError!T` and propagate
+//! it). Internal Zig fns return `PyError!T` and propagate
 //! a raise via `try` (real multi-frame error propagation, no
 //! longjmp). At the C-ABI boundary `bridge(T, r)` either returns the
 //! T (success) or — in B1 mode — calls the shared C trampoline
@@ -13,7 +13,7 @@ const std = @import("std");
 
 pub const PyError = error{PyRaise};
 // Not `threadlocal`: polled on every opcode, and on macOS each TLS access
-// is a call to tlv_get_addr (1.2x on fibo/bubble, notes/15). No threads
+// is a call to tlv_get_addr (1.2x on fibo/bubble). No threads
 // today; with real `_thread` this belongs in per-thread VM state.
 pub var pending_exc: usize = 0;
 

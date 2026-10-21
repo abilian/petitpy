@@ -5,7 +5,7 @@ Replaces the upstream micropython-lib `random.py` which depends on `urandom`
 implementation we don't need for any in-scope use case).
 
 Implements a Park-Miller LCG. The state is a 31-bit signed int, mathematically
-correct since wasm32-nano switched to LONGLONG (see notes/05-longlong-on-wasm32.md);
+correct since wasm32-nano switched to LONGLONG;
 on 64-bit native the smallint is 62-bit so the same code runs untouched.
 
 API matches CPython's `random` module for the functions algorithms textbooks

@@ -82,7 +82,7 @@ extern fn mp_set_remove_first(set: *MpSet) callconv(.c) Obj;
 extern fn mp_set_clear(set: *MpSet) callconv(.c) void;
 
 // ── helpers ─────────────────────────────────────────────────────────
-// NX-3 N1 raise helpers (PyError convention; notes/41, /42).
+// Raise helpers (PyError convention: set pending_exc and return error.PyRaise).
 fn raiseKeyErrorPopEmpty() PyError!void {
     pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_KeyError, "pop from an empty set");
     return error.PyRaise;

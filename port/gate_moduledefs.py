@@ -59,23 +59,23 @@ OPTIONAL_MODULES: dict[str, str] = {
     # cleanly when feature-re=false (e.g. on wasm32, where re1.5's
     # function-pointer ABI breaks).
     "RE": "MICROPY_PY_RE",
-    # notes/plans/full-unix-profile.md phase 1 — `os` module (Zig-native).
+    # `os` module (Zig-native).
     # MICROPY_PY_OS is set in port/mpconfigport.h under NANOPYTHON_FEATURE_OS;
     # this gate keeps the moduledefs reference off under nano (and wasm),
     # where `mp_module_os` isn't defined.
     "OS": "MICROPY_PY_OS",
-    # notes/plans/full-unix-profile.md phase 2 — `time` module (Zig-native).
+    # `time` module (Zig-native).
     "TIME": "MICROPY_PY_TIME",
-    # notes/plans/full-unix-profile.md phase 3 — `socket` module (Zig-native).
+    # `socket` module (Zig-native).
     "SOCKET": "MICROPY_PY_SOCKET",
-    # notes/plans/full-unix-profile.md phase 4 — `select` module (Zig-native).
+    # `select` module (Zig-native).
     "SELECT": "MICROPY_PY_SELECT",
-    # notes/plans/full-unix-profile.md phase 5 — `signal` module MVP.
+    # `signal` module MVP.
     "SIGNAL": "MICROPY_PY_SIGNAL",
-    # notes/plans/full-unix-profile.md phase 7 — `pwd` + `grp`.
+    # `pwd` + `grp`.
     "PWD": "MICROPY_PY_PWD",
     "GRP": "MICROPY_PY_GRP",
-    # notes/plans/full-unix-profile.md phase 6 — `_subprocess` low-level.
+    # `_subprocess` low-level.
     # The qstr is `_subprocess` (leading underscore) — MODULE_DEF macro is
     # generated as MODULE_DEF__SUBPROCESS (underscore preserved).
     "_SUBPROCESS": "MICROPY_PY__SUBPROCESS",

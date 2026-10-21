@@ -20,8 +20,7 @@
 //! byte-mismatch on every non-decimal literal that overflows the
 //! 30-bit SMALL_INT gate.
 //!
-//! No fold logic here — that's a separate layer in parser.zig
-//! (see notes/24-bigint-fold.md, future commit).
+//! No fold logic here — that's a separate layer in parser.zig.
 
 const std = @import("std");
 
@@ -210,8 +209,8 @@ pub fn foldBinary(
             // limbs, skip the fold when any operand is negative — the
             // VM's mpz path handles it correctly via two's-complement
             // semantics at runtime. This costs us a few bytes of fold
-            // optimisation but preserves execution equivalence (the
-            // actual gate in notes/30 + notes/31).
+            // optimisation but preserves execution equivalence, which is
+            // the actual gate.
             if (!a.isPositive() or !b.isPositive()) return null;
             switch (op) {
                 .bor => r.bitOr(&a, &b) catch |e| switch (e) {

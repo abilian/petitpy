@@ -21,7 +21,7 @@
 //!   - mp_type_fun_builtin_0/1/2/3, mp_type_fun_builtin_var
 //!   - mp_type_fun_bc
 //!
-//! Dropped (config-dead under both arms, see notes/02-detailed-design):
+//! Dropped (config-dead under both arms):
 //!   - mp_type_fun_native / fun_native_call (MICROPY_ENABLE_NATIVE_CODE=0)
 //!   - mp_type_fun_viper  / fun_viper_call  (same)
 //!   - mp_type_fun_asm    / fun_asm_call + convert_obj_for_inline_asm
@@ -241,7 +241,7 @@ export fn mp_obj_new_fun_bc(
 
 // ── fun_bc_call (bc.h spike #3 — the wall) ───────────────────────────
 //
-// The VM bytecode entry point. Three blockers from notes/18:
+// The VM bytecode entry point. Three blockers to porting it:
 //   (a) mp_code_state_t has flex array state[] → use MpCodeState mirror
 //       with statePtr() (same pattern as MpObjTuple.itemsPtr).
 //   (b) C uses alloca for state_size <= VM_MAX_STATE_ON_STACK (88 bytes,

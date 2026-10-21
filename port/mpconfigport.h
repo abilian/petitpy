@@ -7,7 +7,7 @@
  *   -DNANOPYTHON_CONFIG_FULL=1 → full features (everything available).
  *
  * The build.zig `-Dconfig=nano|full` option drives the define above.
- * See notes/20-full-features-plan.md for the broader plan; Phase 1
+ * Phase 1
  * wires the toggle, subsequent phases add the actual feature flips
  * inside the #ifdef NANOPYTHON_CONFIG_FULL arm.
  */
@@ -250,7 +250,7 @@
 //
 // When NANOPYTHON_CONFIG_FULL is defined (via build.zig's -Dconfig=full),
 // override the nano defaults above to enable every available feature.
-// Per notes/20-full-features-plan.md, Phase 1 just wires the toggle —
+// Phase 1 just wires the toggle —
 // the actual feature flips land in subsequent phases as the Zig ports
 // gain comptime config-gating support.
 //
@@ -259,7 +259,7 @@
 #ifdef NANOPYTHON_CONFIG_FULL
 // Phase 2 (Category A — Zig comptime restoration):
 // MICROPY_PY_DELATTR_SETATTR is now (1) for both arms (was full-only;
-// flipped in v0.7 — see notes/06-v0.6-followups.md). Redefine kept here
+// flipped in v0.7). Redefine kept here
 // as a no-op marker so a vendor pull diff stays readable.
 // MICROPY_PY_FUNCTION_ATTRS_CODE: oracle has it OFF and the matching
 // SKIP path in tests/basics/fun_code*.py expects AttributeError on
@@ -342,34 +342,34 @@ extern const struct _mp_print_t mp_stderr_print;
 #undef MICROPY_ERROR_PRINTER
 #define MICROPY_ERROR_PRINTER                  (&mp_stderr_print)
 #endif
-// notes/plans/full-unix-profile.md phase 1 — `os` module (Zig-native).
+// `os` module (Zig-native).
 // Also defined under NANOPYTHON_CONFIG_FULL below (unconditionally, so the
 // qstr scanner sees the module qstrs even when the runtime feature is off).
 #ifdef NANOPYTHON_FEATURE_OS
 #define MICROPY_PY_OS                          (1)
 #endif
-// notes/plans/full-unix-profile.md phase 2 — `time` module (Zig-native).
+// `time` module (Zig-native).
 #ifdef NANOPYTHON_FEATURE_TIME
 #define MICROPY_PY_TIME                        (1)
 #endif
-// notes/plans/full-unix-profile.md phase 3 — `socket` module (Zig-native).
+// `socket` module (Zig-native).
 #ifdef NANOPYTHON_FEATURE_SOCKET
 #define MICROPY_PY_SOCKET                      (1)
 #endif
-// notes/plans/full-unix-profile.md phase 4 — `select` module (Zig-native).
+// `select` module (Zig-native).
 #ifdef NANOPYTHON_FEATURE_SELECT
 #define MICROPY_PY_SELECT                      (1)
 #endif
-// notes/plans/full-unix-profile.md phase 5 — `signal` module (Zig-native, MVP).
+// `signal` module (Zig-native, MVP).
 #ifdef NANOPYTHON_FEATURE_SIGNAL
 #define MICROPY_PY_SIGNAL                      (1)
 #endif
-// notes/plans/full-unix-profile.md phase 7 — `pwd` + `grp` modules.
+// `pwd` + `grp` modules.
 #ifdef NANOPYTHON_FEATURE_PWD_GRP
 #define MICROPY_PY_PWD                         (1)
 #define MICROPY_PY_GRP                         (1)
 #endif
-// notes/plans/full-unix-profile.md phase 6 — `_subprocess` low-level module.
+// `_subprocess` low-level module.
 #ifdef NANOPYTHON_FEATURE_SUBPROCESS
 #define MICROPY_PY__SUBPROCESS                 (1)
 #endif

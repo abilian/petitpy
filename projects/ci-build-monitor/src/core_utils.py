@@ -18,7 +18,6 @@ def generate_id():
     The nano build has no float type and the smallint window stops at
     ~5.4e8 — `Date.now()` (~1.7e12) and `Math.random()` (a float) both
     blow up. Use a masked Date seed plus a monotonic counter instead.
-    See notes/03-nano-python-cheatsheet.md §1 and §2.
     """
     global _ID_COUNTER
     _ID_COUNTER = _ID_COUNTER + 1

@@ -42,8 +42,7 @@ driven and we lean into that rather than poll-emulate it.
 
 Lives at `web/lib/nanopy.py`. Per-demo `*-lite/nanopy.py` is a
 symlink to this one. Eventual home is `nanopython-lib/dom.py` as a
-frozen-tiny module (Tier 1 item 2 in
-`notes/07-js-vs-nanopython-games.md`, modulo the file being rewound).
+frozen-tiny module.
 """
 
 import js

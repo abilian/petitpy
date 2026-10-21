@@ -63,7 +63,7 @@ class CustomBuildHook(BuildHookInterface):
 
         root = Path(self.root)
         # The full-config build fails on the `nanopython-vm` variant binary
-        # (10 unresolved float symbols — deferred per notes/12-is-full-audit.md).
+        # (10 unresolved float symbols, deferred).
         # The main `nanopython` binary builds cleanly; verify by checking it
         # exists after the run, mirroring the Makefile pattern of `-zig build`
         # followed by an explicit binary-presence check.

@@ -17,7 +17,7 @@ This was a reach cycle. `match` statements land: with them, nanopython runs Pyth
 - **The playground shows bytecode.** `nanopython --emit-mpy` compiles without running; the browser page decodes the container and disassembles it beside your program, with a gallery of the 580 corpus programs measured to run on wasm.
 - **Install from PyPI and npm, as petitpy.** `uvx petitpy script.py`, `pip install petitpy` or `uv tool install petitpy` install prebuilt wheels on macOS and Linux and build the sdist with Zig elsewhere; the commands are `petitpy` and `ppy`. `npm install petitpy` brings the browser build (ADR 016).
 - **A garbage collector.** Until now nothing was ever freed: a program that created a million small objects kept all of them, 67 MB where MicroPython needs 3.7 MB. Memory is now collected (ADR 019), on native whenever the heap fills and on wasm between entries into Python, so a browser game that makes garbage on every frame stays flat (2000 callbacks: 1.36 GB before, 19 MB now). Files and sockets dropped without `close()` are closed by the collector. `gc.collect()`, `gc.mem_alloc()` and `gc.mem_free()` are real.
-- **Faster.** Native `nano` runs fibo about 2x faster and bubble sort about 3x faster than at the start of October 2026, about 1.4x faster than MicroPython on both. In the browser, loop-heavy code runs up to 2.2x faster: V8 had kept the interpreter loop on its baseline compiler (notes/15 §11).
+- **Faster.** Native `nano` runs fibo about 2x faster and bubble sort about 3x faster than at the start of October 2026, about 1.4x faster than MicroPython on both. In the browser, loop-heavy code runs up to 2.2x faster: V8 had kept the interpreter loop on its baseline compiler.
 
 ### Added
 
@@ -137,7 +137,7 @@ This was a profile cycle, in which three landmark ADRs land together. **011 (eve
 - **`sys.implementation` attrtuple layout fix**: `impl_fields` declared as `[u16]` (2-byte stride) but read as `[Qstr]` (8-byte stride on 64-bit) → panic on `sys.implementation` under full. One-line type fix. Closes 4 tests (3 async_*2 + attrtuple1), all gated on `sys.implementation.name`.
 - **`__build_class__` propagates class-body exceptions**: `class S: m.x = 1` used to panic with `cast causes pointer to be null` from `MpObjCell.fromObj(0)`. Vendor unwinds via NLR; nano's `mp_call_function_0` returns the bridge sentinel and we forgot to poll. Two-line fix.
 - **All raise helpers unified across arms**: `mp_raise_msg`, `mp_raise_msg_varg`, `mp_raise_ValueError`, `mp_raise_TypeError_int_conversion`, `mp_raise_TypeError`, `mp_raise_OSError`, `mp_raise_NotImplementedError`, `mp_raise_type_arg` moved from `@panic` stubs under full to real implementations on both arms. Pairs with the NLR trampoline so try/except catches when a pad is registered.
-- **Full main binary now links**: three small fixes (`build.zig` float files unconditional, `mp_raise_NotImplementedError`/`type_arg` exports unconditional, `mp_obj_new_str_from_utf8_vstr` alias under full). `nanopython-vm` (the experimental variant) still has 10 link errors (deferred per `notes/12-is-full-audit.md`).
+- **Full main binary now links**: three small fixes (`build.zig` float files unconditional, `mp_raise_NotImplementedError`/`type_arg` exports unconditional, `mp_obj_new_str_from_utf8_vstr` alias under full). `nanopython-vm` (the experimental variant) still has 10 link errors (deferred).
 - **User-class `__setattr__` / `__delattr__` work on nano**: `MICROPY_PY_DELATTR_SETATTR` flipped from `0` to `1` for both arms via new `build_options.delattr_setattr` flag. `JsProxy` bridge uses natural attribute writes (`js.window.title = "foo"`); `object.__setattr__` / `object.__delattr__` reachable as methods.
 
 ### feat (stdlib, ADR 011)
@@ -196,14 +196,11 @@ Each module pure Python under `nanopython-lib/`. 160 self-tests under `tests/std
 - **[ADR 012](docs/adrs/012-profiles-and-feature-matrix.md)**: Profiles + feature matrix. **Implemented** (Phase 4b lands the default flip). Partially supersedes ADR 002.
 - **[ADR 013](docs/adrs/013-exception-unwind-vendor-c.md)**: Exception unwinding across vendor C. **Proposed**; trampoline foundation + 3 wrap sites implemented in this cycle; alternative B' (native-only) per the setjmp spike.
 - **CLAUDE.md "What 'green' means" section** rewritten for the default-full era. 7-row gate table.
-- **[notes/12-is-full-audit.md](notes/12-is-full-audit.md)**: punch list driving ADR 012 Phase 2-4. Tracks each `is_full` site classification + cumulative Phase 3.5 step table.
-- **[notes/07-js-vs-nanopython-games.md](notes/07-js-vs-nanopython-games.md)** refreshed with post-Prettier cloc numbers.
-- **[notes/08-game-developer-roadmap.md](notes/08-game-developer-roadmap.md)**: strategy doc for what would make `web/lib/nanopy.py` feel like Pygame for kids and pros.
 - ADR 002 status → "Partially superseded by ADR 012."
 
 ### Known issues (deferred)
 
-- **`nanopython-vm` variant under full**: 10 undefined symbols at link time. The main `nanopython` binary builds fine. Tracked under "Real next-phase work" in `notes/12-is-full-audit.md`; affected Makefile targets tolerate the partial-build exit code.
+- **`nanopython-vm` variant under full**: 10 undefined symbols at link time. The main `nanopython` binary builds fine. Affected Makefile targets tolerate the partial-build exit code.
 - **Wasm-arm uses `exit(1)` for vendor-C raises**: wasi-libc `setjmp.h` `#error`s out, so the NLR trampoline (ADR 013 B') doesn't compile under wasm32. Wasm full would need WasmEH (ADR 013 Alternative D) once toolchain support firms up.
 - **14 full-corpus known-fails** in `corpus/full-known-fails.txt`, each with a categorized one-line rationale. Closing one is a net-improvement to the project; the strict gate enforces atomic removal.
 
@@ -217,7 +214,7 @@ Each module pure Python under `nanopython-lib/`. 160 self-tests under `tests/std
 
 ## [0.6.0](https://github.com/sfermigier/nanopython/releases/tag/v0.6.0) - 2026-06-12
 
-This was the first post-strangler cycle. The runtime works end-to-end on both arms; v0.6 broadens the surface (stdlib `re`/`itertools`/`string`, multiple inheritance, several Python-3.x features), closes the eval/exec wasm wall, lands measurable size + cold-load metrics infrastructure, and addresses two classes of wasm32 layout bug that had been latent since v0.3. The full plan + retrospective is in [ADR 010](docs/adrs/010-roadmap-v06.md); deferred items are tracked in [notes/06-v0.6-followups.md](notes/06-v0.6-followups.md).
+This was the first post-strangler cycle. The runtime works end-to-end on both arms; v0.6 broadens the surface (stdlib `re`/`itertools`/`string`, multiple inheritance, several Python-3.x features), closes the eval/exec wasm wall, lands measurable size + cold-load metrics infrastructure, and addresses two classes of wasm32 layout bug that had been latent since v0.3. The plan is in [ADR 010](docs/src/adrs/010-roadmap-v06.md).
 
 ### Highlights
 
@@ -256,8 +253,7 @@ This was the first post-strangler cycle. The runtime works end-to-end on both ar
 ### docs
 
 - [ADR 010](docs/adrs/010-roadmap-v06.md) updated with DONE/DEFERRED markers per item, including the A3c (MPZ on wasm32) deferral rationale and the D2 timing-harness resolution.
-- [notes/06-v0.6-followups.md](notes/06-v0.6-followups.md): punch list of items deferred to v0.6.x patch work or v0.7. Includes the remaining `MpStateVmPartial` wasm32 layout debt (latent; surfaced in CLAUDE.md, deferred because cleanup is coupled to `npy_mirror_layout_check` revival or deletion).
-- ADRs moved from `notes/adrs/` to `docs/adrs/` and cross-references made clickable across the docs.
+- ADRs moved into `docs/adrs/` and cross-references made clickable across the docs.
 - README + `docs/` restructured around three personas (web devs, embedded devs, contributors); contrastive *"X, not Y"* constructions removed across the docs and ADRs.
 - CLAUDE.md updated with the v0.6 retrospective (MI surfacing the property-descriptor bug class; the `re`-on-wasm root cause; the MpStateVmPartial known issue).
 
@@ -336,7 +332,6 @@ The strangler-to-Zig phase is done. v0.5 closes the long-standing 541/541 native
 - `CLAUDE.md` restructured around the "What 'green' means" test-harness table. Known failures surfaced explicitly with a "don't push problems under the rug" policy.
 - [ADR 009](docs/adrs/009-roadmap-v05.md): v0.5 roadmap (now closed; §11 retrospective added).
 - [ADR 010](docs/adrs/010-roadmap-v06.md): v0.6 roadmap. Headline: closing the eval/exec longjmp wall, broadening the stdlib surface (`re`, `itertools`, `string`), and a softening of the size target from 228 KB to 285 KB with explicit reasoning.
-- [TR-001](notes/tech-reports/TR-001.md): methodology paper rewritten from scratch as a scientific paper (1681 → 281 lines; ~25k → 5.5k words; appendices removed; thesis stated).
 
 ### build
 

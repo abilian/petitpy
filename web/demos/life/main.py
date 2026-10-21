@@ -6,7 +6,7 @@ One wasm instance is booted by ``app.js`` on page load. main.py:
     wrap-around (torus) edges,
   - paints cells on click + drag (via a 0-arg callback that app.js
     invokes after stashing the cursor coords on ``window``, since the
-    bridge currently drops callback args — see notes/03),
+    bridge currently drops callback args),
   - wires the Start / Step / Clear / Random buttons via the ADR-006 js
     bridge,
   - runs the animation through ``js.window.setInterval`` with a Python
@@ -280,7 +280,7 @@ def on_speed(*_):
 # Mouse painting — globals-stash workaround
 #
 # The js bridge currently drops callback args when wasm has no malloc/free
-# exports (see notes/03 + web/lib/js-bridge.js), so a Python mousedown
+# exports (see web/lib/js-bridge.js), so a Python mousedown
 # handler attached via ``canvas.addEventListener`` would receive no event
 # object and cannot read ``offsetX``/``offsetY``. Instead JS does the
 # wrapping: ``app.js`` listens for mousedown/mousemove/mouseup, stashes the

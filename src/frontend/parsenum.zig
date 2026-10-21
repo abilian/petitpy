@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/parsenum.c (Axis-B B1.5 W3; notes/11).
+//! nanopython — Zig port of py/parsenum.c.
 //!
 //! Nano config (probed): MICROPY_LONGINT_IMPL=NONE,
 //! MICROPY_PY_BUILTINS_FLOAT=0, MICROPY_PY_BUILTINS_COMPLEX=0,

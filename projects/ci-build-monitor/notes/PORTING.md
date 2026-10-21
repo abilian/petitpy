@@ -1,6 +1,6 @@
 # PORTING.md — Prescrypt to nanopython transformation reference
 
-This is the canonical reference future sessions follow when porting `sandbox/ci-build-monitor/src/*.py` into `projects/ci-build-monitor/src/*.py`. Every rule below was derived from the actual source patterns in the upstream codebase + the constraints documented in `notes/03-nano-python-cheatsheet.md` and `nanopython-lib/js.py`.
+This is the canonical reference future sessions follow when porting `sandbox/ci-build-monitor/src/*.py` into `projects/ci-build-monitor/src/*.py`. Every rule below was derived from the actual source patterns in the upstream codebase + the nano runtime's constraints and the bridge documented in `nanopython-lib/js.py`.
 
 Read this file BEFORE editing any ported `.py` file. If you discover a new transformation that isn't documented here, add a row and reference the source-file:line that surfaced it.
 
