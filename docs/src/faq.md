@@ -27,9 +27,9 @@ Rust would also work. The choice was pragmatic.
 
 ## Q4: Is it faster than MicroPython?
 
-In the same ballpark. The latest benchmark snapshot ([`benchmarks.md`](benchmarks.md)) puts petitpy at **1.28× geomean** vs MicroPython unix-standard and **1.96× geomean** vs CPython 3.14 across 6 perf_bench programs. Per-benchmark spread is wide: strops is faster than MicroPython (0.79×); sieve is slower (2.04×). The geometric mean sits in the green band per [ADR 004](adrs/004-benchmarking.md) §D8.
+Slightly, on these programs. The latest benchmark snapshot ([`benchmarks.md`](benchmarks.md), Linux x86_64) puts petitpy at **0.79× geomean** vs MicroPython unix-standard, i.e. about 20% faster, and **1.41× geomean** vs CPython 3.14 across 6 perf_bench programs. Per-benchmark spread is wide: fib is the clearest win over MicroPython (0.63×), listops the closest (0.92×); against CPython, petitpy is faster on dictops (0.84×) and 4× slower on strops. MicroPython's default build optimizes for size (`-Os`), petitpy's release build for speed.
 
-The interpreter keeps MicroPython's bytecode and much of its overall design, so the gap reflects implementation details and compiler code generation more than different algorithms. There's no dedicated perf optimization arc yet; size is the cross-cutting goal that takes priority.
+The interpreter keeps MicroPython's bytecode and much of its overall design, so the gap reflects implementation details and compiler code generation more than different algorithms. The speed work so far (inline small-int paths, threaded dispatch, a map lookup cache) is in [ADR 020](adrs/020-quickening.md); size still takes priority.
 
 ## Q5: Can I use this in production?
 

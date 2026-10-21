@@ -106,7 +106,7 @@ MicroPython uses `setjmp`/`longjmp`-based NLR. petitpy uses Zig's `error{PyRaise
 
 ### About the same
 
-- **Performance.** Both interpreters dispatch the same bytecode through similar opcode handlers. The [benchmark snapshot](benchmarks.md) puts them within ~1.28× geomean on a small `perf_bench` subset, with per-benchmark spread.
+- **Performance.** Both interpreters dispatch the same bytecode through similar opcode handlers. The [benchmark snapshot](benchmarks.md) puts petitpy about 20% faster (0.79× geomean) on a small `perf_bench` subset, with per-benchmark spread, against MicroPython's default size-optimized build.
 - **REPL quality.** Both support multi-line input, walrus, copy-paste. Neither has `rlcompleter` completion.
 - **Error messages.** Both produce terse messages by default; petitpy has incremental improvements (`NameError` / `AttributeError` include the identifier name).
 

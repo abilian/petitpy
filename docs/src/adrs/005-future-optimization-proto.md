@@ -207,7 +207,7 @@ If those mitigations fail and the proto stays open without action for a long per
 - **Hardware acquisition for benchmarking.** ADR-004 already declines a dedicated perf rig; nothing in this proto changes that.
 - **Cross-Python-implementation comparisons beyond MicroPython + CPython.** PyPy is out (different category: JIT-vs-interp). Pyston, GraalPython, RustPython etc. are out for the same reason or because they target audiences petitpy does not address.
 - **Optimization of build-time tooling.** `make build` taking 4 seconds vs 2 seconds is not a project goal. Build-time perf only matters insofar as it affects the maintainer's iteration speed; that is a separate concern from interpreter perf.
-- **Documentation of past optimization decisions.** Several MicroPython-side optimizations come with us via the strangler; documenting their history is a different exercise (TR-002 territory, if it ever exists).
+- **Documentation of past optimization decisions.** Several MicroPython-side optimizations come with us via the strangler; documenting their history is a different exercise.
 
 ## 8. Next steps from this proto
 

@@ -7,15 +7,15 @@
 
 ## 1. Context
 
-ADR-001 anchors the WASM-primary story. ADR-002 makes feature surfaces composable. ADR-003 settles where the stdlib comes from. None of them say anything about *speed*. That gap is now overdue: TR-001 §6 explicitly names benchmarks as future work, and ADR-001's Theme E ("performance baseline") was demoted to optional and never landed.
+ADR-001 anchors the WASM-primary story. ADR-002 makes feature surfaces composable. ADR-003 settles where the stdlib comes from. None of them say anything about *speed*. That gap is now overdue: ADR-001's Theme E ("performance baseline") was demoted to optional and never landed.
 
 What we already know about petitpy's footprint:
 
 | Surface | Measurement | Reference |
 |---|---|---|
-| WASM binary, `ReleaseSmall` | 286 KB | TR-001 §4, README |
+| WASM binary, `ReleaseSmall` | 286 KB | README |
 | MicroPython unix-standard binary | 652 KB | same hardware, comparable build flags |
-| Compiled C under nano | 86 LOC | TR-001 §4 |
+| Compiled C under nano | 86 LOC | — |
 | Corpus parity (arm64-macos) | 537/541 byte-identical | nano-C oracle |
 
 What we do *not* know:

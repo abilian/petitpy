@@ -1,35 +1,37 @@
 # petitpy benchmarks
 
-_For contributors evaluating optimization arcs, and for embedded/systems developers calibrating perf expectations. The figures below were measured on 2026-06-07. The current longitudinal data lives in `metrics/history.ndjson` (run `make metrics-report` for the trend). This page captures one point-in-time comparison for context._
+_For contributors evaluating optimization arcs, and for embedded/systems developers calibrating perf expectations. The figures below were measured on 2026-10-21. The current longitudinal data lives in `metrics/history.ndjson` (run `make metrics-report` for the trend). This page captures one point-in-time comparison for context._
 
-- Date: 2026-06-07 14:13:08 CEST
-- Platform: Darwin arm64 (macOS-14.8.4-arm64-arm-64bit-Mach-O)
-- Commit: `6f9ca14`
-- Methodology: K=2 warmup, N=5 timed iterations per (interpreter, benchmark). Reported value is the median wall-clock; minimum shown in tooltip-style parens. Full methodology in [ADR 004](adrs/004-benchmarking.md).
+- Date: 2026-10-21
+- Platform: Linux x86_64 (AMD Ryzen 7 6800U), Debian 12 container
+- Commit: `29dad57`
+- Methodology: K=3 warmup, N=11 timed iterations per (interpreter, benchmark). Reported value is the median wall-clock; minimum in parens. A second run agreed within 3%. Full methodology in [ADR 004](adrs/004-benchmarking.md).
 
 ## Interpreters
 
-| Name | Binary | Size | Version |
+| Name | Binary | Size (stripped) | Version |
 |---|---|---|---|
-| petitpy | `nanopython` | 954 KB | nanopython 0.4.0 |
-| MicroPython | `micropython` | 652 KB | MicroPython v1.28.0-preview.80.gb14d129a16 on 2026-05-17; darwin (Clang 15.0.0) version |
-| CPython | `python3` | 51 KB | Python 3.14.5 |
+| petitpy | `nanopython` | 737 KB | petitpy 0.8.0 |
+| MicroPython | `micropython` | 807 KB | MicroPython v1.28.0-preview.80.gb14d129a16, GCC 12.2 |
+| CPython | `python3` | n/a | Python 3.14.8 |
 
-petitpy is built with `make build-release` (`-Doptimize=ReleaseFast -Dconfig=nano`). MicroPython is the upstream `unix-standard` build. CPython is the system `python3`.
+petitpy is built with `-Doptimize=ReleaseFast -Dconfig=nano`. MicroPython is the upstream `unix-standard` build at its default flags, which optimize for size (`-Os`). CPython is the `python:3.14-slim-bookworm` image.
 
 ## Results
 
 | benchmark | petitpy median (s) | MicroPython median (s) | CPython median (s) | nano / MicroPython | nano / CPython | output match |
 |---|---|---|---|---|---|---|
-| dictops | 0.185 (min 0.184) | 0.117 (min 0.115) | 0.125 (min 0.123) | 1.57× | 1.48× | yes |
-| fannkuch | 0.554 (min 0.546) | 0.558 (min 0.545) | 0.338 (min 0.330) | 0.99× | 1.64× | yes |
-| fib | 0.545 (min 0.530) | 0.430 (min 0.427) | 0.272 (min 0.265) | 1.27× | 2.00× | yes |
-| listops | 0.150 (min 0.146) | 0.109 (min 0.108) | 0.113 (min 0.112) | 1.37× | 1.33× | yes |
-| sieve | 0.326 (min 0.315) | 0.160 (min 0.155) | 0.151 (min 0.148) | 2.04× | 2.16× | yes |
-| strops | 0.225 (min 0.183) | 0.285 (min 0.272) | 0.055 (min 0.052) | 0.79× | 4.10× | yes |
-| **geomean** | n/a | n/a | n/a | **1.28×** | **1.96×** | n/a |
+| dictops | 0.159 (min 0.156) | 0.176 (min 0.170) | 0.188 (min 0.181) | 0.90× | 0.84× | yes |
+| fannkuch | 0.484 (min 0.468) | 0.580 (min 0.574) | 0.418 (min 0.403) | 0.83× | 1.16× | yes |
+| fib | 0.392 (min 0.387) | 0.620 (min 0.609) | 0.235 (min 0.229) | 0.63× | 1.67× | yes |
+| listops | 0.152 (min 0.147) | 0.165 (min 0.160) | 0.132 (min 0.127) | 0.92× | 1.15× | yes |
+| sieve | 0.194 (min 0.189) | 0.262 (min 0.248) | 0.187 (min 0.174) | 0.74× | 1.04× | yes |
+| strops | 0.194 (min 0.191) | 0.254 (min 0.243) | 0.049 (min 0.046) | 0.76× | 3.99× | yes |
+| **geomean** | n/a | n/a | n/a | **0.79×** | **1.41×** | n/a |
 
 Ratio reading: `nano / X` means petitpy's median divided by X's median. A value of `1.50×` means petitpy took 1.5× as long as X (i.e. X is faster). Lower is better for petitpy.
+
+The previous snapshot (2026-06-07, macOS arm64, petitpy 0.4.0) had petitpy at 1.28× MicroPython and 1.96× CPython. The interpreter speed work of [ADR 020](adrs/020-quickening.md) landed in between, but the two runs differ in platform and compiler, so they don't measure its effect.
 
 ## The build `pip` installs
 

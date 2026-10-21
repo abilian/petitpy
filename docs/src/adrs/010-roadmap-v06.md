@@ -35,7 +35,7 @@ The vision behind these priorities is unchanged from ADR 009. A web developer sh
 
 **Scope.** Vendor `py/builtinevex.c` exports `mp_builtin_eval`, `mp_builtin_exec`, `mp_builtin_compile`. Each currently routes a compile-failure or execute-failure through `nlr_jump`. On wasm32 (`MICROPY_ENABLE_SCHEDULER=0`, no native sjlj), the `nlr_jump` either traps or executes an `unreachable`. The 50 programs in `golden-programs/works-native-only/` that use these surfaces are blocked.
 
-**Approach.** Port `builtinevex.c` to the polled-sentinel convention (the same pattern §3.2 of TR-001 documents and the rest of the runtime uses). Concretely:
+**Approach.** Port `builtinevex.c` to the polled-sentinel convention (the pattern the rest of the runtime uses). Concretely:
 
 - Replace the three vendor entry points with Zig implementations that produce `PyError!Obj` returns and route raises through `pyerr.pending_exc`. Estimated surface: ~200-400 LOC of Zig.
 - The compiler entry path (the parser → compiler → `mp_compiled_module_t` chain that eval/exec depend on) is already strangled to Zig; the wall sits specifically at the *vendor* exec entry, downstream of compilation.
