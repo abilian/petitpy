@@ -16,7 +16,7 @@ _For contributors and embedded/systems developers. The Makefile drives the build
 | `make build-frozen` | ReleaseFast + frozen-tiny stdlib bundled: what `make web` builds against. |
 | `make build-release-frozen` | Same, but ReleaseSmall. Used by the metrics tool. |
 | `make rebuild` | `clean` + `build`. Use after a config change. |
-| `make port` | Regenerate `vendor/micropython_embed/` from `sandbox/micropython` via the upstream `embed.mk`. Automatic prerequisite of `build`. |
+| `make port` | Regenerate `vendor/micropython_embed/` from `vendor/micropython` via the upstream `embed.mk`. Automatic prerequisite of `build`. |
 | `make wasm` | `zig build -Dtarget=wasm32-wasi -Dconfig=nano`. The raw wasm artifact. |
 | `make web` | `make wasm` + `wasm-opt -Oz` (when binaryen is installed). Produces `web/nanopython.wasm`, the shipping artifact, **346 KB**. |
 
@@ -191,7 +191,7 @@ Every bug fix lands with at least one regression pin here. If a wasm-only bug sl
 
 ### A corpus test
 
-Corpus tests come from `sandbox/micropython/tests/basics/*.py`. Adding one is non-trivial: the goldens have to come from a known-good reference. See `tools/corpus.py` for the freeze logic; in practice, new corpus tests follow upstream MicroPython's test additions.
+Corpus tests live in `corpus/basics/*.py`, verbatim copies of upstream MicroPython's `tests/basics/` at the `MICROPY_REV` the Makefile pins. Bumping that revision means re-copying them and re-freezing the goldens in the same commit. Adding one is non-trivial: the goldens have to come from a known-good reference. See `tools/corpus.py` for the freeze logic; in practice, new corpus tests follow upstream MicroPython's test additions.
 
 ### A golden program
 

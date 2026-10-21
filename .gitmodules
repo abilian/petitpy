@@ -1,3 +1,0 @@
-[submodule "vendor/micropython-lib"]
-	path = vendor/micropython-lib
-	url = https://github.com/micropython/micropython-lib

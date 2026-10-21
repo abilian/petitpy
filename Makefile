@@ -61,8 +61,8 @@ else
 	@echo "  ... and $$(( $$(grep -cE '^## [a-zA-Z0-9_-]+:' $(MAKEFILE_LIST)) - $(words $(EVERYDAY)) )) more: make help ALL=1"
 endif
 
-## bootstrap: clone MicroPython into sandbox/ if the symlink/dir is
-##            missing. Idempotent — no-op when sandbox/micropython
+## bootstrap: clone MicroPython into vendor/micropython if the symlink/dir
+##            is missing. Idempotent — no-op when vendor/micropython
 ##            already resolves (symlink to an external clone, or a
 ##            direct checkout from this target).
 ##
@@ -72,12 +72,12 @@ endif
 ## gate and (if qstr counts shifted upstream) bumping N_MAIN.
 MICROPY_REV := b14d129a1
 
-sandbox/micropython:
-	@echo "sandbox/micropython missing — cloning MicroPython@$(MICROPY_REV) (fresh-checkout bootstrap)"
+vendor/micropython:
+	@echo "vendor/micropython missing — cloning MicroPython@$(MICROPY_REV) (fresh-checkout bootstrap)"
 	git clone https://github.com/micropython/micropython.git $@
 	git -C $@ checkout $(MICROPY_REV)
 
-bootstrap: sandbox/micropython
+bootstrap: vendor/micropython
 
 ## verify-linux: cross-compile nanopython for the container's native
 ##               arch on the host, then run the integration suite
@@ -123,7 +123,7 @@ verify-linux: verify-linux-image freeze-modules
 	  bash -c 'cd /src && python3 tests/integration.py zig-out/bin/nanopython'
 
 ## port: (re)generate vendor/micropython_embed from the symlinked tree
-port: | sandbox/micropython
+port: | vendor/micropython
 	$(MAKE) -C port
 
 ## build: regenerate vendor/ then build zig-out/bin/nanopython (Debug).
@@ -621,7 +621,7 @@ test-coverage-e2e:
 	@echo "Wrapping $$(ls corpus/$(CONFIG)/basics/*.out | wc -l) corpus runs with kcov (slow — minutes)…"
 	@for out in corpus/$(CONFIG)/basics/*.out; do \
 		base=$$(basename "$$out" .out); \
-		script="sandbox/micropython/tests/basics/$$base.py"; \
+		script="corpus/basics/$$base.py"; \
 		[ -f "$$script" ] || continue; \
 		kcov --include-pattern=/src/ "coverage/e2e/per-test/$$base" \
 			$(BIN) "$$script" >/dev/null 2>&1 || true; \
@@ -677,9 +677,10 @@ lint:
 	@if command -v prettier >/dev/null 2>&1; then prettier --check 'web/**/*.js' 'projects/**/*.js'; else echo "(prettier absent — skipped JS lint)"; fi
 
 ## clean: remove everything this repo generates. `make clean ALL=1` also drops
-##        the expensive-to-rebuild artifacts: vendor/ (needs `make port`),
-##        web/nanopython.wasm (needs `make web`, and `make smoke` won't run
-##        without it). sandbox/ is never touched — it's an external clone.
+##        the expensive-to-rebuild artifacts: vendor/micropython_embed (needs
+##        `make port`), web/nanopython.wasm (needs `make web`, and `make smoke`
+##        won't run without it). vendor/micropython and sandbox/ are never
+##        touched — they are external clones.
 GENERATED := .zig-cache zig-out coverage build-frozen port/build-embed \
              dist docs/site .ruff_cache .pytest_cache .workflow-tmp \
              notes/tech-reports/TR-001.pdf

@@ -23,8 +23,8 @@ Options:
   --config nano|full  Which corpus to operate on (default: nano).
 
 Layout (relative to repo root):
-  sandbox/micropython/tests/basics/*.py        source tests
-  sandbox/micropython/ports/unix/build-standard/micropython   standard oracle
+  corpus/basics/*.py                           source tests (copied from upstream tests/basics/)
+  vendor/micropython/ports/unix/build-standard/micropython   standard oracle
   corpus/<config>/basics/*.out                 frozen golden output
   corpus/<config>/EXCLUDED.txt                 excluded tests + reason
 """
@@ -36,8 +36,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MPY = ROOT / "sandbox" / "micropython"
-TESTS = MPY / "tests" / "basics"
+MPY = ROOT / "vendor" / "micropython"
+TESTS = ROOT / "corpus" / "basics"
 ORACLE = MPY / "ports" / "unix" / "build-standard" / "micropython"
 
 # Per-config corpus paths. Set by `set_config()` before any other module

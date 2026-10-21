@@ -25,7 +25,7 @@ sources:
   - https://git.sr.ht/~sfermigier/nanopython
   # Pinned: the qstr counts in src/compiler/qstr.zig (N_MAIN/N_STATIC) and
   # the corpus goldens are calibrated against this upstream revision.
-  # MICROPY_REV in the top-level Makefile is the authority; setup_sandbox
+  # MICROPY_REV in the top-level Makefile is the authority; setup_vendor
   # below fails the build if the two drift apart.
   - https://github.com/micropython/micropython#b14d129a163d980ab4ae3e3e509bcf6b1232b663
 environment:
@@ -42,16 +42,16 @@ tasks:
       # fails the wasm task degrades to build-only.
       curl -fsSL https://wasmtime.dev/install.sh | bash || true
       echo "export PATH=\$HOME/.wasmtime/bin:\$PATH" >> ~/.buildenv
-  - setup_sandbox: |
+  - setup_vendor: |
       cd ~/nanopython
-      mkdir -p sandbox
-      ln -sfn ~/micropython sandbox/micropython
+      mkdir -p vendor
+      ln -sfn ~/micropython vendor/micropython
       # The pin's authority is MICROPY_REV in the Makefile. If the sources:
       # ref above drifts from it, `make port` regenerates vendor/ from the
       # wrong upstream and the failure surfaces far away (qstr count drift,
       # undefined vendor symbols). Fail here instead, with the reason.
       want=$(sed -n 's/^MICROPY_REV := *//p' Makefile)
-      got=$(git -C sandbox/micropython rev-parse HEAD)
+      got=$(git -C vendor/micropython rev-parse HEAD)
       case "$got" in
         "$want"*) echo "micropython pinned at $got" ;;
         *) echo "micropython ref mismatch: got $got, MICROPY_REV wants $want"; exit 1 ;;

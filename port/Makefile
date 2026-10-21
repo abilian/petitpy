@@ -12,7 +12,7 @@
 # CFLAGS at zig-build time. This keeps one vendor/ tree compatible with
 # both `make build` (nano) and `make build CONFIG=full`.
 
-MICROPYTHON_TOP = ../sandbox/micropython
+MICROPYTHON_TOP = ../vendor/micropython
 PACKAGE_DIR = ../vendor/micropython_embed
 CFLAGS += -DNANOPYTHON_CONFIG_FULL=1
 # Unicode str is a separate switch (build.zig str-unicode); scan with it on.

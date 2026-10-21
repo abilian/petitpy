@@ -75,10 +75,10 @@ The native binary's scope is "Linux/macOS scripting target + development compani
 If `make` drops below the documented gates on your machine, that's a bug. Steps:
 
 1. Run `make verify` to identify which corpus test regressed.
-2. Open the failing `.py` file under `sandbox/micropython/tests/basics/` and the corresponding `.out` golden in `corpus/nano/basics/`.
+2. Open the failing `.py` file under `corpus/basics/` and the corresponding `.out` golden in `corpus/nano/basics/`.
 3. Diff the binary's output against the golden:
    ```sh
-   ./zig-out/bin/nanopython sandbox/micropython/tests/basics/foo.py | diff - corpus/nano/basics/foo.out
+   ./zig-out/bin/nanopython corpus/basics/foo.py | diff - corpus/nano/basics/foo.out
    ```
 4. The diff names what changed.
 

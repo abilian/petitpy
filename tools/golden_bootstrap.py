@@ -39,7 +39,7 @@ SOURCES = {
 
 GOLDEN = ROOT / "golden-programs"
 
-MICROPY_REF = ROOT / "sandbox/micropython/ports/unix/build-standard/micropython"
+MICROPY_REF = ROOT / "vendor/micropython/ports/unix/build-standard/micropython"
 NANO_NATIVE = ROOT / "zig-out/bin/nanopython"
 NANO_WASM = ROOT / "zig-out/bin/nanopython.wasm"
 RUN_WASM = ROOT / "tools/run_wasm.sh"

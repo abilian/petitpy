@@ -29,7 +29,7 @@ extern fn mp_obj_exception_get_value(self_in: Obj) callconv(.c) Obj;
 // MICROPY_OBJ_REPR_A (our setting throughout the codebase — same as
 // mirrors.smallIntValue's shift assumption) it expands to
 // `MP_OBJ_NEW_IMMEDIATE_OBJ(0)` = `(0 << 3) | 6` = 6. The vendor
-// definition is in sandbox/micropython/py/obj.h:102 + :915.
+// definition is in vendor/micropython/py/obj.h:102 + :915.
 const MP_CONST_NONE: Obj = 0x06;
 // Matches C `qstr` (= size_t per qstr.h:60) and the export declaration in
 // src/runtime/zig_compile_bridge.zig. Using u16 here causes the Zig linker

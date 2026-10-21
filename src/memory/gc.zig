@@ -169,7 +169,7 @@ pub export fn gc_init(start: ?*anyopaque, end: ?*anyopaque) void {
     // calloc so the heap can grow.
     _ = start;
     _ = end;
-    // Vendor gc_init (sandbox/micropython/py/gc.c:220) sets the auto-
+    // Vendor gc_init (vendor/micropython/py/gc.c:220) sets the auto-
     // collect flag to 1 here. Without this, gc.isenabled() returns
     // False on startup (BSS-default 0) instead of True. CPython +
     // MicroPython both start with gc enabled.

@@ -77,8 +77,9 @@ Regenerating goldens is the `make freeze` target, **only** after an intended con
 
 ### Don't touch `sandbox/` or `vendor/`
 
-- `sandbox/micropython` is a **symlink** to a 2.6 GB external clone. Gitignored.
-- `vendor/` is **generated** by `make port`. Gitignored. Regenerable from `sandbox/micropython` + `port/mpconfigport.h`.
+- `vendor/micropython` is the upstream MicroPython clone pinned by `MICROPY_REV`, made by `make bootstrap` or a **symlink** to an external checkout. Gitignored.
+- `vendor/micropython_embed` is **generated** by `make port`. Gitignored. Regenerable from `vendor/micropython` + `port/mpconfigport.h`.
+- `sandbox/` is local scratch space. Gitignored. Nothing a build or a gate needs may live there.
 
 If you need to change MicroPython config behavior, edit `port/mpconfigport.h` and regenerate via `make port`.
 

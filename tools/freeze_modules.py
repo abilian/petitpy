@@ -2,7 +2,7 @@
 """ADR-003 L2 — frozen-tiny module compiler.
 
 Walks the frozen-tiny module list, locates each module's `.py` source
-(in `vendor/micropython-lib/` or `nanopython-lib/`), and compiles it to
+(in `nanopython-lib/`), and compiles it to
 `.mpy` via `./zig-out/bin/zigpy-compile`. Output lands in `build-frozen/`.
 
 Driven by `make freeze`. After this runs, `zig build -Dfrozen-tiny=true`
@@ -31,18 +31,18 @@ OUT_DIR = ROOT / "build-frozen"
 #   json       — nanopython-lib (micropython-lib has no python-stdlib json;
 #                upstream MicroPython exposes json as a C extension module).
 #                See ADR-003 §D1 — local additions go under nanopython-lib/.
-#   types      — vendor/micropython-lib/python-stdlib/types/types.py.
+#   types      — nanopython-lib/types.py, a verbatim copy from micropython-lib.
 #   __future__ — REMOVED. `from __future__ import …` is a directive, not an
 #                import, and compile.zig consumes the statement now, so the
 #                module was only carrying `import __future__` and attribute
 #                introspection — which nothing here does. Put it back from
-#                vendor/micropython-lib if that changes.
+#                micropython-lib if that changes.
 #   _thread    — nanopython-lib stub (single-thread runtime). Many stdlib
 #                modules import it conditionally; the stub keeps those
 #                imports working. ADR-003 §D6.
 MODULES = [
     ("json", "nanopython-lib/json.py"),
-    ("types", "vendor/micropython-lib/python-stdlib/types/types.py"),
+    ("types", "nanopython-lib/types.py"),
     ("_thread", "nanopython-lib/_thread.py"),
     # ADR-006 J2/Q4 — JS interop Python front. The frozen .mpy is baked
     # into every binary (size impact ~2-3 KB compiled); whether `import
@@ -52,12 +52,12 @@ MODULES = [
     # Algorithm/data-science stdlib slice — the modules ~200 programs
     # in golden-programs/needs-stdlib/ depend on. heapq, bisect,
     # functools have no upstream deps and copy straight from
-    # micropython-lib. collections does `from ucollections import *`
+    # micropython-lib (heapq and bisect verbatim, see ADR-003 §D7). collections does `from ucollections import *`
     # and ucollections is always live under nano (PY_COLLECTIONS=1).
     # random is a local pure-Python LCG — micropython-lib's relies
     # on `urandom` which we don't ship.
-    ("heapq", "vendor/micropython-lib/python-stdlib/heapq/heapq.py"),
-    ("bisect", "vendor/micropython-lib/python-stdlib/bisect/bisect.py"),
+    ("heapq", "nanopython-lib/heapq.py"),
+    ("bisect", "nanopython-lib/bisect.py"),
     # nanopython-lib supersedes vendor: adds lru_cache + cache on top of
     # partial/wraps/reduce. tests/stdlib/test_functools.py pins the full
     # surface (ADR 011 Phase 2). The vendor file has only 4 functions.

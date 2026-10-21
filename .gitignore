@@ -6,16 +6,16 @@ zig-out/
 # (regenerate: `make freeze`).
 build-frozen/
 
-# Generated MicroPython embed C package (regenerate: `make -C port`)
-vendor/micropython_embed/
-
-# (vendor/micropython-lib is a tracked submodule — see ADR-003 §D7)
+# Vendored upstream code, none of it committed: vendor/micropython is the
+# MicroPython clone pinned by MICROPY_REV (`make bootstrap`, or a symlink to
+# an external checkout); vendor/micropython_embed is generated from it by
+# `make port`.
+vendor/
 
 # embed.mk build dir
 port/build-embed/
 
-# Upstream MicroPython clone (symlink to an external git checkout).
-# Reproduce: clone github.com/micropython/micropython here.
+# Local scratch space. Nothing a build or a gate needs may live here.
 sandbox/
 notes/scratch/
 .workflow-tmp/

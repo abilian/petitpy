@@ -24,7 +24,7 @@ _This page is reference material for contributors. It defines the terms that com
 
 **Compiler track**: `src/compiler/`. It is made of pure Zig modules: lexer, parser, scope analyzer, bytecode emitter, compile driver. It ships as the `zigpy-compile` binary AND links into the main interpreter.
 
-**Corpus**: `corpus/nano/basics/*.out` (or `corpus/full/basics/*.out`). Frozen stdout/stderr/exit-status fixtures for each Python test program in `sandbox/micropython/tests/basics/`. `make check` measures the byte-identity comparison against these fixtures.
+**Corpus**: `corpus/nano/basics/*.out` (or `corpus/full/basics/*.out`). Frozen stdout/stderr/exit-status fixtures for each Python test program in `corpus/basics/` (copied from upstream MicroPython's `tests/basics/`). `make check` measures the byte-identity comparison against these fixtures.
 
 ## D – H
 
@@ -90,15 +90,13 @@ _This page is reference material for contributors. It defines the terms that com
 
 **qstr**: Interned string, MicroPython's universal string-interning mechanism. Every `__init__`, `print`, `foo`, etc. is assigned a small-integer ID at build time (`MP_QSTR_*`) or runtime (`qstr_from_strn`). A qstr is cheap to compare and expensive to allocate.
 
-**qstr-gen**: The build-time machinery that scans source files for `MP_QSTR_*` references and produces `qstrdefs.generated.h`. Lives in `sandbox/micropython/py/makeqstrdefs.py`; the project extends it via `tools/zig_qstr_shadow.py` to also read Zig files.
+**qstr-gen**: The build-time machinery that scans source files for `MP_QSTR_*` references and produces `qstrdefs.generated.h`. Lives in `vendor/micropython/py/makeqstrdefs.py`; the project extends it via `tools/zig_qstr_shadow.py` to also read Zig files.
 
 **REPR_A**: MicroPython's default object representation. Tagged `usize`: low bit set = small-int, low byte `0b...010` = qstr, otherwise pointer to a heap object whose first word is the type pointer. petitpy uses REPR_A under both nano and full.
 
 **`raise.zig`**: `src/runtime/raise.zig`. Exception-construction helpers. Post-NX-3, contains polled-sentinel `mp_raise_*_polled` siblings plus a handful of remaining `noreturn` exports for memory exhaustion and a few stream paths.
 
 ## S – Z
-
-**`sandbox/micropython`**: Symlink to a local MicroPython git checkout. Gitignored. Provides the upstream tree from which `make port` regenerates the embed package.
 
 **Shim**: A small `.c` file paired with a Zig module, holding macros or static-inline functions the Zig side can't reach. Most `_shim.c` files were eliminated during NX-1/NX-2/NX-3. The remaining `objmodule_shim.c` is the architectural floor.
 
@@ -119,6 +117,8 @@ _This page is reference material for contributors. It defines the terms that com
 **Validator pattern**: The locked code-shape for the NX-3 N1 leaf conversions, named after `objslice.zig` (the first leaf, commit `6752953`). Internal `xImpl(...) PyError!T` + small `raiseX() PyError!void` helper + `pub export fn x(...) callconv(.c) Obj { return pyerr.bridge(Obj, xImpl(...)); }`. Every subsequent leaf copies this exact shape.
 
 **Vendor C**: Code in `vendor/micropython_embed/`, the auto-generated upstream MicroPython embed package. Under `-Dconfig=nano` with default flags the core interpreter uses no vendor C; the default-on `float` and `re` carveouts compile ~1,900 LOC of it (wasm adds ~861 more for longint). Per-feature carveouts (longint, float, full's MPZ + IO + warning + builtin_help) selectively pull individual vendor `.c` files back in. The directory always exists for `@cImport`-time header lookups.
+
+**`vendor/micropython`**: The upstream MicroPython checkout at `MICROPY_REV`: a clone made by `make bootstrap`, or a symlink to one. Gitignored. Provides the tree from which `make port` regenerates the embed package, and the oracle binaries (unix `micropython`, `mpy-cross`) are built inside it.
 
 **VM track**: `src/runtime/` + `src/objects/` + `src/modules/` + `src/memory/`. It holds the bytecode interpreter, object model, builtin modules, allocator + GC. Contrast it with the **Compiler track**.
 

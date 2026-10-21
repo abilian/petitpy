@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """compile-exec-test — the actual success criterion for the compiler track.
 
-For each Python test in sandbox/micropython/tests/basics/:
+For each Python test in corpus/basics/:
   1. Compile to .mpy via our zigpy-compile (the Zig-based frontend).
   2. Execute the .mpy through the upstream unix MicroPython binary
      (the SAME C VM that was used to freeze corpus/full/basics/*.out).
@@ -31,14 +31,14 @@ ROOT = Path(__file__).resolve().parent.parent
 ZIGPY = ROOT / "zig-out" / "bin" / "zigpy-compile"
 ORACLE = (
     ROOT
-    / "sandbox"
+    / "vendor"
     / "micropython"
     / "ports"
     / "unix"
     / "build-standard"
     / "micropython"
 )
-TESTS = ROOT / "sandbox" / "micropython" / "tests" / "basics"
+TESTS = ROOT / "corpus" / "basics"
 CORPUS = ROOT / "corpus" / "full" / "basics"
 EXCLUDED = ROOT / "corpus" / "full" / "EXCLUDED.txt"
 TIMEOUT = 30

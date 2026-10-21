@@ -9,4 +9,4 @@ projects/ci-build-monitor/dist/
 projects/ci-build-monitor/dist-ext/
 projects/pyfront/htmlcov/
 
-# Anything under sandbox/* is a symlink to external clones
+# sandbox/ is local scratch; vendor/ holds the MicroPython clone and generated code

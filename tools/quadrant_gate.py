@@ -38,10 +38,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT / "corpus" / "full" / "basics"
-TESTS = ROOT / "sandbox" / "micropython" / "tests" / "basics"
+TESTS = ROOT / "corpus" / "basics"
 VM = ROOT / "zig-out" / "bin" / "nanopython-vm"
 ZIGPY = ROOT / "zig-out" / "bin" / "zigpy-compile"
-MPY_CROSS = ROOT / "sandbox" / "micropython" / "mpy-cross" / "build" / "mpy-cross"
+MPY_CROSS = ROOT / "vendor" / "micropython" / "mpy-cross" / "build" / "mpy-cross"
 
 QUADRANTS = {
     "q1": (ZIGPY, ROOT / "corpus" / "split-known-fails.txt", "our bytecode + our VM"),
@@ -109,7 +109,7 @@ def main(argv: list[str]) -> int:
         if not compiler.exists():
             print(f"{q.upper()} ({label}): SKIP — {compiler.relative_to(ROOT)} not built", file=sys.stderr)
             if compiler is MPY_CROSS:
-                print("     build it with: make -C sandbox/micropython/mpy-cross", file=sys.stderr)
+                print("     build it with: make -C vendor/micropython/mpy-cross", file=sys.stderr)
             rc = max(rc, 2)
             continue
         with tempfile.TemporaryDirectory() as td:

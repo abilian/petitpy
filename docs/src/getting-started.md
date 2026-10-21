@@ -218,14 +218,14 @@ The complete workflow + conventions are in [Contributing](contributing.md).
 | Python 3 | 3.9+ | for the test runners (`tools/*.py`) |
 | GNU Make | any | for the top-level Makefile |
 | `git` | any | the project assumes a git checkout |
-| Upstream MicroPython | matching `embed.mk` API | symlinked at `sandbox/micropython` (gitignored) |
+| Upstream MicroPython | `MICROPY_REV` in the Makefile | cloned or symlinked at `vendor/micropython` (gitignored) |
 | [wasmtime](https://wasmtime.dev/) | any recent | for running the wasm binary locally |
 | [binaryen](https://github.com/WebAssembly/binaryen) | any recent | for `wasm-opt -Oz` (optional; `make web` degrades gracefully without it) |
 
-The MicroPython symlink feeds `make port`, which regenerates `vendor/micropython_embed/`. It's gitignored because it points outside the project tree. If you don't have a checkout:
+The MicroPython tree feeds `make port`, which regenerates `vendor/micropython_embed/`. Both are gitignored. If you don't have a checkout:
 
 ```sh
-make bootstrap   # clones sandbox/micropython at the pinned revision
+make bootstrap   # clones vendor/micropython at the pinned revision
 make port
 ```
 
@@ -233,17 +233,17 @@ Prefer `make bootstrap` to cloning by hand. The tree must sit at the revision `M
 
 ```sh
 git -C ~/micropython checkout $(sed -n 's/^MICROPY_REV := *//p' Makefile)
-ln -s ~/micropython sandbox/micropython
+ln -s ~/micropython vendor/micropython
 make port
 ```
 
 ### Common issues
 
-**`make port` fails with "sandbox/micropython not found":** create the symlink as above.
+**`make port` fails with "vendor/micropython not found":** create the symlink as above.
 
-**`make` reports < 541/541 on a fresh checkout:** likely a Zig version mismatch, a stale `vendor/`, or a `sandbox/micropython` that isn't at `MICROPY_REV`. Try `make rebuild`.
+**`make` reports < 541/541 on a fresh checkout:** likely a Zig version mismatch, a stale `vendor/`, or a `vendor/micropython` that isn't at `MICROPY_REV`. Try `make rebuild`.
 
-**Build fails with "qstrdefs.generated.h QDEF1 count drift" or an undefined `mp_obj_*` symbol:** `sandbox/micropython` is at the wrong revision. Check it out at `MICROPY_REV` and re-run `make port`.
+**Build fails with "qstrdefs.generated.h QDEF1 count drift" or an undefined `mp_obj_*` symbol:** `vendor/micropython` is at the wrong revision. Check it out at `MICROPY_REV` and re-run `make port`.
 
 **`make wasm` builds, but `wasmtime web/nanopython.wasm` errors:** check that `wasmtime` is on the path and recent enough to support the `wasi_snapshot_preview1` ABI.
 

@@ -50,7 +50,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ZIGPY = ROOT / "zig-out" / "bin" / "zigpy-compile"
 VM = ROOT / "zig-out" / "bin" / "nanopython-vm"
-UPY = ROOT / "sandbox" / "micropython" / "ports" / "unix" / "build-standard" / "micropython"
+UPY = ROOT / "vendor" / "micropython" / "ports" / "unix" / "build-standard" / "micropython"
 PYFRONT = ROOT / "projects" / "pyfront"
 KNOWN = ROOT / "corpus" / "capability-known.txt"
 

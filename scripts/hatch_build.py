@@ -27,29 +27,20 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from packaging import tags
 
 # The wheel's stdlib, bundled at share/petitpy/lib/: every module under
-# nanopython-lib/ (packages included), plus the vendor micropython-lib modules
-# that tools/freeze_modules.py freezes and nanopython-lib has no copy of.
+# nanopython-lib/ (packages included).
 STDLIB_DIR = "nanopython-lib"
 # The JS bridge: importing it on native raises ImportError by design.
 BROWSER_ONLY = {"js.py"}
-VENDOR_MODULES = [
-    "vendor/micropython-lib/python-stdlib/types/types.py",
-    "vendor/micropython-lib/python-stdlib/heapq/heapq.py",
-    "vendor/micropython-lib/python-stdlib/bisect/bisect.py",
-]
 
 
 def stdlib_files(root: Path) -> dict[Path, str]:
     """Source file -> path under share/petitpy/lib/."""
     lib = root / STDLIB_DIR
-    files = {
+    return {
         src: src.relative_to(lib).as_posix()
         for src in lib.rglob("*.py")
         if "__pycache__" not in src.parts and src.name not in BROWSER_ONLY
     }
-    for rel in VENDOR_MODULES:
-        files[root / rel] = Path(rel).name
-    return files
 
 
 class CustomBuildHook(BuildHookInterface):
@@ -107,6 +98,4 @@ class CustomBuildHook(BuildHookInterface):
 
         data = build_data.setdefault("shared_data", {})
         for src, dest in stdlib_files(root).items():
-            if not src.exists():
-                raise FileNotFoundError(f"{src} is missing from the sdist (pyproject.toml only-include)")
             data[str(src)] = f"share/petitpy/lib/{dest}"

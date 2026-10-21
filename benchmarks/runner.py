@@ -31,7 +31,7 @@ REPORT_PATH = REPO_ROOT / "docs" / "benchmarks.md"
 
 def _find_binary(*relative_paths: str) -> Path | None:
     """Search REPO_ROOT then ancestors for any of the relative paths.
-    Worktrees may not contain sandbox/ or zig-out/; ancestor lookup lets the
+    Worktrees may not contain vendor/ or zig-out/; ancestor lookup lets the
     runner work from the main repo's built binaries when invoked from one."""
     candidates: list[Path] = []
     bases = [REPO_ROOT, *REPO_ROOT.parents]
@@ -47,7 +47,7 @@ def _find_binary(*relative_paths: str) -> Path | None:
 # Interpreter wiring. Path is resolved at runtime; missing ones are skipped
 # (the report notes which were unavailable).
 NANO_BIN = _find_binary("zig-out/bin/nanopython")
-MPY_BIN = _find_binary("sandbox/micropython/ports/unix/build-standard/micropython")
+MPY_BIN = _find_binary("vendor/micropython/ports/unix/build-standard/micropython")
 
 # Order matters: leftmost column in the report is the headline interpreter.
 INTERPRETERS = [
@@ -262,7 +262,7 @@ def render_report(results, available, warmups, runs):
     lines.append("make build-release")
     lines.append("")
     lines.append("# 2. (Optional) Build MicroPython unix-standard if absent.")
-    lines.append("(cd sandbox/micropython/ports/unix && make submodules && make)")
+    lines.append("(cd vendor/micropython/ports/unix && make submodules && make)")
     lines.append("")
     lines.append("# 3. Run the suite.")
     lines.append("python3 benchmarks/runner.py")

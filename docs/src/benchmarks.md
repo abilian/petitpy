@@ -71,7 +71,7 @@ All benchmarks produce byte-identical stdout across all available interpreters.
 make build-release
 
 # 2. (Optional) Build MicroPython unix-standard if absent.
-(cd sandbox/micropython/ports/unix && make submodules && make)
+(cd vendor/micropython/ports/unix && make submodules && make)
 
 # 3. Run the suite.
 python3 benchmarks/runner.py

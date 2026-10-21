@@ -13,7 +13,7 @@ deliberately-disabled nano features — is the contract every C→Zig replacemen
 must reproduce exactly. This gives a baseline the strangler can hold at 100%.
 
 The standard unix oracle
-(`sandbox/micropython/ports/unix/build-standard/micropython`, MicroPython
+(`vendor/micropython/ports/unix/build-standard/micropython`, MicroPython
 v1.28.0-preview) is kept as a sanity reference; the nano build is 274/552
 against *it*, the 278-test gap being legitimate config difference, not bugs.
 (`corpus.py gen` with no argument still uses the oracle; pass a command to use
@@ -21,7 +21,8 @@ another reference.)
 
 ## Corpus
 
-- Source: `sandbox/micropython/tests/basics/*.py` — 552 core-language tests,
+- Source: `corpus/basics/*.py` — 552 core-language tests, verbatim copies of
+  upstream MicroPython's `tests/basics/` at the Makefile's `MICROPY_REV`,
   exactly the "nano" scope (no `extmod`, ports, or hardware tests).
 - Golden output: `corpus/basics/<name>.out` — combined stdout+stderr plus an
   `[exit N]` marker, captured from the reference.

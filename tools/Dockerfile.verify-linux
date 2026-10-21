@@ -18,7 +18,7 @@
 # ── Run ───────────────────────────────────────────────────────────────
 #   docker run --rm -it -v $PWD:/src nanopython-verify-linux \
 #     bash -c 'cp -a /src /work/np && cd /work/np && \
-#              rm -rf .zig-cache zig-out sandbox/micropython vendor \
+#              rm -rf .zig-cache zig-out vendor \
 #                     build-embed build-frozen && \
 #              make bootstrap && make'
 #

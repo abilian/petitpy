@@ -2,7 +2,7 @@
 
 The wheel installs the binary, built without frozen modules, as
 `bin/petitpy` (and `bin/ppy`), and the stdlib that scripts/hatch_build.py collects
-from nanopython-lib/ and a few vendor files at `share/petitpy/lib/`,
+from nanopython-lib/ at `share/petitpy/lib/`,
 where the binary finds it next to itself. This lays out the same tree
 from the hook's own `stdlib_files()`, then imports every module with the
 copied binary and no PETITPY_LIB. The frozen-tiny integration suite

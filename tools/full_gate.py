@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 KNOWN_FAILS = ROOT / "corpus" / "full-known-fails.txt"
 CORPUS = ROOT / "corpus" / "full" / "basics"
-TESTS = ROOT / "sandbox" / "micropython" / "tests" / "basics"
+TESTS = ROOT / "corpus" / "basics"
 BIN = ROOT / "zig-out" / "bin" / "nanopython"
 
 

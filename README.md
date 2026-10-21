@@ -67,7 +67,7 @@ The harness has four independent gates plus an aggregate. Each answers a differe
 
 ## Quick start
 
-Needs [Zig 0.16](https://ziglang.org/) and [wasmtime](https://wasmtime.dev/) (for running wasm locally). A MicroPython source tree is required at `sandbox/micropython`; if it's missing, `make port` (and everything downstream: `make build`, `make check`, …) will run `make bootstrap`, cloning MicroPython `--depth 1` into that path on first use. If you already keep MicroPython checked out elsewhere, symlink it at `sandbox/micropython` before the first build to skip the auto-clone.
+Needs [Zig 0.16](https://ziglang.org/) and [wasmtime](https://wasmtime.dev/) (for running wasm locally). A MicroPython source tree is required at `vendor/micropython`; if it's missing, `make port` (and everything downstream: `make build`, `make check`, …) will run `make bootstrap`, cloning MicroPython at the pinned `MICROPY_REV` into that path on first use. If you already keep MicroPython checked out elsewhere, symlink it at `vendor/micropython` before the first build to skip the auto-clone.
 
 ```sh
 make build               # Debug native binary → zig-out/bin/nanopython

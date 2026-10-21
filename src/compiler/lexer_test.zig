@@ -7,7 +7,7 @@
 //
 // Flow (per fixture):
 //   1. Spawn `token_dump <fixture>` (the vendor-linked C harness at
-//      sandbox/micropython/mpy-cross/build/tools/token_dump or anywhere
+//      vendor/micropython/mpy-cross/build/tools/token_dump or anywhere
 //      on PATH). Capture stdout — one line per token in the format:
 //
 //          idx<TAB>kind<TAB>line<TAB>column<TAB>len<TAB>hexbytes\n
@@ -42,10 +42,10 @@ const DEFAULT_FIXTURE = "tests/qstr_fixture.py";
 
 // Resolution order for the vendor token-dump helper:
 //   1. NPY_TOKEN_DUMP env var (absolute path; useful in CI)
-//   2. sandbox/micropython/mpy-cross/build/tools/token_dump (canonical local build)
+//   2. vendor/micropython/mpy-cross/build/tools/token_dump (canonical local build)
 //   3. `token_dump` on PATH
 const TOKEN_DUMP_DEFAULT =
-    "sandbox/micropython/mpy-cross/build/tools/token_dump";
+    "vendor/micropython/mpy-cross/build/tools/token_dump";
 
 // ── tiny logging helpers ─────────────────────────────────────────────────────
 

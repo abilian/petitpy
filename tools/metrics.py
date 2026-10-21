@@ -90,7 +90,7 @@ WASM_KNOWN_FAILS = ROOT / "corpus" / "wasm-known-fails.txt"
 BENCH_DIR = ROOT / "sandbox" / "p2w" / "programs" / "benchmarks"
 MP_BIN = (
     ROOT
-    / "sandbox"
+    / "vendor"
     / "micropython"
     / "ports"
     / "unix"

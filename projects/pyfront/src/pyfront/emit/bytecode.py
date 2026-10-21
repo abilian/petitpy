@@ -2,7 +2,7 @@
 
 Numbers come from `vendor/micropython_embed/py/bc0.h` and `runtime0.h`; the
 prelude encoders are the inverse of `read_prelude_sig` / `read_prelude_size` in
-`sandbox/micropython/tools/mpy-tool.py`, cross-checked against the Zig
+`vendor/micropython/tools/mpy-tool.py`, cross-checked against the Zig
 implementation in `src/compiler/emit.zig` (`preludeSigEncode`,
 `preludeSizeEncode`), which the corpus gates keep honest.
 """

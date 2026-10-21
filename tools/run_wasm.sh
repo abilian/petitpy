@@ -2,10 +2,9 @@
 # run_wasm.sh — wasmtime wrapper for the corpus runner.
 #
 # Why this exists: tools/corpus.py's run_cmd sets cwd to the test's
-# parent directory before invoking wasmtime. Combined with the sandbox/
-# symlink (which resolves to an out-of-tree clone), --dir=/ gives
-# PermissionDenied because the resolved test path is outside the mounted
-# host root. The fix: use --dir=. + pass the test as a relative basename.
+# parent directory before invoking wasmtime. When the test path resolves
+# outside the mounted host root (the corpus inputs used to come through a
+# symlink to an out-of-tree clone), --dir=/ gives PermissionDenied. The fix: use --dir=. + pass the test as a relative basename.
 #
 # Usage: run_wasm.sh <abs-path-to-wasm> [binary-flags...] <abs-path-to-script>
 #
