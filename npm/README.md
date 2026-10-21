@@ -18,4 +18,4 @@ const { stdout, stderr, exitCode } = await py.run('print("hello from", 6 * 7)');
 
 From Python, `import js` reaches the page: `js.document.getElementById("out").textContent = "hi"`.
 
-This is an alpha. The language is close to CPython (Unicode strings, `match`, floats, exception chaining) with MicroPython's limits: no arbitrary-precision integers in the browser build, dicts are not insertion-ordered, `upper()`/`lower()` are ASCII-only. See the [differences from CPython](https://nanopython.lab.abilian.com/differences/) and the [playground](https://nanopython.lab.abilian.com/play/demos/playground/).
+This is an alpha. The language is close to CPython (Unicode strings, `match`, floats, exception chaining) with MicroPython's limits: no arbitrary-precision integers in the browser build, dicts are not insertion-ordered, `upper()`/`lower()` are ASCII-only. See the [differences from CPython](https://petitpy.lab.abilian.com/differences/) and the [playground](https://petitpy.lab.abilian.com/play/demos/playground/).

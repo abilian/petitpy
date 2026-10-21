@@ -1,6 +1,6 @@
 # ADR 004. benchmarking: vs MicroPython + CPython, reuse p2w runner with adapters
 
-- **Status**: Accepted (Proposed 2026-06-07; benchmark suite lives under `benchmarks/` and the first comparison table is in `docs/benchmarks.md`)
+- **Status**: Accepted (Proposed 2026-06-07; benchmark suite lives under `benchmarks/` and the current comparison table is in [Benchmarks](../benchmarks.md))
 - **Decider**: project maintainers
 - **Supersedes**: nothing
 - **Consequences**: commits the project to producing a benchmark suite + comparison story, with the p2w alioth runner forked and adapted as the framework; defers a fully generic extraction until a third user materializes

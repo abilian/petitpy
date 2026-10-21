@@ -1,9 +1,9 @@
 # Changelog
 
-All notable changes to nanopython are documented in this file.
+All notable changes to petitpy (development name nanopython) are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use [Conventional Commits](https://www.conventionalcommits.org/) types (feat, fix, perf, docs, build, test).
 
-## [Unreleased]
+## [0.8.0] - 2026-10-21
 
 This was a reach cycle. `match` statements land: with them, nanopython runs Python that vendor MicroPython cannot parse at all, for the first time. The **full-unix profile** grows POSIX modules and enough of `json`, `pathlib`, `dataclasses`, `re`, `logging`, `unittest.mock` and `pytest` to run a real third-party test suite. The compiler/VM split becomes a supported, gated configuration; a second front-end (`pyfront`, pure Python) exists to exercise the bytecode boundary from the outside; and a capability matrix measures both front-ends against both back-ends, construct by construct. The browser playground now shows the bytecode it compiled.
 
@@ -121,18 +121,18 @@ This was a profile cycle, in which three landmark ADRs land together. **011 (eve
 
 ### Highlights
 
-- **Default profile flips to `full`** ([ADR 012](docs/adrs/012-profiles-and-feature-matrix.md) Phase 4b). `make build` produces a full binary; `make check` / `verify` route to `tools/full_gate.py` against `corpus/full-known-fails.txt` (538/552 = 97.5%, 14 documented misses); `make check CONFIG=nano` keeps the byte-exact 541/541 strangler invariant reachable. Wasm targets pinned to nano (wasm has no MPZ).
-- **Everyday stdlib: 8 modules, 160 tests** ([ADR 011](docs/adrs/011-everyday-stdlib.md)). `pytest_lite`, `enum`, `dataclasses`, `contextlib`, `functools`, `logging`, `argparse`, `abc`. A daily-CPython script (`@dataclass class Config: ...`; `import logging; logging.info(...)`; `pytest tests/`) now works unchanged.
-- **`try/except` over vendor-C raises** ([ADR 013](docs/adrs/013-exception-unwind-vendor-c.md)). New scoped setjmp/longjmp trampoline (`src/runtime/nlr_trampoline.{c,zig}`) wraps the type's `.call` slot dispatch + `mp_obj_int_pow3` + the binary-op slot. Vendor MPZ / io / pow3 raises (ZeroDivisionError, OverflowError, OSError, ValueError) now unwind back into the polled-sentinel pattern; they used to `exit(1)` past the user's `try/except`. Native-only; wasi-libc `setjmp.h` `#error`s out (spike documented in §6).
+- **Default profile flips to `full`** ([ADR 012](docs/src/adrs/012-profiles-and-feature-matrix.md) Phase 4b). `make build` produces a full binary; `make check` / `verify` route to `tools/full_gate.py` against `corpus/full-known-fails.txt` (538/552 = 97.5%, 14 documented misses); `make check CONFIG=nano` keeps the byte-exact 541/541 strangler invariant reachable. Wasm targets pinned to nano (wasm has no MPZ).
+- **Everyday stdlib: 8 modules, 160 tests** ([ADR 011](docs/src/adrs/011-everyday-stdlib.md)). `pytest_lite`, `enum`, `dataclasses`, `contextlib`, `functools`, `logging`, `argparse`, `abc`. A daily-CPython script (`@dataclass class Config: ...`; `import logging; logging.info(...)`; `pytest tests/`) now works unchanged.
+- **`try/except` over vendor-C raises** ([ADR 013](docs/src/adrs/013-exception-unwind-vendor-c.md)). New scoped setjmp/longjmp trampoline (`src/runtime/nlr_trampoline.{c,zig}`) wraps the type's `.call` slot dispatch + `mp_obj_int_pow3` + the binary-op slot. Vendor MPZ / io / pow3 raises (ZeroDivisionError, OverflowError, OSError, ValueError) now unwind back into the polled-sentinel pattern; they used to `exit(1)` past the user's `try/except`. Native-only; wasi-libc `setjmp.h` `#error`s out (spike documented in §6).
 - **Full arm becomes a real release target.** Was: doesn't link (13 undefined symbols + the `nanopython-vm` variant still has 10 deferred). Is: 538/552 corpus, strict bidirectional regression gate, `make check-full` + `make check-nano` + `make check-all` aggregate.
 - **Nano runtime bug closures**: five `is_full` over-trims fixed: `__radd__` / `__rmul__` (reverse special methods), `b'-'.join([bytearray(...), b'..'])`, `bytes([256])` validation, `bytearray.append`'s polled-sentinel rollback, PEP-572 walrus rebind-of-for-target rejection. All five close CPython-conformance gaps that nano shipped silently broken.
 - **Descriptor protocol fixes**: `__getattr__` no longer fires when probing `__get__` / `__set__` / `__delete__` / `__set_name__` / `__setattr__` / `__delattr__` (mirrors vendor `py/objtype.c:664-678`); `__set_name__` is dispatched after class-body finalization with a capture-then-call snapshot that tolerates in-collector mutations (mirrors vendor `py/objtype.c:1256-1287`).
 - **`make check-full` strict gate**: bidirectional regression checker mirrors `make wasm-check` discipline exactly. `corpus/full-known-fails.txt` only ever shrinks; closing a test means removing it from the list in the same commit. Categorized rationale per entry.
-- **Browser-game tutorial**: [docs/writing-games.md](docs/writing-games.md) walks newcomers through building Catch on the `nanopy` library, kid (procedural) and pro (classes + decorators) variants.
+- **Browser-game tutorial**: [docs/writing-games.md](docs/src/writing-games.md) walks newcomers through building Catch on the `nanopy` library, kid (procedural) and pro (classes + decorators) variants.
 
 ### feat (runtime)
 
-- **NLR carveout trampoline** ([ADR 013](docs/adrs/013-exception-unwind-vendor-c.md)). `src/runtime/nlr_trampoline.c` + `.zig`. New `build_options.exception_unwind` flag (default true on native + full only; false on nano + wasm32). Wraps `mp_obj_int_binary_op` (covers MPZ divide/shift/mod/pow), `mp_obj_int_pow3`, and the type-slot `.call` dispatch in `mpCallFunctionNKwImpl` (the funnel wrap, which catches StringIO closed-file, BytesIO EINVAL, `int()` TypeError, `int.to_bytes` OverflowError). Closes 11 corpus tests that used `try/except` across the vendor-C boundary.
+- **NLR carveout trampoline** ([ADR 013](docs/src/adrs/013-exception-unwind-vendor-c.md)). `src/runtime/nlr_trampoline.c` + `.zig`. New `build_options.exception_unwind` flag (default true on native + full only; false on nano + wasm32). Wraps `mp_obj_int_binary_op` (covers MPZ divide/shift/mod/pow), `mp_obj_int_pow3`, and the type-slot `.call` dispatch in `mpCallFunctionNKwImpl` (the funnel wrap, which catches StringIO closed-file, BytesIO EINVAL, `int()` TypeError, `int.to_bytes` OverflowError). Closes 11 corpus tests that used `try/except` across the vendor-C boundary.
 - **Parser MPZ overflow handoff under full**: new `build_options.longint_impl` tri-valued enum (`.none` / `.longlong` / `.mpz`) mirroring `MICROPY_LONGINT_IMPL`. `parsenum.zig` overflow gate widened from `if (longint_none)` to `if (longint_impl != .longlong)` so NONE and MPZ both delegate to vendor `mp_obj_new_int_from_str_len`. Closes 33 `*intbig*` tests in one commit; aligning the MPZ accumulator with the NONE shape closes 5 more.
 - **`sys.implementation` attrtuple layout fix**: `impl_fields` declared as `[u16]` (2-byte stride) but read as `[Qstr]` (8-byte stride on 64-bit) → panic on `sys.implementation` under full. One-line type fix. Closes 4 tests (3 async_*2 + attrtuple1), all gated on `sys.implementation.name`.
 - **`__build_class__` propagates class-body exceptions**: `class S: m.x = 1` used to panic with `cast causes pointer to be null` from `MpObjCell.fromObj(0)`. Vendor unwinds via NLR; nano's `mp_call_function_0` returns the bridge sentinel and we forgot to poll. Two-line fix.
@@ -191,10 +191,10 @@ Each module pure Python under `nanopython-lib/`. 160 self-tests under `tests/std
 
 ### docs
 
-- **[docs/writing-games.md](docs/writing-games.md)**: newcomer tutorial; builds Catch end-to-end, kid + pro variants, `nanopy` quick-reference.
-- **[ADR 011](docs/adrs/011-everyday-stdlib.md)**: Everyday stdlib. **Implemented**.
-- **[ADR 012](docs/adrs/012-profiles-and-feature-matrix.md)**: Profiles + feature matrix. **Implemented** (Phase 4b lands the default flip). Partially supersedes ADR 002.
-- **[ADR 013](docs/adrs/013-exception-unwind-vendor-c.md)**: Exception unwinding across vendor C. **Proposed**; trampoline foundation + 3 wrap sites implemented in this cycle; alternative B' (native-only) per the setjmp spike.
+- **[docs/writing-games.md](docs/src/writing-games.md)**: newcomer tutorial; builds Catch end-to-end, kid + pro variants, `nanopy` quick-reference.
+- **[ADR 011](docs/src/adrs/011-everyday-stdlib.md)**: Everyday stdlib. **Implemented**.
+- **[ADR 012](docs/src/adrs/012-profiles-and-feature-matrix.md)**: Profiles + feature matrix. **Implemented** (Phase 4b lands the default flip). Partially supersedes ADR 002.
+- **[ADR 013](docs/src/adrs/013-exception-unwind-vendor-c.md)**: Exception unwinding across vendor C. **Proposed**; trampoline foundation + 3 wrap sites implemented in this cycle; alternative B' (native-only) per the setjmp spike.
 - **CLAUDE.md "What 'green' means" section** rewritten for the default-full era. 7-row gate table.
 - ADR 002 status → "Partially superseded by ADR 012."
 
@@ -212,7 +212,7 @@ Each module pure Python under `nanopython-lib/`. 160 self-tests under `tests/std
 
 ---
 
-## [0.6.0](https://github.com/sfermigier/nanopython/releases/tag/v0.6.0) - 2026-06-12
+## [0.6.0] - 2026-06-12
 
 This was the first post-strangler cycle. The runtime works end-to-end on both arms; v0.6 broadens the surface (stdlib `re`/`itertools`/`string`, multiple inheritance, several Python-3.x features), closes the eval/exec wasm wall, lands measurable size + cold-load metrics infrastructure, and addresses two classes of wasm32 layout bug that had been latent since v0.3. The plan is in [ADR 010](docs/src/adrs/010-roadmap-v06.md).
 
@@ -221,7 +221,7 @@ This was the first post-strangler cycle. The runtime works end-to-end on both ar
 - **eval/exec works on wasm32**: the longjmp wall identified in v0.5 closes via a u16/usize ABI fix at the bytecode entry boundary. It belongs to a class of bugs latent on amd64's tolerant register layout but trapping on wasm32's typed function-call discipline.
 - **Multiple inheritance under nano**: `class C(A, B):` works correctly; nine corpus tests previously fail-fasting on `NotImplementedError` now match vendor MP byte-for-byte.
 - **`re` works on both arms**: vendor `extmod/modre.c` + `lib/re1.5/` ship as a feature carveout. Closing this required fixing `MpObjFunBuiltinVar`'s wasm32 layout: an explicit `_pad: u32 = 0` in the mirror was correct on amd64 but inserted phantom padding on wasm32, manifesting as `wasm trap: undefined element` deep in any var-arity builtin caller. `MpCodeState` + `MpArg` got the same treatment in cleanup.
-- **Wasm shipping artifact: 305 KB → 278 KB raw** (-9%) via export-section strip ([ADR 010 §D1 P2](docs/adrs/010-roadmap-v06.md)). Post-`wasm-opt -Oz`: 283 KB.
+- **Wasm shipping artifact: 305 KB → 278 KB raw** (-9%) via export-section strip ([ADR 010 §D1 P2](docs/src/adrs/010-roadmap-v06.md)). Post-`wasm-opt -Oz`: 283 KB.
 - **Cold-load wasm timing measured for the first time**: ~10 ms median (Apple Silicon, wasmtime CLI). Trend tracked per row in `metrics/history.ndjson`; `make cold-load` runs the harness standalone.
 - **Property setters work correctly on nano**: independent code review surfaced that `mp_obj_instance_store_attr` was incorrectly gated on `is_full`, silently bypassing setters under nano since v0.3. The corpus golden for `builtin_property` had been frozen against the broken behavior; re-froze against vendor MP.
 
@@ -248,18 +248,18 @@ This was the first post-strangler cycle. The runtime works end-to-end on both ar
 
 ### perf
 
-- **Wasm shipping artifact: 305 KB → 278 KB raw, 283 KB post-`wasm-opt -Oz`** via export-section strip ([ADR 010 §D1 P2](docs/adrs/010-roadmap-v06.md)). Replaced `exe.rdynamic = true` (which exported every `pub fn`) with an explicit `export_symbol_names` list, so DCE strips the unreachable internals.
+- **Wasm shipping artifact: 305 KB → 278 KB raw, 283 KB post-`wasm-opt -Oz`** via export-section strip ([ADR 010 §D1 P2](docs/src/adrs/010-roadmap-v06.md)). Replaced `exe.rdynamic = true` (which exported every `pub fn`) with an explicit `export_symbol_names` list, so DCE strips the unreachable internals.
 
 ### docs
 
-- [ADR 010](docs/adrs/010-roadmap-v06.md) updated with DONE/DEFERRED markers per item, including the A3c (MPZ on wasm32) deferral rationale and the D2 timing-harness resolution.
+- [ADR 010](docs/src/adrs/010-roadmap-v06.md) updated with DONE/DEFERRED markers per item, including the A3c (MPZ on wasm32) deferral rationale and the D2 timing-harness resolution.
 - ADRs moved into `docs/adrs/` and cross-references made clickable across the docs.
 - README + `docs/` restructured around three personas (web devs, embedded devs, contributors); contrastive *"X, not Y"* constructions removed across the docs and ADRs.
 - CLAUDE.md updated with the v0.6 retrospective (MI surfacing the property-descriptor bug class; the `re`-on-wasm root cause; the MpStateVmPartial known issue).
 
 ### build
 
-- **`tools/timing.py` + `make cold-load`**: cold-load timing infrastructure ([ADR 010 §D2](docs/adrs/010-roadmap-v06.md)).
+- **`tools/timing.py` + `make cold-load`**: cold-load timing infrastructure ([ADR 010 §D2](docs/src/adrs/010-roadmap-v06.md)).
 - `make doc-setup / doc-build / doc-serve` targets for the Zensical doc site.
 - New build flag `-Dmultiple-inheritance=true` (default on, controls the MI enable in `objtype.zig`).
 - New build flag `-Dfeature-re=true` (default on, gates the re module carveout).
@@ -283,9 +283,9 @@ This was the first post-strangler cycle. The runtime works end-to-end on both ar
 
 ---
 
-## [0.5.0](https://github.com/sfermigier/nanopython/releases/tag/v0.5.0) - 2026-06-11
+## [0.5.0] - 2026-06-11
 
-The strangler-to-Zig phase is done. v0.5 closes the long-standing 541/541 native byte-exact baseline, ships the shipping artifact's first major size cut, and brings the test harness to both arms. The full retrospective is in [ADR 009](docs/adrs/009-roadmap-v05.md); the v0.6 plan that follows is in [ADR 010](docs/adrs/010-roadmap-v06.md).
+The strangler-to-Zig phase is done. v0.5 closes the long-standing 541/541 native byte-exact baseline, ships the shipping artifact's first major size cut, and brings the test harness to both arms. The full retrospective is in [ADR 009](docs/src/adrs/009-roadmap-v05.md); the v0.6 plan that follows is in [ADR 010](docs/src/adrs/010-roadmap-v06.md).
 
 ### Highlights
 
@@ -324,14 +324,14 @@ The strangler-to-Zig phase is done. v0.5 closes the long-standing 541/541 native
 
 ### perf
 
-- Wasm shipping artifact: **354 KB → 305 KB** (-14% raw, -5% gzipped) via `wasm-opt -Oz` integration ([ADR 007 §4 P6](docs/adrs/007-wasm-fat-loss.md)).
+- Wasm shipping artifact: **354 KB → 305 KB** (-14% raw, -5% gzipped) via `wasm-opt -Oz` integration ([ADR 007 §4 P6](docs/src/adrs/007-wasm-fat-loss.md)).
 
 ### docs
 
 - `README.md` revised end-to-end. The gate state (four independent test gates) is surfaced where new readers land, with each gate's purpose and current count.
 - `CLAUDE.md` restructured around the "What 'green' means" test-harness table. Known failures surfaced explicitly with a "don't push problems under the rug" policy.
-- [ADR 009](docs/adrs/009-roadmap-v05.md): v0.5 roadmap (now closed; §11 retrospective added).
-- [ADR 010](docs/adrs/010-roadmap-v06.md): v0.6 roadmap. Headline: closing the eval/exec longjmp wall, broadening the stdlib surface (`re`, `itertools`, `string`), and a softening of the size target from 228 KB to 285 KB with explicit reasoning.
+- [ADR 009](docs/src/adrs/009-roadmap-v05.md): v0.5 roadmap (now closed; §11 retrospective added).
+- [ADR 010](docs/src/adrs/010-roadmap-v06.md): v0.6 roadmap. Headline: closing the eval/exec longjmp wall, broadening the stdlib surface (`re`, `itertools`, `string`), and a softening of the size target from 228 KB to 285 KB with explicit reasoning.
 
 ### build
 
@@ -354,7 +354,7 @@ The strangler-to-Zig phase is done. v0.5 closes the long-standing 541/541 native
 
 ---
 
-## [0.4.0](https://github.com/sfermigier/nanopython/releases/tag/v0.4.0) - Earlier
+## [0.4.0] - Earlier
 
-This release converged the strangler-to-Zig core, positioned WASM as primary and added per-feature size flags. The v0.4 roadmap is in [ADR 001](docs/adrs/001-roadmap-v04.md); details predate this changelog.
+This release converged the strangler-to-Zig core, positioned WASM as primary and added per-feature size flags. The v0.4 roadmap is in [ADR 001](docs/src/adrs/001-roadmap-v04.md); details predate this changelog.
 

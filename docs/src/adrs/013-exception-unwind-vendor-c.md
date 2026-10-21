@@ -1,6 +1,6 @@
 # ADR 013. Restoring exception unwinding across vendor-C frames (the try/except-over-MPZ wall)
 
-- **Status**: Proposed (drafted 2026-06-13)
+- **Status**: Implemented in v0.7.0 as B' (§4): native `full` only; wasm keeps `exit(1)` for vendor-C raises (drafted 2026-06-13)
 - **Decider**: project maintainers
 - **Supersedes**: nothing
 - **Branches from**: ADR 012 §3 D2 (per-feature flags as the only durable gate; this ADR introduces `build_options.exception_unwind` following that discipline). Phase 3.5 step 4 + 6 retrospectives documented the limitation that this ADR resolves.
@@ -152,7 +152,7 @@ Extend the polled-sentinel discipline INTO vendor C via small patches maintained
 1. **Spike (30 min)**: write a 10-line setjmp/longjmp roundtrip in C, build with `zig cc -target wasm32-wasi`, run under wasmtime. Settles the wasi-libc setjmp question that gates B (and A and C). If setjmp works on wasm32-wasi, B is single-flag-gated; if it doesn't, B becomes B' (native-only wrap; wasm full retains `exit(1)`).
 2. **Add `build_options.exception_unwind` flag** in build.zig (default true on full, false on nano). Do NOT use `is_full` as the gate (ADR 012 §2.4 deprecates it as a feature predicate).
 3. **Write the trampoline shim** in `src/runtime/nlr_trampoline.zig` (~30 LOC): `npy_call_vendor_with_setjmp(fn, args)` sets up a local `nlr_buf_t`, registers it in `mp_state_ctx.thread.nlr_top`, calls fn, on longjmp converts `nlr_buf.ret_val` to `pyerr.pending_exc` and returns an error sentinel.
-4. **Re-enable `npy_mirror_layout_check()`** at `src/main.zig:202` as a prerequisite: the disabled `mp_state_vm._pad0` layout checks at `mp_mirrors.zig:1199-1203` are the exact ABI-mirror hazard NLR restoration reactivates. Notes/06 follow-up item #1 / #2 covers the layout debt; this work merges with that.
+4. **Re-enable `npy_mirror_layout_check()`** at `src/main.zig:202` as a prerequisite: the disabled `mp_state_vm._pad0` layout checks at `mp_mirrors.zig:1199-1203` are the exact ABI-mirror hazard NLR restoration reactivates.
 5. **Wrap 3 high-value vendor entry points:**
    - `mp_obj_int_binary_op` at runtime.zig binary-op slot dispatch (covers all 7 MPZ raises)
    - `mp_stream_write_exactly` at the io slot dispatch (covers `modio.c:173`; corrected target per verifier flag)

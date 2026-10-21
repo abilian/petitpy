@@ -5,7 +5,7 @@ petitpy (developed as nanopython) runs most everyday Python unchanged, but it bu
 There are two builds:
 
 - **native** (`pip install petitpy`, `uvx petitpy`; the command is `petitpy` or `ppy`): the `full` profile, with arbitrary-precision integers, Unicode strings, files, `os`, `subprocess` and sockets;
-- **browser** (`npm install petitpy`, the [playground](https://nanopython.lab.abilian.com/play/demos/playground/)): the `nano` profile, smaller, with direct DOM access through the `js` module.
+- **browser** (`npm install petitpy`, the [playground](https://petitpy.lab.abilian.com/play/demos/playground/)): the `nano` profile, smaller, with direct DOM access through the `js` module.
 
 ## Language and built-in types
 

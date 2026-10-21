@@ -16,7 +16,7 @@ _Each ADR here records one architectural decision for contributors: the context 
 | [ADR 010](010-roadmap-v06.md) | v0.6 roadmap: closing the wall, broadening the surface | Proposed |
 | [ADR 011](011-everyday-stdlib.md) | Everyday stdlib: dataclasses, pytest, and the eight modules a CPython script reaches for daily | Accepted (implemented 2026-06-12) |
 | [ADR 012](012-profiles-and-feature-matrix.md) | Build profiles and the feature matrix: full as default, profiles as named feature bundles | Implemented 2026-06-13 |
-| [ADR 013](013-exception-unwind-vendor-c.md) | Restoring exception unwinding across vendor-C frames (the try/except-over-MPZ wall) | Proposed |
+| [ADR 013](013-exception-unwind-vendor-c.md) | Restoring exception unwinding across vendor-C frames (the try/except-over-MPZ wall) | Implemented in v0.7.0 (native `full`) |
 | [ADR 016](016-distribution.md) | Distribution: PyPI wheels and sdist, built by Zig from one machine | Accepted 2026-10-19 |
 | [ADR 019](019-garbage-collector.md) | A garbage collector: vendor's heap, conservative roots, safe points on wasm | Implemented 2026-10-11 |
 | [ADR 020](020-quickening.md) | Quickening and the interpreter's next speed step | Implemented 2026-10-12 (B declined) |
