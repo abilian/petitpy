@@ -210,8 +210,7 @@ path = "scripts/hatch_build.py"
 # ---------------------------------------------------------------------------
 # Ruff. No `select` on purpose — the project tracks ruff's defaults. The only
 # configuration here turns OFF rules that are actively wrong for the trees
-# that run ON nanopython rather than on CPython (see
-# notes/03-nano-python-cheatsheet.md); host-side code under tools/, tests/,
+# that run ON nanopython rather than on CPython; host-side code under tools/, tests/,
 # port/ and scripts/ is held to the full default set.
 # ---------------------------------------------------------------------------
 [tool.ruff.lint.per-file-ignores]
@@ -226,3 +225,8 @@ path = "scripts/hatch_build.py"
 "web/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
 "nanopython-lib/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
 "projects/ci-build-monitor/src/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
+
+[dependency-groups]
+dev = [
+    "twine>=7.0.0",
+]

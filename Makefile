@@ -777,7 +777,7 @@ release-publish:
 ##          PyPI credentials for twine.
 publish: clean
 	$(MAKE) pypi-dist
-	twine upload --skip-existing dist/*
+	uv run twine upload --skip-existing dist/*
 
 ## npm-check: run the assembled package under Node and in headless
 ##            Chromium (needs `make smoke-setup`). Installs its one
