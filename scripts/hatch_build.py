@@ -62,11 +62,6 @@ class CustomBuildHook(BuildHookInterface):
             build_data["tag"] = f"py3-none-{next(tags.platform_tags())}"
 
         root = Path(self.root)
-        # The full-config build fails on the `nanopython-vm` variant binary
-        # (10 unresolved float symbols, deferred).
-        # The main `nanopython` binary builds cleanly; verify by checking it
-        # exists after the run, mirroring the Makefile pattern of `-zig build`
-        # followed by an explicit binary-presence check.
         subprocess.run(
             [
                 sys.executable,
@@ -78,17 +73,12 @@ class CustomBuildHook(BuildHookInterface):
                 "-Dstrip=true",
                 *zig_target_arg,
             ],
-            check=False,
+            check=True,
             cwd=root,
         )
 
         suffix = ".exe" if "win" in build_data["tag"] else ""
         binary = root / "zig-out" / "bin" / f"nanopython{suffix}"
-        if not binary.exists():
-            raise FileNotFoundError(
-                f"zig build did not produce {binary}. "
-                f"Check the ziglang subprocess output above for errors."
-            )
         short = binary.with_name(f"ppy{suffix}")
         shutil.copy2(binary, short)
 

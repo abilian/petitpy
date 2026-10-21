@@ -128,14 +128,9 @@ port: | vendor/micropython
 
 ## build: regenerate vendor/ then build zig-out/bin/nanopython (Debug).
 ##        Default CONFIG=full per ADR 012 Phase 4b. Use CONFIG=nano for
-##        the shipping arm. Under full, `nanopython-vm` (an experimental
-##        variant binary) currently fails to link with 10 float symbols
-##        (deferred); the main nanopython binary builds. The `-` prefix tolerates
-##        the partial-success exit code; the subsequent test confirms the
-##        main binary exists.
+##        the shipping arm.
 build: port
-	-zig build -Dconfig=$(CONFIG)
-	@test -x zig-out/bin/nanopython || (echo "main nanopython failed to build"; exit 1)
+	zig build -Dconfig=$(CONFIG)
 
 ## freeze-modules: ADR-003 L2 — compile the frozen-tiny .py set to .mpy
 ##                  under build-frozen/. Requires zigpy-compile (built by
@@ -144,8 +139,7 @@ build: port
 ##                  or `zig build -Dfrozen-tiny=true` bakes the bytes
 ##                  into the nanopython binary via @embedFile.
 freeze-modules: port
-	-zig build -Dconfig=$(CONFIG)
-	@test -x zig-out/bin/zigpy-compile || (echo "zigpy-compile failed to build"; exit 1)
+	zig build -Dconfig=$(CONFIG)
 	python3 tools/freeze_modules.py
 
 ## build-frozen: build nanopython with the frozen-tiny set baked in.
@@ -153,8 +147,7 @@ freeze-modules: port
 ##               `zig build` with -Dfrozen-tiny=true so
 ##               frozen_modules.zig's @embedFile calls find their inputs.
 build-frozen: freeze-modules
-	-zig build -Dconfig=$(CONFIG) -Dfrozen-tiny=true
-	@test -x zig-out/bin/nanopython || (echo "main nanopython failed to build"; exit 1)
+	zig build -Dconfig=$(CONFIG) -Dfrozen-tiny=true
 
 ## build-release: ReleaseFast build (~960 KB on arm64, ~3× smaller than Debug).
 build-release: port
@@ -212,15 +205,11 @@ wasm-check: wasm-small
 ##             passes fail. corpus/full-known-fails.txt only ever
 ##             shrinks. Per ADR 012 the eventual default profile becomes
 ##             full; this gate is the path to making that flip safe.
-##             nanopython-vm's link failure under full is a known,
-##             deferred issue — the main nanopython binary builds and the
-##             gate runs against that.
 ## v0.7.1: -Dfrozen-tiny=true so `import random` (needed by
 ## class_setname_hazard_rand) works from build-frozen/random.mpy.
 ## Depends on freeze-modules to populate build-frozen/.
 check-full: freeze-modules
 	zig build -Dconfig=full -Dfrozen-tiny=true
-	@test -x zig-out/bin/nanopython || (echo "main nanopython failed to build"; exit 1)
 	python3 tools/full_gate.py
 
 ## check-nano: nano-arm strict gate. Equivalent to `make check
@@ -265,7 +254,6 @@ check-all:
 ##              that. Run by check-all — you don't need to invoke it directly.
 check-split: freeze-modules
 	zig build -Dconfig=full -Dfrozen-tiny=true
-	@test -x zig-out/bin/nanopython-vm || (echo "nanopython-vm failed to build"; exit 1)
 	python3 tools/quadrant_gate.py
 
 ## check-capability: the capability matrix as a gate. Compiles a
