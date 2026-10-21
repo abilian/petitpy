@@ -745,14 +745,17 @@ npm-package: web
 	  sed "s/\"version\": \"0.0.0\"/\"version\": \"$$version\"/" npm/package.json > npm/dist/package.json
 
 ## release-dist: build everything a release publishes (ADR 016): the
-##               sdist and the four wheels in dist/, cross-compiled here by
-##               Zig, and the npm package in npm/dist/. Smoke-tests the
-##               wheel for this machine in a fresh venv.
+##               PyPI files (pypi-dist) and the npm package in npm/dist/.
+release-dist: pypi-dist npm-package
+
+## pypi-dist: build the sdist and the four wheels in dist/, cross-compiled
+##            here by Zig. Smoke-tests the wheel for this machine in a
+##            fresh venv.
 RELEASE_TARGETS := aarch64-macos.11.0:macosx_11_0_arm64 \
                    x86_64-macos.11.0:macosx_11_0_x86_64 \
                    x86_64-linux-gnu.2.17:manylinux_2_17_x86_64 \
                    aarch64-linux-gnu.2.17:manylinux_2_17_aarch64
-release-dist: port npm-package
+pypi-dist: port
 	rm -rf dist && mkdir dist
 	uv build --sdist --out-dir dist
 	for t in $(RELEASE_TARGETS); do NANOPYTHON_TARGET=$$t uv build --wheel --out-dir dist || exit 1; done
@@ -771,6 +774,12 @@ release-publish:
 	  [ "$$tag" = "v$$version" ] || { echo "HEAD is tagged '$$tag', not v$$version; tag the release first"; exit 1; }
 	uv publish dist/*.tar.gz dist/*.whl
 	npm publish npm/dist
+
+## publish: clean, rebuild dist/ and upload it to PyPI (not npm). Needs
+##          PyPI credentials for twine.
+publish: clean
+	$(MAKE) pypi-dist
+	twine upload --skip-existing dist/*
 
 ## npm-check: run the assembled package under Node and in headless
 ##            Chromium (needs `make smoke-setup`). Installs its one
@@ -894,5 +903,5 @@ ext-package-zip:
         metrics-record metrics-record-perf metrics-report metrics-latest \
         golden compatibility \
         doc-setup doc-build doc-serve \
-        smoke smoke-setup wasm-gc-check test-wheel-layout npm-package npm-check release-dist release-publish \
+        smoke smoke-setup wasm-gc-check test-wheel-layout npm-package npm-check pypi-dist release-dist release-publish publish \
         ext-lint ext-package ext-run ext-package-zip
