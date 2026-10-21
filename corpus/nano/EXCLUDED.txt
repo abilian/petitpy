@@ -1,0 +1,14 @@
+# Tests excluded from the corpus: reference output differs across two
+# runs (memory addresses, dict/set ordering, timing). One name/line.
+# Reference: ./zig-out/bin/nanopython
+assign_expr
+bytearray1
+bytes_partition
+list_slice_assign
+op_error_bytearray
+ordereddict1
+self_type_check
+string_format_modulo
+string_partition
+string_rpartition
+struct2

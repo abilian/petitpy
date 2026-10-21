@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Extensions &mdash; nanopython</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .ext-card {
+    display: block;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+    text-decoration: none;
+    color: var(--fg);
+    transition: border-color 0.12s ease, transform 0.12s ease;
+  }
+  .ext-card:hover { border-color: var(--accent-2); transform: translateY(-1px); }
+  .ext-card h3 { margin: 0 0 8px; font-size: 17px; }
+  .ext-card p  { margin: 0 0 10px; color: var(--fg-dim); font-size: 14px; line-height: 1.55; }
+  .ext-card .meta {
+    color: var(--accent-2); font-family: var(--mono); font-size: 12px;
+  }
+  .ext-card .meta a { color: var(--accent-2); }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../">nanopython</a> &nbsp;/&nbsp; extensions</div>
+  <header>
+    <h1>Extensions</h1>
+    <p class="lede">Browser extensions and offline projects built on the nanopython runtime &mdash; things that go beyond a single page. Each extension loads <code>nanopython.wasm</code> in a privileged context (background script, options page, popup) and runs Python source there.</p>
+  </header>
+
+  <a class="ext-card" href="./ci-build-monitor/popup.html">
+    <h3>Nano Build Monitor</h3>
+    <p>A Chrome/Firefox extension that watches CI builds across Sourcehut, GitHub, and GitLab. Background polling, badge updates, options page, popup &mdash; all driven by Python sources running on the nanopython wasm runtime via the ADR-006 JS bridge. Originally a Prescrypt-targeted Python-to-JS extension; this is the in-progress nanopython port.</p>
+    <div class="meta">popup.html &middot; options.html &middot; live</div>
+  </a>
+
+  <p class="lede" style="margin-top: 24px; font-size: 12.5px;">
+    Source code lives at <code>projects/ci-build-monitor/</code> in the repo. This page links to the popup directly; the extension itself is packaged via <code>make ext-package</code> in that directory.
+  </p>
+
+</main>
+</body>
+</html>

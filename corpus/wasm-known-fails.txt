@@ -1,0 +1,99 @@
+# corpus/wasm-known-fails.txt — the WASM regression baseline.
+#
+# Per CLAUDE.md, the byte-exact corpus is the project's load-bearing
+# correctness gate. The native target reports 537/541. The WASM target
+# (via tools/wasm_gate.py + tools/run_wasm.sh + wasmtime) currently
+# reports 468/541 = 86.5% raw passing.
+#
+# Discipline (mirrors the corpus byte-exact gate's role-shift,
+# TR-001 §3.8):
+#   - `make wasm-check` runs tools/wasm_gate.py.
+#   - Rejects any commit that EITHER introduces a new failing test
+#     not in this list (regression) OR keeps a test in this list that
+#     now passes (golden out of date — close it AND remove from the
+#     list, atomic).
+#   - The list only ever SHRINKS. Adding a test requires a real reason.
+#
+# Grouped by likely cause. Each removal of an item from this list is
+# a net improvement to the WASM target.
+
+# --- LONGLONG-bringup output divergences (wasm32-nano uses LONGLONG;
+#     native nano uses NONE; goldens were frozen against NONE, so
+#     wasm output for bignum-touching tests legitimately differs).
+#     Closing each requires either: re-freezing the golden against
+#     LONGLONG output (and dual-tracking native via skip-on-wasm32);
+#     or a per-arm corpus split. Tracked as one cause:
+array_intbig
+builtin_abs_intbig
+builtin_bin_intbig
+builtin_divmod_intbig
+builtin_hash_intbig
+builtin_hex_intbig
+builtin_oct_intbig
+builtin_pow3_intbig
+bytearray_intbig
+bytes_construct_intbig
+floordivide_intbig
+int1
+int_64_basics
+int_big1
+int_big_add
+int_big_and
+int_big_and2
+int_big_and3
+int_big_cmp
+int_big_div
+int_big_error
+int_big_lshift
+int_big_mod
+int_big_mul
+int_big_or
+int_big_or2
+int_big_or3
+int_big_pow
+int_big_rshift
+int_big_to_small
+int_big_to_small_int29
+int_big_unary
+int_big_xor
+int_big_xor2
+int_big_xor3
+int_big_zeroone
+int_bytes
+int_bytes_int64
+int_bytes_intbig
+int_constfolding_intbig
+int_divmod_intbig
+int_intbig
+memoryview_intbig
+op_error_intbig
+slice_intbig
+special_methods
+special_methods_intbig
+string_format_intbig
+struct1_intbig
+
+# --- syntax errors (parser/lexer divergence) ---
+
+# --- misc per-test gaps ---
+# Added 2026-06-11 with the CPython-friendly collections.deque (frozen-tiny
+# nanopython-lib/collections.py).
+#
+# These two tests are literally named deque_micropython — they pin MP's
+# strict deque semantics, not standard Python's:
+#
+#   deque_micropython: expects deque(()) to raise TypeError because MP makes
+#                      maxlen mandatory. Also exercises the 3-arg
+#                      deque((), 2, True) signature with MP's flags=True
+#                      mode (raise on overflow).
+#   deque_slice:       expects d[0:1] to TypeError because MP's deque doesn't
+#                      support slicing. Ours does, because it's a list subclass.
+#
+# We deliberately shipped CPython-compatible deque(iterable) because BFS /
+# sliding-window / queue code uses it that way universally. The MP-specific
+# behavior is still available via `from ucollections import deque`. These
+# tests stay failing on wasm by design; native (no frozen-tiny in the Debug
+# corpus binary) uses ucollections.deque and still passes them.
+deque_micropython
+deque_slice
+

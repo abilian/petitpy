@@ -1,0 +1,9 @@
+2147483646
+-2147483646
+140737488355326
+-140737488355326
+Traceback (most recent call last):
+  File "<stdin>", in <module>
+OverflowError: small int overflow
+
+[exit 1]

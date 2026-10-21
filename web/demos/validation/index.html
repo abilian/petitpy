@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Validation — nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; validation</div>
+  <header>
+    <h1>Form validation, Python on both sides</h1>
+    <p class="lede">The Python rules in <code>validators.py</code> are lifted verbatim from Prescrypt's <code>validation-library</code> demo. Clicking <em>Validate</em> hands control to <code>main.py</code>, which reads each field, runs the validators, and writes errors straight back into the DOM via the ADR-006 <code>js</code> bridge &mdash; no stdout protocol. The same module would run on the server.</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <form autocomplete="off" onsubmit="return false">
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="alice@example.com" autocomplete="off">
+      <div class="hint" id="email-error"></div>
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Min 8 chars, upper/lower/digit/special" autocomplete="new-password">
+      <div class="hint" id="password-error"></div>
+    </div>
+
+    <div class="field">
+      <label for="phone">Phone</label>
+      <input type="tel" id="phone" placeholder="+1 (555) 123-4567" autocomplete="off">
+      <div class="hint" id="phone-error"></div>
+    </div>
+
+    <div class="field">
+      <label for="card">Credit card number</label>
+      <input type="text" id="card" placeholder="4242 4242 4242 4242" inputmode="numeric" autocomplete="off">
+      <div class="hint" id="card-error"></div>
+    </div>
+
+    <div class="field">
+      <button type="button" id="validate-btn" disabled>Validate</button>
+    </div>
+  </form>
+
+  <h2>Notes</h2>
+  <p class="lede">Each click spins up a fresh wasm instance: <code>main.py</code> reads <code>document.getElementById(id).value</code>, calls the validator, then writes <code>err</code>/<code>ok</code> classes and the error message back via <code>js.document</code>. JS supplies only the wasm loader and bridge wiring; Python owns the DOM. Try <code>4111 1111 1111 1111</code> (a known-good Luhn test number) versus a random digit string for the card field.</p>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

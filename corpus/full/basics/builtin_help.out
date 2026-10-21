@@ -1,0 +1,54 @@
+Welcome to MicroPython!
+
+For online docs please visit http://docs.micropython.org/
+
+Control commands:
+  CTRL-A        -- on a blank line, enter raw REPL mode
+  CTRL-B        -- on a blank line, enter normal REPL mode
+  CTRL-C        -- interrupt a running program
+  CTRL-D        -- on a blank line, exit or do a soft reset
+  CTRL-E        -- on a blank line, enter paste mode
+
+For further help on a specific object, type help(obj)
+object <function> is of type function
+object <class 'int'> is of type type
+  from_bytes -- <classmethod>
+  to_bytes -- <function>
+object 1 is of type int
+  from_bytes -- <classmethod>
+  to_bytes -- <function>
+object <module 'micropython'> is of type module
+  __name__ -- micropython
+  const -- <function>
+  opt_level -- <function>
+  mem_total -- <function>
+  mem_current -- <function>
+  mem_peak -- <function>
+  mem_info -- <function>
+  qstr_info -- <function>
+  stack_use -- <function>
+  heap_lock -- <function>
+  heap_unlock -- <function>
+  kbd_intr -- <function>
+  RingIO -- <class 'RingIO'>
+  schedule -- <function>
+__main__          btree             io                select
+_asyncio          builtins          json              socket
+_thread           cmath             machine           ssl
+argparse          collections       math              struct
+array             cryptolib         micropython       sys
+asyncio/__init__  deflate           mip/__init__      termios
+asyncio/core      errno             mip/__main__      time
+asyncio/event     ffi               os                tls
+asyncio/funcs     framebuf          platform          uasyncio
+asyncio/lock      gc                random            uctypes
+asyncio/stream    hashlib           re                vfs
+binascii          heapq             requests/__init__ websocket
+Plus any modules on the filesystem
+object <class 'A'> is of type type
+  __module__ -- __main__
+  y -- 2
+  __qualname__ -- A
+done
+
+[exit 0]

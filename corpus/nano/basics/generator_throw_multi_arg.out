@@ -1,0 +1,8 @@
+123
+GeneratorExit ()
+456
+123
+GeneratorExit (123,)
+456
+
+[exit 0]

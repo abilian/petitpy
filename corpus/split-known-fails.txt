@@ -1,0 +1,43 @@
+# Known failures: zigpy-compile -> nanopython-vm
+#
+# Quadrant 1 (our bytecode + our VM) of the four-quadrant matrix in notes/OLD/30-two-track-architecture.md;
+# rationale in notes/plans/adr-017-bytecode-boundary.md.
+# our front-end's bytecode executed by our VM-only binary.
+#
+# BASELINE BUILD: `-Dconfig=full -Dfrozen-tiny=true`, i.e. what check-full
+# leaves in zig-out before check-split runs. Regenerating against a plain
+# `-Dconfig=full` build gives different answers (the frozen stdlib changes
+# three tests), so always rebuild the frozen way first.
+#
+# Gated by tools/quadrant_gate.py, STRICT BIDIRECTIONAL like the other gates:
+# an unlisted failure fails the build, and a listed test that starts passing
+# fails it too, so closing one means deleting its line in the same commit.
+#
+# Format: <test-name><TAB><rationale>
+assign_expr_syntaxerror	uses eval()/exec()/compile(); the VM binary stubs these by design
+async_syntaxerror	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_compile	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_eval	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_eval_buffer	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_eval_error	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_exec	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_exec_buffer	uses eval()/exec()/compile(); the VM binary stubs these by design
+builtin_help	output differs - UNTRIAGED, see ADR 017 section 6
+class_inplace_op2	output differs - UNTRIAGED, see ADR 017 section 6
+deque_micropython	ships the CPython-semantics collections.deque, not vendor MP's strict form; documented divergence, same entry as corpus/wasm-known-fails.txt
+deque_slice	ships the CPython-semantics collections.deque, not vendor MP's strict form; documented divergence, same entry as corpus/wasm-known-fails.txt
+fun_calldblstar2	uses eval()/exec()/compile(); the VM binary stubs these by design
+fun_callstardblstar	uses eval()/exec()/compile(); the VM binary stubs these by design
+lexer	uses eval()/exec()/compile(); the VM binary stubs these by design
+memoryview_slice_size	output differs - UNTRIAGED, see ADR 017 section 6
+nanbox_smallint	output differs - UNTRIAGED, see ADR 017 section 6
+parser	uses eval()/exec()/compile(); the VM binary stubs these by design
+python34	uses eval()/exec()/compile(); the VM binary stubs these by design
+special_comparisons	uses eval()/exec()/compile(); the VM binary stubs these by design
+stopiteration	uses eval()/exec()/compile(); the VM binary stubs these by design
+string_fstring	uses eval()/exec()/compile(); the VM binary stubs these by design
+string_fstring_invalid	uses eval()/exec()/compile(); the VM binary stubs these by design
+subclass_native_call	output differs - UNTRIAGED, see ADR 017 section 6
+syntaxerror	uses eval()/exec()/compile(); the VM binary stubs these by design
+syntaxerror_return	uses eval()/exec()/compile(); the VM binary stubs these by design
+sys_path	reads its own .py source; a precompiled .mpy deployment has none (structural)

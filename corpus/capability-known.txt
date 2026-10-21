@@ -1,0 +1,13 @@
+# Known capability-matrix findings, baselined for `make check-capability`.
+#
+# Only the categories that mean something is WRONG are gated: BACK-END GAP,
+# BACK-END SPLIT and FRONT-END SPLIT. A FRONT-END GAP is not a defect; it is
+# the matrix reporting that one front-end is behind, which is the measurement
+# it exists to make. CPYTHON DIFF is a language difference, recorded in
+# notes/14-capability-matrix.md rather than gated.
+#
+# Strict bidirectional: a new finding fails the gate, and a listed finding that
+# stops reproducing also fails, so closing one means deleting its line here in
+# the same commit.
+#
+# Format: <construct><TAB><rationale>

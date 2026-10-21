@@ -1,0 +1,49 @@
+# Linux verify-environment for nanopython.
+#
+# When developing on macOS the fastest way to reproduce a Linux build
+# failure is a native-arch Debian container. Bookworm-slim + zig 0.16 +
+# gcc (for MicroPython's makeqstrdefs preprocessor step).
+#
+# ── Build ─────────────────────────────────────────────────────────────
+#   docker build -f tools/Dockerfile.verify-linux \
+#                -t nanopython-verify-linux:latest .
+#
+# Defaults target linux/arm64 (native on Apple Silicon; no emulation).
+# On x86_64 hosts, or to reproduce an x86_64-specific failure:
+#   docker build --build-arg ZIG_ARCH=x86_64 \
+#                --platform=linux/amd64 \
+#                -f tools/Dockerfile.verify-linux \
+#                -t nanopython-verify-linux:latest .
+#
+# ── Run ───────────────────────────────────────────────────────────────
+#   docker run --rm -it -v $PWD:/src nanopython-verify-linux \
+#     bash -c 'cp -a /src /work/np && cd /work/np && \
+#              rm -rf .zig-cache zig-out sandbox/micropython vendor \
+#                     build-embed build-frozen && \
+#              make bootstrap && make'
+#
+# ── Rosetta caveats (Apple Silicon + linux/amd64) ─────────────────────
+# - Rosetta's amd64 emulation triggers "bss_size overflow" inside Zig's
+#   translate-c aro. Cross-compile from the macOS host targeting
+#   x86_64-linux-gnu instead, then run the produced ELF inside this
+#   container to test.
+# - Certain vendor MicroPython tests (while / with control flow) fail
+#   under Rosetta amd64 emulation due to setjmp/longjmp handling in
+#   the NLR trampoline. They pass on native Linux.
+
+FROM debian:bookworm-slim
+
+ARG ZIG_VERSION=0.16.0
+ARG ZIG_ARCH=aarch64
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl xz-utils git make python3 python3-venv time \
+        gcc libc6-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sSL "https://ziglang.org/download/${ZIG_VERSION}/zig-${ZIG_ARCH}-linux-${ZIG_VERSION}.tar.xz" \
+      | tar -xJ -C /opt \
+    && ln -s /opt/zig-${ZIG_ARCH}-linux-${ZIG_VERSION}/zig /usr/local/bin/zig
+
+WORKDIR /work
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8

@@ -1,0 +1,6 @@
+frozenset()
+frozenset({1})
+[1, 3, 4]
+{frozenset({'1'}): 2}
+
+[exit 0]

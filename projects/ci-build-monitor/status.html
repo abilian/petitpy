@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Nano Build Monitor - Dashboard</title>
+        <link rel="stylesheet" href="styles/common.css" />
+        <style>
+            /* Dashboard-specific overrides */
+            #overview-container,
+            #timeline-container {
+                max-width: var(--max-width-md);
+                margin: 0 auto;
+            }
+
+            #repos-container {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                gap: var(--space-3);
+                max-width: var(--max-width-xl);
+                margin: 0 auto;
+            }
+
+            #admin-container {
+                max-width: var(--max-width-md);
+                margin: 0 auto;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Nano Build Monitor</h1>
+            <div class="flex gap-2">
+                <button id="refresh-btn" class="btn btn-primary">Refresh Now</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="overview">Overview</div>
+            <div class="tab" data-tab="repos">By Repository</div>
+            <div class="tab" data-tab="timeline">Timeline</div>
+            <div class="tab" data-tab="data">Raw Data</div>
+            <div class="tab" data-tab="admin">Admin</div>
+        </div>
+
+        <div id="tab-overview" class="tab-content active">
+            <div id="overview-container">
+                <p class="empty">Loading...</p>
+            </div>
+        </div>
+
+        <div id="tab-repos" class="tab-content">
+            <div id="repos-container">
+                <p class="empty">Loading...</p>
+            </div>
+        </div>
+
+        <div id="tab-timeline" class="tab-content">
+            <div id="timeline-container">
+                <p class="empty">Loading...</p>
+            </div>
+        </div>
+
+        <div id="tab-data" class="tab-content">
+            <div id="storage-output" class="code-block">Loading...</div>
+        </div>
+
+        <div id="tab-admin" class="tab-content">
+            <div id="admin-container">
+                <div class="section">
+                    <h2 class="section-header sleeping">Sleeping Repositories</h2>
+                    <p class="text-muted mb-3">These repositories are ignored and won't trigger notifications.</p>
+                    <div id="sleeping-repos-list"></div>
+                </div>
+                <div class="section">
+                    <h2 class="section-header warning">Failing Repositories</h2>
+                    <p class="text-muted mb-3">Repositories with failed builds. Put them to sleep to stop notifications.</p>
+                    <div id="failing-repos-list"></div>
+                </div>
+                <div class="section">
+                    <h2 class="section-header">Passing Repositories</h2>
+                    <p class="text-muted mb-3">All repositories with passing builds.</p>
+                    <div id="passing-repos-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="dist/chrome-shim.js"></script>
+        <script type="module" src="dist/status-loader.js"></script>
+    </body>
+</html>

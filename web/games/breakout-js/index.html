@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Breakout-lite (kid-style) &mdash; nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8px; }
+  .scoreline { display: flex; gap: 24px; font-family: var(--mono); font-size: 14px; }
+  .scoreline .label { color: var(--fg-dim); text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; margin-right: 6px; }
+  .help { color: var(--fg-dim); font-size: 12px; }
+  canvas#board { outline: 1px solid var(--border); border-radius: 6px; }
+  .spike-banner { background: #2a3650; border: 1px solid #9ece6a; border-radius: 4px; padding: 8px 12px; margin: 8px 0; font-size: 12px; color: #cdd6f4; }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; breakout-lite</div>
+  <header>
+    <h1>Breakout-lite</h1>
+    <p class="lede">Move the paddle, bounce the ball, break the bricks. Pure procedural Python &mdash; module globals, a handful of helper functions (<code>reset_bricks</code>, <code>bounce_off_paddle</code>, <code>handle_brick_hits</code>), and the three loop hooks (<code>update</code>, <code>draw</code>, <code>on_press</code>).</p>
+  </header>
+
+  <div class="spike-banner">
+    Kid-style. Built on <code>web/lib/nanopy.py</code>. The bounce math is integer-only: the paddle imparts horizontal english based on hit position, capped so the ball never goes purely sideways.
+  </div>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="board-wrap">
+    <div class="scoreline">
+      <div><span class="label">Score</span><span id="score">0</span></div>
+      <div><span class="label">Lives</span><span id="lives">3</span></div>
+      <div><span class="label">High</span><span id="high">0</span></div>
+    </div>
+    <canvas id="board" width="500" height="500"
+            role="img" aria-label="Breakout play area"></canvas>
+    <p class="help">Arrow keys or A/D to move. Space to launch. R to restart.</p>
+  </div>
+  <section class="source" data-files="main.js"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

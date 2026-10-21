@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>petitpy npm check</title>
+<pre id="out">running</pre>
+<p id="dom"></p>
+<script type="importmap">
+  { "imports": { "@bjorn3/browser_wasi_shim": "./dist/node_modules/@bjorn3/browser_wasi_shim/dist/index.js" } }
+</script>
+<script type="module">
+  // Browser check of the assembled package (make npm-check): default wasm
+  // URL next to index.js, stdout capture, and Python writing to the DOM.
+  import { loadPetitpy } from "./dist/index.js";
+  const out = document.getElementById("out");
+  const results = [];
+  try {
+    const py = await loadPetitpy();
+    let r = await py.run('print("hello", 6 * 7)');
+    results.push(r.stdout === "hello 42\n" ? "PASS run" : "FAIL run " + JSON.stringify(r.stdout));
+    r = await py.run('import js\njs.document.getElementById("dom").textContent = "set from python"');
+    const dom = document.getElementById("dom").textContent;
+    results.push(dom === "set from python" ? "PASS dom" : "FAIL dom " + JSON.stringify(dom + r.stderr));
+  } catch (e) {
+    results.push("FAIL load " + e);
+  }
+  const passed = results.filter((x) => x.startsWith("PASS")).length;
+  out.textContent = results.join("\n") + `\n${passed} of ${results.length} passed`;
+</script>

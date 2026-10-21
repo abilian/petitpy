@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<stdin>", in <module>
+  File "<stdin>", in __int__
+OverflowError: small int overflow
+
+[exit 1]

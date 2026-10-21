@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Color picker &mdash; nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .picker {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 24px;
+    margin-top: 8px;
+  }
+  @media (max-width: 760px) { .picker { grid-template-columns: 1fr; } }
+  .slider-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 56px;
+    gap: 10px;
+    align-items: center;
+    margin: 6px 0;
+  }
+  .slider-row label {
+    color: var(--fg-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .slider-row output {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--fg);
+    text-align: right;
+  }
+  .group {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .group h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--fg-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  #swatch {
+    width: 100%;
+    height: 220px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    background: #000;
+  }
+  #hex-out {
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 22px;
+    text-align: center;
+    color: var(--fg);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; color</div>
+  <header>
+    <h1>HSL / RGB color picker</h1>
+    <p class="lede">Two coupled slider banks, one Python state. Moving an HSL slider recomputes the RGB triple in <code>main.py</code> and back-fills the RGB sliders; moving an RGB slider does the reverse. Float-less integer sector arithmetic on both sides of the conversion.</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="picker">
+    <div>
+      <div class="group">
+        <h3>HSL</h3>
+        <div class="slider-row">
+          <label for="h">H</label>
+          <input type="range" id="h" min="0" max="360" step="1" value="0">
+          <output for="h" id="h-out">0</output>
+        </div>
+        <div class="slider-row">
+          <label for="s">S</label>
+          <input type="range" id="s" min="0" max="100" step="1" value="0">
+          <output for="s" id="s-out">0</output>
+        </div>
+        <div class="slider-row">
+          <label for="l">L</label>
+          <input type="range" id="l" min="0" max="100" step="1" value="0">
+          <output for="l" id="l-out">0</output>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>RGB</h3>
+        <div class="slider-row">
+          <label for="r">R</label>
+          <input type="range" id="r" min="0" max="255" step="1" value="0">
+          <output for="r" id="r-out">0</output>
+        </div>
+        <div class="slider-row">
+          <label for="g">G</label>
+          <input type="range" id="g" min="0" max="255" step="1" value="0">
+          <output for="g" id="g-out">0</output>
+        </div>
+        <div class="slider-row">
+          <label for="b">B</label>
+          <input type="range" id="b" min="0" max="255" step="1" value="0">
+          <output for="b" id="b-out">0</output>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div id="swatch"></div>
+      <div id="hex-out">#000000</div>
+    </div>
+  </div>
+
+  <h2>Notes</h2>
+  <p class="lede">RGB is the internal state. The HSL sector formula uses integer chroma <code>C = (100 - |2L - 100|) * S / 100</code> picked by <code>H / 60</code>, scaled to 0&ndash;255 only at the end. The two slider banks are linked through an <code>_updating</code> flag so write-back never re-fires its own input event.</p>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

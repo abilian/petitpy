@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", in <module>
+AttributeError: no attribute 'name'
+
+[exit 1]

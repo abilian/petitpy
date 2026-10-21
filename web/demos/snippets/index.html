@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Playground — nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  textarea#code-editor { min-height: 320px; }
+  pre.output { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: var(--mono); font-size: 13px; min-height: 320px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../">demos</a> &nbsp;/&nbsp; playground</div>
+  <header>
+    <h1>Python playground</h1>
+    <p class="lede">Preset snippets ported from <a href="https://github.com/prescrypt">Prescrypt</a>'s <code>python-playground</code> demo. There, the user's Python was transpiled to JavaScript by a server. Here, it runs in the nanopython interpreter, compiled to WebAssembly &mdash; no server required.</p>
+  </header>
+
+  <div class="playground-layout">
+    <div>
+      <h2>Examples</h2>
+      <ul class="examples" id="examples"></ul>
+    </div>
+    <div>
+      <div class="split">
+        <div>
+          <h2>Python</h2>
+          <textarea id="code-editor" spellcheck="false" aria-label="Python source"></textarea>
+          <div class="row">
+            <button id="run-btn" disabled>Loading wasm&hellip;</button>
+            <span id="status" class="status"></span>
+          </div>
+        </div>
+        <div>
+          <h2>Output</h2>
+          <pre id="output" class="output empty">(Click "Run" to execute)</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Tip: <kbd>Ctrl</kbd>/<kbd>&#8984;</kbd> + <kbd>Enter</kbd> to run.</p>
+  </footer>
+</main>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

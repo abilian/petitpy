@@ -1,0 +1,5 @@
+SystemExit ()
+SystemExit ()
+SystemExit (42,)
+
+[exit 0]

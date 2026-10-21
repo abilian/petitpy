@@ -1,0 +1,172 @@
+# petitpy documentation — Zensical configuration
+# ============================================================================
+
+[project]
+
+site_name = "petitpy"
+site_description = "A small Python interpreter in Zig, for the browser and for native Linux and macOS. Builds on MicroPython."
+site_author = "Stefane Fermigier"
+site_url = "https://petitpy.lab.abilian.com/"
+
+# Source and output directories
+docs_dir = "src"
+site_dir = "site"
+
+# Repository information
+repo_url = "https://git.sr.ht/~sfermigier/petitpy"
+edit_uri = "tree/main/item/docs/src"
+
+copyright = """
+Copyright &copy; 2025-2026 Stefane Fermigier
+"""
+
+# =============================================================================
+# Navigation
+# =============================================================================
+nav = [
+    # -------------------------------------------------------------------------
+    # Tab 1: Home
+    # -------------------------------------------------------------------------
+    { "Home" = "index.md" },
+
+    # -------------------------------------------------------------------------
+    # Tab 2: Get Started — pick your path, build, test
+    # -------------------------------------------------------------------------
+    { "Get Started" = [
+        { "Getting Started" = "getting-started.md" },
+        { "Build & Test" = "build-and-test.md" },
+    ]},
+
+    # -------------------------------------------------------------------------
+    # Tab 3: Guides — user-facing, "how do I use this?"
+    # -------------------------------------------------------------------------
+    { "Guides" = [
+        { "vs MicroPython" = "comparison-micropython.md" },
+        { "Compatibility matrix" = "COMPATIBILITY.md" },
+        { "Writing games with nanopy" = "writing-games.md" },
+        { "Benchmarks" = "benchmarks.md" },
+        { "Case study: a Linux daemon" = "case-study-daemon.md" },
+    ]},
+
+    # -------------------------------------------------------------------------
+    # Tab 4: Internals — how the runtime is structured
+    # -------------------------------------------------------------------------
+    { "Internals" = [
+        { "Overview" = "internals/index.md" },
+        { "Architecture" = "architecture.md" },
+        { "How it was built" = "strangler-journey.md" },
+        { "Type mirrors" = "internals/mirrors.md" },
+        { "PyError convention" = "internals/pyerror.md" },
+        { "Persistentcode loader" = "internals/persistentcode.md" },
+        { "qstr generation" = "internals/qstr-gen.md" },
+        { "Wasm composition" = "internals/wasm-composition.md" },
+    ]},
+
+    # -------------------------------------------------------------------------
+    # Tab 5: Decisions — the ADR trail
+    # -------------------------------------------------------------------------
+    { "Decisions" = [
+        { "ADR index" = "adrs/index.md" },
+        { "How ADRs work" = "adrs/000-readme.md" },
+        { "ADR 001 — v0.4 roadmap" = "adrs/001-roadmap-v04.md" },
+        { "ADR 002 — feature selection" = "adrs/002-feature-selection.md" },
+        { "ADR 003 — library and module loading" = "adrs/003-library-and-module-loading.md" },
+        { "ADR 004 — benchmarking" = "adrs/004-benchmarking.md" },
+        { "ADR 005 — future-optimization PROTO" = "adrs/005-future-optimization-proto.md" },
+        { "ADR 006 — JS interop" = "adrs/006-js-interop.md" },
+        { "ADR 007 — wasm fat loss" = "adrs/007-wasm-fat-loss.md" },
+        { "ADR 008 — golden programs" = "adrs/008-golden-programs.md" },
+        { "ADR 009 — v0.5 roadmap" = "adrs/009-roadmap-v05.md" },
+        { "ADR 010 — v0.6 roadmap" = "adrs/010-roadmap-v06.md" },
+        { "ADR 011 — everyday stdlib" = "adrs/011-everyday-stdlib.md" },
+        { "ADR 012 — profiles & feature matrix" = "adrs/012-profiles-and-feature-matrix.md" },
+        { "ADR 013 — exception unwind across vendor C" = "adrs/013-exception-unwind-vendor-c.md" },
+        { "ADR 016 — distribution" = "adrs/016-distribution.md" },
+        { "ADR 019 — garbage collector" = "adrs/019-garbage-collector.md" },
+        { "ADR 020 — quickening" = "adrs/020-quickening.md" },
+    ]},
+
+    # -------------------------------------------------------------------------
+    # Tab 6: Reference — lookups, contributing, project meta
+    # -------------------------------------------------------------------------
+    { "Reference" = [
+        { "Differences from CPython" = "differences.md" },
+        { "FAQ" = "faq.md" },
+        { "Glossary" = "glossary.md" },
+        { "Contributing" = "contributing.md" },
+    ]},
+    { "Demos" = "/play/" },
+]
+
+# =============================================================================
+# Theme
+# =============================================================================
+[project.theme]
+
+variant = "modern"
+custom_dir = "overrides"
+language = "en"
+
+features = [
+    "announce.dismiss",
+    "content.action.view",
+    "content.code.annotate",
+    "content.code.copy",
+    "content.code.select",
+    "content.footnote.tooltips",
+    "content.tabs.link",
+    "content.tooltips",
+    "navigation.footer",
+    # navigation.indexes intentionally OFF: it turns a section's index.md into a
+    # clickable section title (poor affordance — headers don't read as links).
+    # Sections that need an overview list an explicit "Overview" item on top.
+    "navigation.instant",
+    "navigation.instant.prefetch",
+    "navigation.path",
+    "navigation.sections",
+    "navigation.tabs",
+    "navigation.tabs.sticky",
+    "navigation.top",
+    "navigation.tracking",
+    "search.highlight",
+    "search.suggest",
+    "toc.follow",
+]
+
+# Color schemes — light + dark toggle
+[[project.theme.palette]]
+scheme = "default"
+primary = "indigo"
+accent = "amber"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+scheme = "slate"
+primary = "indigo"
+accent = "amber"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+# Fonts
+[project.theme.font]
+text = "Inter"
+code = "JetBrains Mono"
+
+# Icons
+[project.theme.icon]
+logo = "lucide/braces"
+repo = "lucide/git-branch"
+
+# =============================================================================
+# Social links
+# =============================================================================
+[[project.extra.social]]
+icon = "lucide/git-branch"
+link = "https://git.sr.ht/~sfermigier/petitpy"
+
+# =============================================================================
+# Plugins
+# =============================================================================
+[project.plugins]
+search = { enabled = true }

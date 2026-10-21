@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TodoMVC &mdash; nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .todo-row { display: flex; gap: 8px; margin: 10px 0; }
+  .todo-row input[type=text] { flex: 1; }
+
+  ul#list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
+  }
+  ul#list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  ul#list li.done .label {
+    text-decoration: line-through;
+    color: var(--fg-dim);
+  }
+  ul#list .label { flex: 1; font-size: 14px; }
+  ul#list .delete {
+    background: var(--bg-elev);
+    color: var(--err);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  ul#list .delete:hover { filter: brightness(1.1); }
+
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  .filter-row .count {
+    flex: 0 0 auto;
+    color: var(--fg-dim);
+    margin-right: auto;
+  }
+  .filter-btn {
+    background: var(--bg-elev);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  .filter-btn.active {
+    background: var(--accent);
+    color: #0b0f14;
+    border-color: var(--accent);
+  }
+  #clear-completed {
+    background: var(--bg-elev);
+    color: var(--fg-dim);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  ul#list .empty-msg {
+    color: var(--fg-dim);
+    font-style: italic;
+    padding: 14px 4px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; todo</div>
+  <header>
+    <h1>TodoMVC, Python on the wire</h1>
+    <p class="lede">A classic TodoMVC built with the ADR-006 <code>js</code> bridge. Python owns the todo list, the filter state, and the DOM rendering; JS owns only the wasm loader and a tiny event-stash shim that surfaces clicked list-item ids back into Python. List state round-trips through <code>localStorage</code> as hand-rolled JSON because the bridge doesn't marshal native dicts.</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="todo-row">
+    <input type="text" id="new-todo" placeholder="What needs to be done?" autocomplete="off" disabled>
+    <button type="button" id="add-btn" disabled>Add</button>
+  </div>
+
+  <ul id="list"></ul>
+
+  <div class="filter-row">
+    <span class="count" id="count">0 items left</span>
+    <button type="button" class="filter-btn active" data-filter="all">All</button>
+    <button type="button" class="filter-btn" data-filter="active">Active</button>
+    <button type="button" class="filter-btn" data-filter="completed">Completed</button>
+    <button type="button" id="clear-completed">Clear completed</button>
+  </div>
+
+  <h2>Notes</h2>
+  <p class="lede">Each <code>li</code> carries its todo id on a <code>data-id</code> attribute. A single delegated click handler on the <code>ul</code> reads <code>e.target.closest("li").dataset.id</code> and the action (<code>toggle</code> or <code>delete</code>) from the clicked element, stashes them on <code>window._todoId</code>/<code>window._todoAction</code>, then invokes the zero-arg <code>window._py_action</code> &mdash; the standard globals-stash workaround documented in <code>notes/03</code> for the bridge's dropped-args caveat.</p>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

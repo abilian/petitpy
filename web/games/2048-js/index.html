@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2048-lite (spike) &mdash; nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .board-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8px; }
+  .scoreline { display: flex; gap: 24px; font-family: var(--mono); font-size: 14px; }
+  .scoreline .label { color: var(--fg-dim); text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; margin-right: 6px; }
+  .help { color: var(--fg-dim); font-size: 12px; }
+  canvas#board { outline: 1px solid var(--border); border-radius: 6px; }
+  .spike-banner {
+    background: #2a3650; border: 1px solid #7aa2f7; border-radius: 4px;
+    padding: 8px 12px; margin: 8px 0; font-size: 12px; color: #cdd6f4;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; 2048-lite (spike)</div>
+  <header>
+    <h1>2048-lite</h1>
+    <p class="lede">Spike of a small <code>nanopy</code> helper that absorbs the bridge ceremony &mdash; DOM lookup, canvas property writes, the integer LCG, the keyboard dispatch, the localStorage try/except &mdash; so the game's <code>main.py</code> reads as Python about 2048. Comparable to <a href="../snake/">Snake</a>, whose <code>main.py</code> duplicates all of that scaffolding inline.</p>
+  </header>
+
+  <div class="spike-banner">
+    Spike build &mdash; the cognitive comparison is against <code>web/snake/main.py</code> (which duplicates the scaffolding inline). Open the spike's <code>main.py</code> + <code>nanopy.py</code> side by side with Snake to see the contrast.
+  </div>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="board-wrap">
+    <div class="scoreline">
+      <div><span class="label">Score</span><span id="score">0</span></div>
+      <div><span class="label">Best</span><span id="high">0</span></div>
+    </div>
+    <canvas id="board" width="400" height="400"
+            role="img" aria-label="2048 game board, 4 by 4 grid"></canvas>
+    <p class="help">Arrow keys or WASD to slide. R to restart.</p>
+  </div>
+
+  <h2>What lives where</h2>
+  <p class="lede">Compared to Snake's <code>main.py</code>: the slide-and-merge logic stays in <code>main.py</code> as ordinary Python &mdash; that part never touched the bridge. What moves into <code>nanopy.py</code> (81 code-lines, paid once): the <code>_g</code> / <code>_set_text</code> / <code>_set_status</code> wrappers, the 16-bit LCG, the <code>ctx.set("fillStyle", X)</code> property-write idiom (now <code>canvas["fillStyle"] = X</code>), the <code>js.window.set("__gFoo", on_foo)</code> dispatch registrations (now <code>@on_key("ArrowLeft")</code>), and the <code>localStorage</code> try/except dance (now <code>storage.get_int / set_int</code>).</p>
+  <p class="lede">Aspirational shape of <code>main.py</code> after Tier 2 #5 (<code>__setattr__</code> on nano, deferred from v0.6.0): <code>canvas["fillStyle"] = BG</code> becomes <code>canvas.fillStyle = BG</code>. The helper rewrites trivially; the game code doesn't.</p>
+
+  <section class="source" data-files="main.js"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

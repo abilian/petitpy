@@ -1,0 +1,8 @@
+-1073741823
+-4611686018427387903
+1073741824
+Traceback (most recent call last):
+  File "<stdin>", in <module>
+OverflowError: small int overflow
+
+[exit 1]

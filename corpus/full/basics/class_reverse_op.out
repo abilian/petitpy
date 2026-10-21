@@ -1,0 +1,12 @@
+A(4)
+A(7)
+B(a|b)
+B(a+b)
+B(a*b)
+B(a/b)
+B(a|b)
+B(a+b)
+B(a*b)
+B(a/b)
+
+[exit 0]

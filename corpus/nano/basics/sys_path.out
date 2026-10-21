@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", in <module>
+NameError: name 'open' isn't defined
+
+[exit 1]

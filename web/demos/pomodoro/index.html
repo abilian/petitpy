@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pomodoro — nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .timer-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 18px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    margin: 18px 0;
+    transition: border-color 0.2s ease;
+  }
+  .timer-card.work    { border-color: var(--err); }
+  .timer-card.short   { border-color: var(--ok); }
+  .timer-card.long    { border-color: var(--accent-2); }
+
+  #phase {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--fg-dim);
+    margin: 0 0 8px;
+  }
+  #display {
+    font-family: var(--mono);
+    font-size: 96px;
+    font-weight: 700;
+    line-height: 1.0;
+    margin: 4px 0 12px;
+    letter-spacing: -0.02em;
+  }
+  #counter {
+    font-size: 13px;
+    color: var(--fg-dim);
+    margin: 6px 0 0;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin: 12px 0 4px;
+  }
+
+  .durations {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .durations .field { margin-bottom: 0; }
+  .durations input[type=number] { width: 100%; }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; pomodoro</div>
+  <header>
+    <h1>Pomodoro timer, Python state machine</h1>
+    <p class="lede">A classic 25/5/15 Pomodoro timer driven by Python. <code>main.py</code> owns the phase state machine, reads the duration inputs on Start, and ticks once per second via <code>setInterval</code>. JavaScript only boots the wasm; every DOM read, write, title-bar update, and color change goes through the ADR-006 <code>js</code> bridge.</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="timer-card" id="timer-card">
+    <p id="phase">Work</p>
+    <div id="display">25:00</div>
+    <p id="counter">Pomodoros completed: 0</p>
+    <div class="controls">
+      <button type="button" id="start-btn" disabled>Start</button>
+      <button type="button" id="pause-btn" class="secondary" disabled>Pause</button>
+      <button type="button" id="reset-btn" class="secondary" disabled>Reset</button>
+      <button type="button" id="skip-btn"  class="secondary" disabled>Skip</button>
+    </div>
+  </div>
+
+  <h2>Durations (minutes)</h2>
+  <div class="durations">
+    <div class="field">
+      <label for="work-min">Work</label>
+      <input type="number" id="work-min" value="25" min="1" max="120">
+    </div>
+    <div class="field">
+      <label for="short-min">Short break</label>
+      <input type="number" id="short-min" value="5" min="1" max="60">
+    </div>
+    <div class="field">
+      <label for="long-min">Long break</label>
+      <input type="number" id="long-min" value="15" min="1" max="120">
+    </div>
+  </div>
+
+  <h2>Notes</h2>
+  <p class="lede">Durations are read on Start, not on every input change &mdash; mid-session edits do not retro-resize the current phase. After four completed work sessions, the next break is a long one and the count resets. The card border and the browser tab title both track the current phase so the timer is glanceable from another tab.</p>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

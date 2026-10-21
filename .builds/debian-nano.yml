@@ -1,0 +1,72 @@
+# Primary gate — the must-pass build for every push.
+# Validates the 541/541 byte-identical nano corpus, unit tests, lint, and
+# wasm garbage collection under Node (wasm-gc-check).
+image: debian/trixie
+packages:
+  - build-essential
+  - python3
+  - python3-pip
+  - git
+  - curl
+  - xz-utils
+  - ca-certificates
+  # wasm-gc-check drives the web build under Node.
+  - nodejs
+sources:
+  - https://git.sr.ht/~sfermigier/nanopython
+  # Pinned: the qstr counts in src/compiler/qstr.zig (N_MAIN/N_STATIC) and
+  # the corpus goldens are calibrated against this upstream revision.
+  # MICROPY_REV in the top-level Makefile is the authority; setup_sandbox
+  # below fails the build if the two drift apart.
+  - https://github.com/micropython/micropython#b14d129a163d980ab4ae3e3e509bcf6b1232b663
+environment:
+  # Zig 0.16.0 official release tarball for linux-x86_64.
+  # TODO(owner): bump this URL when the project upgrades past Zig 0.16.0.
+  ZIG_URL: https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
+  ZIG_DIR: /tmp/zig
+tasks:
+  - install_zig: |
+      mkdir -p "$ZIG_DIR"
+      curl -fsSL "$ZIG_URL" | tar xJ -C "$ZIG_DIR" --strip-components=1
+      echo "export PATH=$ZIG_DIR:\$PATH" >> ~/.buildenv
+      "$ZIG_DIR/zig" version
+  - setup_sandbox: |
+      cd ~/nanopython
+      mkdir -p sandbox
+      ln -sfn ~/micropython sandbox/micropython
+      # The pin's authority is MICROPY_REV in the Makefile. If the sources:
+      # ref above drifts from it, `make port` regenerates vendor/ from the
+      # wrong upstream and the failure surfaces far away (qstr count drift,
+      # undefined vendor symbols). Fail here instead, with the reason.
+      want=$(sed -n 's/^MICROPY_REV := *//p' Makefile)
+      got=$(git -C sandbox/micropython rev-parse HEAD)
+      case "$got" in
+        "$want"*) echo "micropython pinned at $got" ;;
+        *) echo "micropython ref mismatch: got $got, MICROPY_REV wants $want"; exit 1 ;;
+      esac
+      ls -la sandbox/
+  - port: |
+      cd ~/nanopython
+      make port
+  - build: |
+      cd ~/nanopython
+      make build
+  - check: |
+      cd ~/nanopython
+      make check
+  - test_unit: |
+      cd ~/nanopython
+      make test-unit
+  - test_integration: |
+      cd ~/nanopython
+      make test-integration
+  - lint: |
+      cd ~/nanopython
+      make lint
+  - wasm_gc_check: |
+      # The web build under Node, the way a page calls it: collection at
+      # safe points between JS callbacks keeps memory flat and live state
+      # intact. Nothing else exercises wasm collection.
+      cd ~/nanopython
+      node --version
+      make wasm-gc-check

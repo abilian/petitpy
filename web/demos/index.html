@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Demos &mdash; nanopython</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .section-head { margin: 22px 0 8px; display: flex; align-items: baseline; gap: 12px; }
+  .section-head h2 {
+    color: var(--fg); text-transform: none; font-size: 18px; letter-spacing: 0;
+    margin: 0; font-weight: 600;
+  }
+  .section-head .count {
+    font-family: var(--mono); font-size: 12px; color: var(--fg-dim);
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../">nanopython</a> &nbsp;/&nbsp; demos</div>
+  <header>
+    <h1>Demos</h1>
+    <p class="lede">Twelve self-contained showcases of what nanopython can do in a browser. Python does the computation, JavaScript does the rendering. Each demo is one HTML file, one <code>app.js</code> loader, one <code>main.py</code> &mdash; readable end-to-end.</p>
+  </header>
+
+  <div class="section-head">
+    <h2>Run Python</h2>
+    <span class="count">2 demos</span>
+  </div>
+  <div class="grid cards-3">
+    <a class="card-link" href="./playground/">
+      <div class="card">
+        <h3>Playground</h3>
+        <p>Write Python, pick an example, lazy-fetch micropython-lib packages, pipe stdin, share via URL. Save scripts to <code>localStorage</code>.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./snippets/">
+      <div class="card">
+        <h3>Snippets</h3>
+        <p>A simpler tour: eight pre-baked Python snippets (fibonacci, factorial, primes, quicksort, classes, comprehensions, FizzBuzz, hello).</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-head">
+    <h2>UI &amp; tools</h2>
+    <span class="count">5 demos</span>
+  </div>
+  <div class="grid cards-3">
+    <a class="card-link" href="./todo/">
+      <div class="card">
+        <h3>Todo list</h3>
+        <p>TodoMVC-style list. Python owns the model and renders rows via the <code>js</code> bridge; event delegation routes clicks back; state persists in <code>localStorage</code>.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./pomodoro/">
+      <div class="card">
+        <h3>Pomodoro</h3>
+        <p>Classic 25/5/15 work-break timer. Python runs the state machine, JavaScript ticks <code>setInterval</code> back into <code>main.py</code> once a second.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./calculator/">
+      <div class="card">
+        <h3>Calculator</h3>
+        <p>Integer four-function calculator. Python drives the state machine; button clicks and keystrokes both feed the same handler.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./color/">
+      <div class="card">
+        <h3>Color picker</h3>
+        <p>Linked HSL/RGB sliders with hex output. Python does the HSL&harr;RGB conversion on every slider event and paints the preview swatch.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./validation/">
+      <div class="card">
+        <h3>Form validation</h3>
+        <p>A shared <code>validators.py</code> module enforcing email, password, phone, and credit-card (Luhn) rules. Each form field is checked in Python on blur.</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="section-head">
+    <h2>Visualization &amp; simulation</h2>
+    <span class="count">5 demos</span>
+  </div>
+  <div class="grid cards-3">
+    <a class="card-link" href="./dashboard/">
+      <div class="card">
+        <h3>Dashboard</h3>
+        <p>Python aggregates a sales dataset by region and month; KPIs and four chart sections come back over stdout. JavaScript renders them on Canvas2D.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./simulation/">
+      <div class="card">
+        <h3>Predator-prey</h3>
+        <p>Lotka-Volterra dynamics. Python integrates the whole trajectory in one batch; JavaScript animates it and draws the phase plot.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./life/">
+      <div class="card">
+        <h3>Game of Life</h3>
+        <p>Conway's cellular automaton on a 60&times;40 torus. Python evolves each generation and only redraws the cells that changed; click or drag to paint.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./reaction-diffusion/">
+      <div class="card">
+        <h3>Reaction-diffusion</h3>
+        <p>Gray-Scott solver on an 80&times;80 grid, integrated in Q-scaled integer math (no floats in the nano build). Drag on the canvas to seed the reaction.</p>
+      </div>
+    </a>
+    <a class="card-link" href="./markdown/">
+      <div class="card">
+        <h3>Markdown editor</h3>
+        <p>Live preview pane driven by Python. Each keystroke fires an <code>input</code> event into <code>main.py</code>, which parses the source and writes HTML straight to the DOM.</p>
+      </div>
+    </a>
+  </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,88 @@
+# Cross-compile reach matrix — confirms the source compiles for every
+# Tier 1/2/3 target the project supports.
+#
+# Targets covered:
+#   - x86_64-linux-gnu (Tier 2, native host build + tiny runtime smoke)
+#   - aarch64-macos    (Tier 1; CI validates cross-compile only — Tier 1
+#                       runtime is the maintainer's mac, not CI)
+#   - x86_64-macos     (Tier 3; build-only)
+#   - aarch64-linux-gnu (build-only; unblocked once the va_list surface moved
+#                       to src/objects/strings/va_ops.c — Zig 0.16 emits
+#                       "disabled due to miscompilations" for
+#                       std.builtin.VaList on this target. This row pins
+#                       that workaround against regression.)
+#   - wasm32-wasi      (Tier 2; build + optional run under wasmtime)
+image: debian/trixie
+packages:
+  - build-essential
+  - python3
+  - python3-pip
+  - git
+  - curl
+  - xz-utils
+  - ca-certificates
+sources:
+  - https://git.sr.ht/~sfermigier/nanopython
+  # Pinned: the qstr counts in src/compiler/qstr.zig (N_MAIN/N_STATIC) and
+  # the corpus goldens are calibrated against this upstream revision.
+  # MICROPY_REV in the top-level Makefile is the authority; setup_sandbox
+  # below fails the build if the two drift apart.
+  - https://github.com/micropython/micropython#b14d129a163d980ab4ae3e3e509bcf6b1232b663
+environment:
+  ZIG_URL: https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
+  ZIG_DIR: /tmp/zig
+tasks:
+  - install_zig: |
+      mkdir -p "$ZIG_DIR"
+      curl -fsSL "$ZIG_URL" | tar xJ -C "$ZIG_DIR" --strip-components=1
+      echo "export PATH=$ZIG_DIR:\$PATH" >> ~/.buildenv
+      "$ZIG_DIR/zig" version
+  - install_wasmtime: |
+      # Best-effort: wasmtime is the reference WASI runtime; if the install
+      # fails the wasm task degrades to build-only.
+      curl -fsSL https://wasmtime.dev/install.sh | bash || true
+      echo "export PATH=\$HOME/.wasmtime/bin:\$PATH" >> ~/.buildenv
+  - setup_sandbox: |
+      cd ~/nanopython
+      mkdir -p sandbox
+      ln -sfn ~/micropython sandbox/micropython
+      # The pin's authority is MICROPY_REV in the Makefile. If the sources:
+      # ref above drifts from it, `make port` regenerates vendor/ from the
+      # wrong upstream and the failure surfaces far away (qstr count drift,
+      # undefined vendor symbols). Fail here instead, with the reason.
+      want=$(sed -n 's/^MICROPY_REV := *//p' Makefile)
+      got=$(git -C sandbox/micropython rev-parse HEAD)
+      case "$got" in
+        "$want"*) echo "micropython pinned at $got" ;;
+        *) echo "micropython ref mismatch: got $got, MICROPY_REV wants $want"; exit 1 ;;
+      esac
+  - port: |
+      cd ~/nanopython
+      make port
+  - build_x86_64_linux: |
+      cd ~/nanopython
+      zig build -Dconfig=nano
+      # Tiny runtime smoke — confirm the host binary actually executes.
+      echo 'print(1 + 1)' | ./zig-out/bin/nanopython
+  - build_x86_64_macos: |
+      cd ~/nanopython
+      zig build -Dtarget=x86_64-macos -Dconfig=nano
+  - build_aarch64_macos: |
+      cd ~/nanopython
+      zig build -Dtarget=aarch64-macos -Dconfig=nano
+  - build_aarch64_linux: |
+      cd ~/nanopython
+      zig build -Dtarget=aarch64-linux-gnu -Dconfig=nano
+  - build_wasm32_wasi: |
+      cd ~/nanopython
+      # Use the Makefile target rather than re-deriving the zig invocation.
+      # `wasm` pins -Dfeature-js=false: feature-js defaults ON for any wasm
+      # target (build.zig `.js = is_wasm_target`), which adds env::js_*
+      # imports that only a JS host resolves. A raw `zig build` here yields
+      # a binary wasmtime cannot instantiate.
+      make wasm
+      if command -v wasmtime >/dev/null 2>&1; then
+        echo 'print(1 + 1)' | wasmtime zig-out/bin/nanopython.wasm
+      else
+        echo "wasmtime not available — build-only for wasm"
+      fi

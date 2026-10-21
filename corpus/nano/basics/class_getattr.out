@@ -1,0 +1,5 @@
+__getattr__ add
+member __add__
+__add__
+
+[exit 0]

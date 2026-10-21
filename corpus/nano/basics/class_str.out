@@ -1,0 +1,9 @@
+str<C1 1>
+repr<C2 2>
+str<C1 1>
+True
+repr<C2 2>
+repr<C2 2>
+str<C3 1>
+
+[exit 0]

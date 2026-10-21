@@ -1,0 +1,21 @@
+__pos__ called
+__pos__ called
+__neg__ called
+__invert__ called
+__mul__ called
+__matmul__ called
+__truediv__ called
+__floordiv__ called
+__iadd__ called
+__isub__ called
+__mod__ called
+__pow__ called
+__or__ called
+__and__ called
+__xor__ called
+__lshift__ called
+__rshift__ called
+['__dir__', '__init__', '__module__', '__qualname__', '__repr__', '__abs__', '__add__', '__and__', '__eq__', '__floordiv__', '__ge__', '__gt__', '__iadd__', '__invert__', '__isub__', '__le__', '__lshift__', '__lt__', '__matmul__', '__mod__', '__mul__', '__ne__', '__neg__', '__or__', '__pos__', '__pow__', '__rshift__', '__sub__', '__truediv__', '__xor__', '__div__']
+False
+
+[exit 0]

@@ -1,0 +1,12 @@
+# Generated / vendored — don't touch
+sandbox/
+vendor/
+node_modules/
+zig-out/
+build-frozen/
+.zig-cache/
+projects/ci-build-monitor/dist/
+projects/ci-build-monitor/dist-ext/
+projects/pyfront/htmlcov/
+
+# Anything under sandbox/* is a symlink to external clones

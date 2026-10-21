@@ -1,0 +1,3 @@
+# Tests excluded from the corpus: reference output differs across two
+# runs (memory addresses, dict/set ordering, timing). One name/line.
+# Reference: /Users/fermigier/projects/clones/nanopython/sandbox/micropython/ports/unix/build-standard/micropython

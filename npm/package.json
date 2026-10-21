@@ -1,0 +1,21 @@
+{
+  "name": "petitpy",
+  "version": "0.0.0",
+  "description": "A small Python runtime for the browser: MicroPython-compatible, written in Zig, 333 KB of wasm with direct DOM access.",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": { "types": "./index.d.ts", "default": "./index.js" },
+    "./petitpy.wasm": "./petitpy.wasm",
+    "./js-bridge.js": "./js-bridge.js"
+  },
+  "files": ["index.js", "index.d.ts", "js-bridge.js", "wasi-fs.js", "petitpy.wasm", "README.md", "LICENSE"],
+  "dependencies": {
+    "@bjorn3/browser_wasi_shim": "^0.4.2"
+  },
+  "keywords": ["python", "micropython", "wasm", "webassembly", "interpreter", "browser"],
+  "license": "MIT AND PSF-2.0",
+  "homepage": "https://petitpy.lab.abilian.com/",
+  "repository": { "type": "git", "url": "https://git.sr.ht/~sfermigier/petitpy" }
+}

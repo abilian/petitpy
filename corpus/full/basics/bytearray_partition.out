@@ -1,0 +1,4 @@
+(bytearray(b'a'), bytearray(b's'), bytearray(b'dsf'))
+(bytearray(b'asd'), bytearray(b's'), bytearray(b'f'))
+
+[exit 0]

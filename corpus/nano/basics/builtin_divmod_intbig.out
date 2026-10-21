@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "<stdin>", in <module>
+OverflowError: small int overflow
+
+[exit 1]

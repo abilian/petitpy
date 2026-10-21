@@ -1,0 +1,127 @@
+# corpus/full-known-fails.txt — the full-arm regression baseline.
+#
+# Captures tests that fail under `-Dconfig=full` against the upstream
+# standard oracle's goldens for known-and-explicit reasons. Each entry
+# has a one-line rationale; categories follow the buckets in
+# notes/12-is-full-audit.md.
+#
+# Discipline (mirrors corpus/wasm-known-fails.txt):
+#   - `make check-full` (when wired) runs tools/full_gate.py.
+#   - Rejects any commit that EITHER introduces a new failing test
+#     not in this list (regression) OR keeps a test in this list that
+#     now passes (golden out of date — remove from the list, atomic).
+#   - The list only ever SHRINKS without an ADR-justified addition.
+#
+# State 2026-07-02: full corpus 545/552 = 98.7%. 7 names below.
+
+# --- VENDOR CONFIG DIVERGENCE (2) ---------------------------------------
+# Nano enables MICROPY_PY_ALL_INPLACE_SPECIAL_METHODS (per
+# port/mpconfigport.h:298-301); vendor `micropython` unix-standard does not.
+# Nano output is MORE conformant to CPython than vendor's. Explicit "benign
+# config mismatch" per the mpconfigport comment.
+class_inplace_op2
+
+# (bytearray_slice_assign removed 2026-07-02 — MICROPY_PY_ARRAY_SLICE_ASSIGN
+#  wired in src/objects/containers/objarray.zig arraySubscrImpl. Gated on
+#  build_options.is_full so nano keeps returning OBJ_NULL → SKIP.)
+
+# (memoryview_slice_assign removed 2026-07-02 — same code path handles the
+#  memoryview LHS case (len_adj==0 + write-through offset). Closed together
+#  with bytearray_slice_assign.)
+
+# (string_format_modulo removed 2026-07-02 — the actual divergence
+#  wasn't __index__ at all. The test's failing line was
+#  `"%(foo)s" % {}` — we raised TypeError("format string needs more
+#  arguments") instead of KeyError, because after dict-lookup missed
+#  the code fell through to the tuple-lookup path and hit its
+#  arg==0 raise. Vendor py/objstr.c:1720 raises KeyError(key) at
+#  the dict-miss site. Added the KeyError raise in
+#  src/objects/strings/objstr.zig strModuloFormatImpl right after
+#  npyStrDictGet returns 0. Rest of the test — including the
+#  `__int__`/`__index__` path — was already correct.)
+
+# --- PORT-SPECIFIC MODULES (4) ------------------------------------------
+# uctypes.bytearray_at is a MicroPython unix/stm32-port extension.
+# Not in nanopython per ADR 012 §4 (the unix-port-specific surface is
+# explicitly out of scope; nanopython targets the web).
+memoryview_slice_size
+
+# machine.PinBase / machine.Signal — MicroPython port-specific. Same.
+subclass_native_call
+
+# (sys_path removed 2026-06-13 — fixed in src/main.zig wireScriptFileAndPath:
+#  intern __file__ qstr dynamically + set __main__.__file__ + replace
+#  sys.path[0] with dirname(argv[1]). Nano golden refreshed to capture
+#  the NameError-on-open behavior under nano per byte-exact discipline.)
+
+# (builtin_override removed 2026-07-02 — added a Zig-side override dict
+#  in src/objects/objtype/objmodule.zig (`mp_module_builtins_override_dict`)
+#  wired into runtime.zig mp_load_global / mp_load_build_class /
+#  mp_import_name lookups, all gated on `build_options.is_full`. We
+#  didn't flip the vendor MICROPY_CAN_OVERRIDE_BUILTINS because that
+#  would shift mp_state_vm_t past dict_main and require re-doing the
+#  MpStateVmPartial offsets. Nano preserves the "fixed map →
+#  AttributeError" behavior the byte-exact golden was frozen against.)
+
+# --- ARCHITECTURAL (1) --------------------------------------------------
+# Test detects OBJ_REPR_D nan-boxing; nanopython uses OBJ_REPR_C
+# (LONGLONG/MPZ). Architectural choice; would not pass without an
+# OBJ_REPR_D port.
+nanbox_smallint
+
+# --- DEFERRED LARGE FEATURE SURFACE (2) — ADR 012 §4 --------------------
+# (builtin_compile removed 2026-07-02 — codeExecute + objIsCode ported
+#  in src/runtime/builtinevex.zig. Uses MICROPY_PY_BUILTINS_CODE_MINIMUM
+#  layout ({base, module_fun}) matching zig_compile_bridge.zig's
+#  compile_to_code_glue emit. Patches fun_bc.context->module.globals to
+#  the caller's globals before mp_call_function_0. Vendor's
+#  nlr_jump_callback restore-on-unwind becomes `defer` on the saved
+#  globals/locals.)
+
+# Vendor builtinhelp.c module list expects unix-port modules (btree,
+# cmath, socket, ssl, _thread, machine, …) that nanopython doesn't
+# ship. "Make help match vendor's module set" is a large surface.
+builtin_help
+
+# (self_type_check removed 2026-06-21 — surgical self-type guard added
+#  at the top of mp_obj_list_append. Vendor's CHECK_SELF_ARG-style
+#  checked_fun wrap would be the more general solution; this is the
+#  per-method version covering the test's actual surface. Closes the
+#  alignment crash on `list.append(1, 2)` without the full feature port.)
+
+# --- DESCRIPTOR-PROTOCOL DEEP-WORK (2) ----------------------------------
+# (class_setname_hazard removed 2026-06-13 — fixed by capture-then-call
+#  snapshot in objtype.zig __set_name__ collector matching vendor
+#  py/objtype.c:1256-1287. Live-mutation hazard from one __set_name__
+#  body's setattr was overwriting a sibling slot before the loop visited
+#  it; vendor captures bound methods first, then invokes.)
+
+# (class_setname_hazard_rand removed 2026-07-02 — Makefile check /
+#  check-full now route through build-frozen instead of build, so
+#  `import random` finds the frozen random.mpy under both native gates.
+#  The stochastic sequence-hazard test now runs and byte-matches vendor.)
+
+# --- DEQUE CPYTHON-COMPAT DIVERGENCE (2) --------------------------------
+# Same deque-shim story that's tracked under corpus/wasm-known-fails.txt.
+# nanopython-lib/collections.py ships a CPython-compatible deque(iterable)
+# — deque(()) works, no size arg required. Vendor MP's C-level deque is
+# stricter (deque(iterable, maxlen) required; d[i] TypeErrors on slice).
+# We chose CPython-compat because BFS / real-world algorithms use it.
+# The strict-MP behavior is still reachable via `from ucollections
+# import deque`. Both were fine under check-full pre-v0.7.1 because
+# `from collections import deque` failed at import (no frozen-tiny in
+# the check-full binary) → tests SKIPped; now that check-full carries
+# the frozen set, the SKIP is gone and the tests reach the assertions.
+deque_micropython
+deque_slice
+
+# (string_escape removed 2026-07-02 — surgical carveout in ordImpl
+#  (src/modules/modbuiltins.zig): under full, a 1-byte non-ASCII str
+#  (`data[0] >= 0x80`) returns data[0] directly instead of feeding it
+#  to utf8_get_char, which would walk off the end of the buffer for a
+#  lone raw high byte. Root cause: our lexer is str-unicode=false
+#  (raw-byte emission), so `"\xff"` is stored as [0xff] not [0xc3 0xbf];
+#  the utf8 path assumed valid UTF-8. Fully-consistent STR_UNICODE
+#  would need both a lexer flip AND codepoint-aware bytes_subscr;
+#  deferred. Closes ord("\xff") == 255 which is what CPython + vendor
+#  give.)

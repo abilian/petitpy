@@ -1,0 +1,16 @@
+# Build artifacts (a future `make build` target may populate /build/).
+# dist/ holds source-controlled per-page loaders now (bootstrap.js +
+# popup/options/status-loader.js), so it is NOT ignored.
+/build/
+
+# Output of `make ext-package` (web-ext build) — packaged .xpi / .zip.
+/dist-ext/
+
+# web-ext run / web-ext sign profile cache
+/.web-ext-artifacts/
+/web-ext-artifacts/
+
+# Editor
+*.swp
+*.swo
+.DS_Store

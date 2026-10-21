@@ -1,0 +1,6 @@
+bytearray(b'\x01\x02\x00\x00')
+bytearray(b'\x01\x02\x00\x00\x00')
+bytearray(b'\x01\x02\x00\x00\x00\x00\x00\x00\x00')
+bytearray(b'abcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefghabcdefgh')
+
+[exit 0]

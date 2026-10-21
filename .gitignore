@@ -1,0 +1,32 @@
+# Build artifacts
+.zig-cache/
+zig-out/
+
+# ADR-003 L2 — pre-compiled .mpy bytes for frozen-tiny modules
+# (regenerate: `make freeze`).
+build-frozen/
+
+# Generated MicroPython embed C package (regenerate: `make -C port`)
+vendor/micropython_embed/
+
+# (vendor/micropython-lib is a tracked submodule — see ADR-003 §D7)
+
+# embed.mk build dir
+port/build-embed/
+
+# Upstream MicroPython clone (symlink to an external git checkout).
+# Reproduce: clone github.com/micropython/micropython here.
+sandbox/
+notes/scratch/
+.workflow-tmp/
+coverage/
+notes/tech-reports/TR-001.pdf
+web/nanopython.wasm
+# Copied from golden-programs/works/ by tools/gen_gallery.py.
+web/gallery/
+
+# Zensical static-site output (regenerate: `make doc-build`)
+site/
+# release artifacts (`make release-dist`, `make npm-package`)
+/dist/
+npm/dist/

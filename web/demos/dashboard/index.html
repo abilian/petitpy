@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard — nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 14px; }
+  .filter-btn.active { background: var(--accent); color: #0b0f14; border-color: var(--accent); }
+  .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+  @media (max-width: 760px) { .charts { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table th, table td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  table th { color: var(--fg-dim); text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; dashboard</div>
+  <header>
+    <h1>Sales dashboard</h1>
+    <p class="lede">Python (in <code>main.py</code>) owns the dataset, computes every aggregation, and draws each canvas chart directly through the ADR-006 <code>js</code> bridge &mdash; <code>ctx.fillRect</code>, <code>beginPath</code>, <code>moveTo</code>/<code>lineTo</code>, <code>stroke</code>, <code>fillText</code>. JavaScript only boots wasm once. Click a region filter (wired by Python via <code>addEventListener</code>) to re-aggregate.</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <h2>Filters</h2>
+  <div id="filters" class="filter-bar"></div>
+
+  <h2>KPIs</h2>
+  <div class="grid cards-4">
+    <div class="card kpi"><div class="label">Total sales</div><div class="value" id="kpi-total-sales">&mdash;</div></div>
+    <div class="card kpi"><div class="label">Total units</div><div class="value" id="kpi-total-units">&mdash;</div></div>
+    <div class="card kpi"><div class="label">Avg order</div><div class="value" id="kpi-avg-order">&mdash;</div></div>
+    <div class="card kpi"><div class="label">Best month</div><div class="value" id="kpi-best-month">&mdash;</div></div>
+  </div>
+
+  <h2>Charts</h2>
+  <div class="charts">
+    <canvas id="chart-region" width="500" height="300"
+            role="img" aria-label="Sales by region — horizontal bar chart"></canvas>
+    <canvas id="chart-month" width="500" height="300"
+            role="img" aria-label="Sales by month — stacked bar chart"></canvas>
+  </div>
+  <canvas id="chart-trend" width="1020" height="320" style="margin-top:16px"
+          role="img" aria-label="Monthly sales trend per region — line chart"></canvas>
+
+  <h2>Top performers</h2>
+  <table>
+    <thead><tr><th>Region</th><th>Month</th><th>Sales</th><th>Units</th></tr></thead>
+    <tbody id="data-table-body"></tbody>
+  </table>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

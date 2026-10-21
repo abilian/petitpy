@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>nanopython — browser gallery</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./shared.css">
+<style>
+  .hero {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 28px;
+    margin-bottom: 28px;
+  }
+  .hero h1 { font-size: 32px; margin-bottom: 10px; }
+  .hero p.lede { font-size: 15px; max-width: 720px; }
+  .section-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    margin-top: 12px;
+  }
+  .big-card {
+    display: block;
+    text-decoration: none;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 22px 20px;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    color: var(--fg);
+  }
+  .big-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .big-card .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .big-card.games .pill { background: rgba(158, 206, 106, 0.18); color: #9ece6a; }
+  .big-card.demos .pill { background: rgba(122, 162, 247, 0.18); color: #7aa2f7; }
+  .big-card.exts  .pill { background: rgba(187, 154, 247, 0.18); color: #bb9af7; }
+  .big-card.play  .pill { background: rgba(240, 196, 73, 0.18); color: #f0c449; }
+  .big-card h2 {
+    color: var(--fg); text-transform: none; font-size: 20px;
+    letter-spacing: 0; margin: 0 0 8px; font-weight: 600;
+  }
+  .big-card p { color: var(--fg-dim); font-size: 13.5px; line-height: 1.55; margin: 0 0 12px; }
+  .big-card .meta { color: var(--accent); font-size: 13px; font-family: var(--mono); }
+  .big-card:hover .meta { color: var(--accent-2); }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>nanopython in the browser</h1>
+    <p class="lede">A Zig/C strangler of MicroPython compiled to <code>wasm32-wasi</code>, running locally via <a href="https://github.com/bjorn3/browser_wasi_shim">@bjorn3/browser_wasi_shim</a>. Python does the computation; JavaScript does the rendering. Pick a section below &mdash; everything runs entirely in your browser, no server. See the <a href="https://sr.ht/~sfermigier/nanopython/">project page</a> for the runtime itself.</p>
+  </section>
+
+  <div class="section-grid">
+    <a class="big-card play" href="./demos/playground/">
+      <div class="pill">Playground</div>
+      <h2>Write Python, right here</h2>
+      <p>An editor, a Run button, and the bytecode the compiler produced &mdash; the string table, the constants, then the opcodes for each scope. Load any of the 580 corpus programs known to run on wasm, or paste your own.</p>
+      <div class="meta">run &amp; disassemble &rarr;</div>
+    </a>
+
+    <a class="big-card games" href="./games/">
+      <div class="pill">Games</div>
+      <h2>Play something</h2>
+      <p>Six classics &mdash; Snake, Catch, Breakout, 2048, Tetris, Space Invaders &mdash; each written three ways: <strong style="color:#9ece6a;">kid</strong> (Python, no classes), <strong style="color:#bb9af7;">pro</strong> (Python, classes + decorators), <strong style="color:#f0c449;">js</strong> (JavaScript). Plus a memory-match demo that shows clicks + sound + collision helpers.</p>
+      <div class="meta">19 playable variants &rarr;</div>
+    </a>
+
+    <a class="big-card demos" href="./demos/">
+      <div class="pill">Demos</div>
+      <h2>See what Python can do</h2>
+      <p>Twelve interactive showcases &mdash; a Python REPL, a snippet runner, form validation, a sales dashboard, a Lotka-Volterra simulator, Conway's Game of Life, a markdown editor, reaction-diffusion, TodoMVC, a Pomodoro timer, a calculator, a color picker.</p>
+      <div class="meta">12 demos &rarr;</div>
+    </a>
+
+    <a class="big-card exts" href="./extensions/">
+      <div class="pill">Extensions</div>
+      <h2>Beyond the page</h2>
+      <p>Browser extensions and offline projects built on nanopython. Currently one: Nano Build Monitor, a Chrome/Firefox extension that watches CI builds across Sourcehut, GitHub, and GitLab, with all logic written in nanopython.</p>
+      <div class="meta">1 extension &rarr;</div>
+    </a>
+  </div>
+
+  <footer>
+    <p style="margin-top: 32px; color: var(--fg-dim); font-size: 13px;">
+      <a href="https://sr.ht/~sfermigier/nanopython/">project</a> &nbsp;&middot;&nbsp;
+      <a href="../">docs</a> &nbsp;&middot;&nbsp;
+      <a href="https://github.com/bjorn3/browser_wasi_shim">WASI shim</a>
+    </p>
+  </footer>
+</main>
+</body>
+</html>

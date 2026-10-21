@@ -1,0 +1,4 @@
+# golden: source=prescrypt-micropython; needs=
+# golden: works-on=micropython,nanopython-native,nanopython-wasm
+s1 = "long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string long string"
+s2 = "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string" "concatenated string"

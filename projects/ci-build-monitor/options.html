@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Nano Build Monitor - Settings</title>
+  <link rel="stylesheet" href="styles/common.css">
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-2xl font-semibold text-primary mb-6 flex items-center gap-3">
+      <img src="icons/icon48.png" alt="Nano Build Monitor" style="width: 32px; height: 32px;">
+      Nano Build Monitor Settings
+    </h1>
+
+    <div id="status-message" class="status-message"></div>
+
+    <div class="section">
+      <h2>Add Repository</h2>
+
+      <div class="form-group">
+        <label for="provider">CI Platform</label>
+        <select id="provider">
+          <option value="sourcehut">Sourcehut</option>
+          <option value="github">GitHub Actions</option>
+          <option value="gitlab">GitLab CI</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="identifier">
+          <span id="identifier-label">Username</span>
+        </label>
+        <input type="text" id="identifier" placeholder="username">
+        <p id="identifier-help" class="help-text">Your Sourcehut username (without ~)</p>
+      </div>
+
+      <div class="form-group hidden" id="token-group">
+        <label for="token">Personal Access Token</label>
+        <div class="token-input-wrapper">
+          <input type="password" id="token" class="token-input" placeholder="Optional for public repos">
+          <button type="button" class="token-toggle" id="token-toggle" title="Show/hide token">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+          </button>
+        </div>
+        <p id="token-help" class="help-text">Required for private repos</p>
+      </div>
+
+      <div class="btn-group">
+        <button id="test-btn" class="btn btn-secondary">Test Connection</button>
+        <button id="add-btn" class="btn btn-primary">Add Repository</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Monitored Repositories</h2>
+      <ul id="repo-list" class="list">
+        <li class="empty">No repositories configured</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Settings</h2>
+
+      <div class="form-group">
+        <label for="check-interval">Check Interval (minutes)</label>
+        <select id="check-interval">
+          <option value="1">1 minute</option>
+          <option value="5" selected>5 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="15">15 minutes</option>
+          <option value="30">30 minutes</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button id="save-settings-btn" class="btn btn-primary">Save Settings</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Debug</h2>
+      <p class="text-muted mb-3">View detailed status information and raw storage data.</p>
+      <a href="status.html" class="btn btn-secondary inline-block">Open Status Dashboard</a>
+    </div>
+
+    <div class="section">
+      <h2>Data Management</h2>
+
+      <div class="form-group">
+        <label>Export Data</label>
+        <p class="text-muted mb-3">Download your configuration or full backup as a JSON file.</p>
+        <div class="btn-group" style="margin-top: 0;">
+          <button id="export-settings-btn" class="btn btn-secondary">Export Settings</button>
+          <button id="export-full-btn" class="btn btn-secondary">Export All Data</button>
+        </div>
+      </div>
+
+      <hr>
+
+      <div class="form-group">
+        <label for="import-file">Import Data</label>
+        <p class="text-muted mb-3">Restore from a previously exported JSON file.</p>
+        <input type="file" id="import-file" accept=".json" style="display: none;">
+        <button id="import-btn" class="btn btn-secondary">Import from File...</button>
+      </div>
+
+      <hr>
+
+      <div class="form-group">
+        <p class="text-muted mb-3">Clear cached build data while keeping your repository configuration.</p>
+        <button id="clear-data-btn" class="btn btn-secondary">Clear Build Data</button>
+      </div>
+
+      <hr>
+
+      <div class="form-group">
+        <p class="text-danger mb-3">
+          <strong>Danger Zone:</strong> This will delete all your settings, monitored repositories, and build data. This action cannot be undone.
+        </p>
+        <button id="reset-all-btn" class="btn btn-danger">Reset All Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/chrome-shim.js"></script>
+  <script type="module" src="dist/options-loader.js"></script>
+</body>
+</html>

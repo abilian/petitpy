@@ -1,0 +1,66 @@
+# Secondary gate — the full-corpus posture (CONFIG=full).
+# Softer threshold than nano: the full corpus runs 545/552 (98.7%) against
+# a documented known-fails baseline, not byte-identical 100%. This manifest
+# catches regressions in the everything-on build path, and runs the
+# ReleaseFast gates (check-release).
+image: debian/trixie
+packages:
+  - build-essential
+  - python3
+  - python3-pip
+  - git
+  - curl
+  - xz-utils
+  - ca-certificates
+sources:
+  - https://git.sr.ht/~sfermigier/nanopython
+  # Pinned: the qstr counts in src/compiler/qstr.zig (N_MAIN/N_STATIC) and
+  # the corpus goldens are calibrated against this upstream revision.
+  # MICROPY_REV in the top-level Makefile is the authority; setup_sandbox
+  # below fails the build if the two drift apart.
+  - https://github.com/micropython/micropython#b14d129a163d980ab4ae3e3e509bcf6b1232b663
+environment:
+  ZIG_URL: https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz
+  ZIG_DIR: /tmp/zig
+  CONFIG: full
+tasks:
+  - install_zig: |
+      mkdir -p "$ZIG_DIR"
+      curl -fsSL "$ZIG_URL" | tar xJ -C "$ZIG_DIR" --strip-components=1
+      echo "export PATH=$ZIG_DIR:\$PATH" >> ~/.buildenv
+      echo "export CONFIG=full" >> ~/.buildenv
+      "$ZIG_DIR/zig" version
+  - setup_sandbox: |
+      cd ~/nanopython
+      mkdir -p sandbox
+      ln -sfn ~/micropython sandbox/micropython
+      # The pin's authority is MICROPY_REV in the Makefile. If the sources:
+      # ref above drifts from it, `make port` regenerates vendor/ from the
+      # wrong upstream and the failure surfaces far away (qstr count drift,
+      # undefined vendor symbols). Fail here instead, with the reason.
+      want=$(sed -n 's/^MICROPY_REV := *//p' Makefile)
+      got=$(git -C sandbox/micropython rev-parse HEAD)
+      case "$got" in
+        "$want"*) echo "micropython pinned at $got" ;;
+        *) echo "micropython ref mismatch: got $got, MICROPY_REV wants $want"; exit 1 ;;
+      esac
+      ls -la sandbox/
+  - port: |
+      cd ~/nanopython
+      make port
+  - build_full: |
+      cd ~/nanopython
+      CONFIG=full make build
+  - verify_full: |
+      cd ~/nanopython
+      CONFIG=full make verify
+  - test_unit_full: |
+      cd ~/nanopython
+      CONFIG=full make test-unit
+  - check_release: |
+      # The gates on ReleaseFast builds, which is what releases and
+      # benchmarks ship: Debug fills undefined memory with a fixed pattern
+      # and hides undefined behaviour (an enumerate() segfault went unseen
+      # for months that way).
+      cd ~/nanopython
+      make check-release

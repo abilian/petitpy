@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Calculator — nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .calc-wrap { max-width: 360px; margin: 8px auto 0; }
+  #display {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 16px;
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 600;
+    text-align: right;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-bottom: 12px;
+    min-height: 1.4em;
+    box-shadow: var(--shadow);
+  }
+  #display.err { color: var(--err); }
+  .pad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .pad button {
+    background: var(--bg-elev);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0;
+    height: 56px;
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: filter 0.1s ease;
+  }
+  .pad button:hover { filter: brightness(1.15); }
+  .pad button:active { filter: brightness(0.92); }
+  .pad button.op {
+    background: var(--accent);
+    color: #0b0f14;
+    border-color: var(--accent);
+  }
+  .pad button.op.active { background: var(--accent-2); border-color: var(--accent-2); }
+  .pad button.fn {
+    background: transparent;
+    color: var(--fg-dim);
+  }
+  .help { color: var(--fg-dim); font-size: 12px; margin-top: 12px; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; calculator</div>
+  <header>
+    <h1>Calculator</h1>
+    <p class="lede">Integer-only calculator driven from <code>main.py</code>. Python owns the state machine; division is integer division (<code>//</code>); overflow shows <code>Error</code>. Built on the nano build (no <code>float</code>, 30-bit smallints).</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="calc-wrap">
+    <div id="display">0</div>
+    <div class="pad" id="pad">
+      <button class="fn" data-key="C">C</button>
+      <button class="fn" data-key="CE">CE</button>
+      <button class="fn" data-key="NEG">+/-</button>
+      <button class="op" data-key="/">/</button>
+
+      <button data-key="7">7</button>
+      <button data-key="8">8</button>
+      <button data-key="9">9</button>
+      <button class="op" data-key="*">*</button>
+
+      <button data-key="4">4</button>
+      <button data-key="5">5</button>
+      <button data-key="6">6</button>
+      <button class="op" data-key="-">-</button>
+
+      <button data-key="1">1</button>
+      <button data-key="2">2</button>
+      <button data-key="3">3</button>
+      <button class="op" data-key="+">+</button>
+
+      <button data-key="0" style="grid-column: span 2;">0</button>
+      <button data-key="DEL">&larr;</button>
+      <button class="op" data-key="=">=</button>
+    </div>
+    <p class="help">Keys: 0&ndash;9, + &minus; * /, Enter for =, Esc for C, Backspace deletes.</p>
+  </div>
+
+  <h2>Notes</h2>
+  <p class="lede">State machine: <code>current_value</code>, <code>pending_op</code>, <code>accumulator</code>. On digit press, append to entry (capped at 9 digits to stay under the 30-bit smallint cap). On operator press, apply any pending operation, then store the new one. Division is <code>//</code> (truncated toward negative infinity per Python). Any <code>OverflowError</code> or divide-by-zero displays <code>Error</code>; the next press clears the error.</p>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

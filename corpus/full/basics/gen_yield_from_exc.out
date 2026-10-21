@@ -1,0 +1,4 @@
+caught ValueError from downstream
+[1, 2]
+
+[exit 0]

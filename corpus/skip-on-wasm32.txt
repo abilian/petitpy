@@ -1,0 +1,12 @@
+# corpus/skip-on-wasm32.txt — currently empty.
+#
+# This list is consulted by tools/wasm_gate.py: tests listed here are
+# excluded from the denominator AND verified to STILL fail (a passing
+# skip-listed test fails the gate as a "stale skip").
+#
+# Empty by default on main — the gate enforces the strict 541-denominator.
+# Add tests here only when they genuinely cannot pass on wasm32 by
+# construction (e.g. tests for fs paths that the wasi sandbox doesn't
+# allow). The 8 bignum tests in wasm-known-fails.txt are NOT skipped:
+# they could pass with MICROPY_LONGINT_IMPL=MPZ on wasm32, so they
+# remain visible in the failure count.

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Reaction-diffusion &mdash; nanopython demos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../../shared.css">
+<style>
+  .rd-layout { display: grid; grid-template-columns: 400px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 760px) { .rd-layout { grid-template-columns: 1fr; } }
+  .slider-row { display: grid; grid-template-columns: 120px 1fr 70px; gap: 10px; align-items: center; margin: 4px 0; }
+  .slider-row label { color: var(--fg-dim); font-size: 13px; }
+  .slider-row output { font-family: var(--mono); font-size: 12px; color: var(--fg); text-align: right; }
+  #rd-canvas { cursor: crosshair; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; reaction-diffusion</div>
+  <header>
+    <h1>Reaction-diffusion (Gray-Scott)</h1>
+    <p class="lede">A Gray-Scott reaction-diffusion solver running in <code>main.py</code>. The 80&times;80 grid of two chemicals U and V is integrated in Q-scaled integer math (Q=10000) since the nano build has no float marshaling. Python drives the <code>setInterval</code> animation loop, renders each cell via <code>ctx.fillRect</code>, and listens for mouse drag events to paint V (seeding the reaction). JavaScript only boots wasm.</p>
+  </header>
+
+  <p class="status" id="status">Loading&hellip;</p>
+
+  <div class="rd-layout">
+    <canvas id="rd-canvas" width="400" height="400"
+            role="img" aria-label="Reaction-diffusion grid &mdash; drag to paint"></canvas>
+    <div>
+      <h2>Parameters</h2>
+      <div id="sliders">
+        <div class="slider-row">
+          <label for="feed">Feed F</label>
+          <input type="range" id="feed" min="100" max="1000" step="5" value="545">
+          <output for="feed" id="feed-out">0.0545</output>
+        </div>
+        <div class="slider-row">
+          <label for="kill">Kill k</label>
+          <input type="range" id="kill" min="400" max="800" step="5" value="620">
+          <output for="kill" id="kill-out">0.0620</output>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 14px">
+        <button id="start-btn">Start</button>
+        <button id="pause-btn" class="secondary" disabled>Pause</button>
+        <button id="reset-btn" class="secondary">Reset</button>
+      </div>
+
+      <h2>How to use</h2>
+      <p class="lede">Drag on the canvas to paint V and seed the reaction. The default V-seed at center is enough to spawn a pattern; F and k sliders shape it. Classic stripe / spot regimes live near F=0.0545, k=0.062.</p>
+    </div>
+  </div>
+
+  <h2>Notes</h2>
+  <p class="lede">The nano build is float-less, so the entire solver works in integers scaled by Q=10000 (U=1.0 -> 10000). Sliders carry pre-scaled values: F slider value 545 means F = 0.0545; the per-step update <code>F*(1-U)</code> becomes <code>F_scaled * (Q - U) // Q</code>. The reaction term <code>U*V*V</code> requires a triple product that's done in stages to keep intermediates within the 30-bit small-int range. Rendering walks the 6400 cells but reuses the same grayscale lookup so the per-frame bridge cost stays around one <code>fillStyle</code>/<code>fillRect</code> pair per cell.</p>
+
+  <section class="source" data-files="main.py"></section>
+</main>
+<script type="module" src="../../lib/show-source.js"></script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
