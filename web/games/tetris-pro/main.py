@@ -117,7 +117,7 @@ class Game:
         self.over = True
         self.ticker.stop()
         self.render()
-        status("Game over — press R to restart.", "err")
+        status("Game over. Press R to restart.", "err")
 
     # ---- piece + collision ----------------------------------------------
 
@@ -356,7 +356,7 @@ def pause():
         return
     game.paused = not game.paused
     status(
-        "Paused — press P to resume." if game.paused else "Stack 'em up.",
+        "Paused. Press P to resume." if game.paused else "Stack 'em up.",
         "" if game.paused else "ok",
     )
     game.render()

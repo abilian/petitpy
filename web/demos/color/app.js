@@ -55,7 +55,7 @@ try {
   bridge.attachMemory(inst.exports.memory);
   bridge.attachExports(inst.exports);
   wasi.start(inst);
-  setStatus("Drag any slider — HSL and RGB stay linked.", "ok");
+  setStatus("Drag any slider: HSL and RGB stay linked.", "ok");
 } catch (e) {
   setStatus(`host error: ${e?.message ?? e}`, "err");
 }

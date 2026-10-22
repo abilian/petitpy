@@ -1,8 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
     <meta charset="UTF-8" />
-    <title>Playground — nanopython demos</title>
+    <title>Playground · petitpy</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root {
@@ -450,28 +451,28 @@
   <body>
     <main>
       <div class="crumb" style="font-size: 12px; color: var(--fg-dim); margin-bottom: 12px">
-        <a href="../" style="color: var(--accent); text-decoration: none">nanopython</a>
+        <a href="../" style="color: var(--accent); text-decoration: none">petitpy</a>
         &nbsp;/&nbsp; playground
       </div>
       <header>
-        <h1>nanopython in the browser</h1>
+        <h1>petitpy in the browser</h1>
         <p class="lede">
-          MicroPython, strangled into Zig and compiled to <code>wasm32-wasi</code>. Your program
-          runs locally and <em>compiles</em> locally &mdash; the bytecode on the right is what this
-          same wasm binary made of it.
+          petitpy, compiled to <code>wasm32-wasi</code>. Your program runs locally and
+          <em>compiles</em> locally: the bytecode on the right is what this same wasm binary
+          made of it.
         </p>
       </header>
 
       <div class="toolbar" role="toolbar" aria-label="Examples and saved scripts">
         <label for="example">Example</label>
         <select id="example" aria-label="Pick an example">
-          <option value="">— pick one —</option>
+          <option value="">(pick one)</option>
         </select>
 
         <span class="tb-sep"></span>
         <label for="saved" class="visually-hidden">Saved</label>
         <select id="saved" aria-label="Load a saved script">
-          <option value="">— none —</option>
+          <option value="">(none)</option>
         </select>
         <input
           type="text"
@@ -569,7 +570,7 @@ for i in range(10):
         <textarea
           id="stdin"
           spellcheck="false"
-          placeholder="optional &mdash; one line per input() call"
+          placeholder="Optional: one line per input() call"
           aria-label="stdin"
         ></textarea>
       </details>
@@ -580,14 +581,14 @@ for i in range(10):
           <span class="sep">•</span>
           <a href="../">more demos &rarr;</a>
           <span class="sep">•</span>
-          <a href="https://github.com/abilian/nanopython">project</a>
+          <a href="https://github.com/abilian/petitpy">project</a>
           <span class="sep">•</span>
-          <a href="https://github.com/abilian/nanopython/tree/main/docs">docs</a>
+          <a href="https://petitpy.lab.abilian.com/">docs</a>
           <span class="sep">•</span>
           <a href="https://github.com/bjorn3/browser_wasi_shim">WASI shim</a>
         </p>
         <p style="margin-top: 4px">
-          Tip: edit the code, click <strong>Share</strong>, and send the URL &mdash; the program is
+          Tip: edit the code, click <strong>Share</strong>, and send the URL. The program is
           encoded in <code>#code=…</code>.
         </p>
       </footer>

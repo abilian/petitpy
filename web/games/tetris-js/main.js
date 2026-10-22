@@ -346,7 +346,7 @@ function game_over() {
   over = true;
   stop_ticker();
   draw();
-  nanopy.status("Game over — press R to restart.", "err");
+  nanopy.status("Game over. Press R to restart.", "err");
 }
 
 function stop_ticker() {
@@ -453,7 +453,7 @@ function on_press(key) {
   else if (key === " ") hard_drop();
   else if (key === "p" || key === "P") {
     paused = !paused;
-    nanopy.status(paused ? "Paused — press P to resume." : "Stack 'em up.", paused ? "" : "ok");
+    nanopy.status(paused ? "Paused. Press P to resume." : "Stack 'em up.", paused ? "" : "ok");
     draw();
   } else if (key === "r" || key === "R") reset();
 }

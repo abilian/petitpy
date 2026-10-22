@@ -1,6 +1,6 @@
 # petitpy
 
-petitpy is a small Python runtime for the browser and Node (developed as nanopython): written in Zig, with direct DOM access from Python through the `js` module, building on MicroPython, whose `.mpy` bytecode it shares. The wasm is about 333 KB (164 KB gzipped).
+petitpy is a small Python runtime for the browser and Node (developed as nanopython): written in Zig, with direct DOM access from Python through the `js` module, building on MicroPython, whose `.mpy` bytecode it shares. The wasm is about 350 KB (about 170 KB gzipped).
 
 ```js
 import { loadPetitpy } from "petitpy";

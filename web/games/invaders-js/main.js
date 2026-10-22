@@ -101,7 +101,7 @@ function game_over_msg(message) {
     nanopy.set_text("high", high);
     nanopy.storage.set_int("invaders_js_high", high);
   }
-  nanopy.status(message + " — press R to play again.", "err");
+  nanopy.status(message + ". Press R to play again.", "err");
 }
 
 function wave_clear() {
@@ -127,7 +127,7 @@ function next_wave() {
   won = false;
   over = false;
   start_ticker();
-  nanopy.status(`Wave ${wave} — A/D move, space fire.`, "ok");
+  nanopy.status(`Wave ${wave}: A/D to move, space to fire.`, "ok");
 }
 
 function update() {

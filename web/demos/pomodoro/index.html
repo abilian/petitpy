@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Pomodoro — nanopython demos</title>
+<title>Pomodoro · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -62,7 +63,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; pomodoro</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; pomodoro</div>
   <header>
     <h1>Pomodoro timer, Python state machine</h1>
     <p class="lede">A classic 25/5/15 Pomodoro timer driven by Python. <code>main.py</code> owns the phase state machine, reads the duration inputs on Start, and ticks once per second via <code>setInterval</code>. JavaScript only boots the wasm; every DOM read, write, title-bar update, and color change goes through the ADR-006 <code>js</code> bridge.</p>
@@ -99,7 +100,7 @@
   </div>
 
   <h2>Notes</h2>
-  <p class="lede">Durations are read on Start, not on every input change &mdash; mid-session edits do not retro-resize the current phase. After four completed work sessions, the next break is a long one and the count resets. The card border and the browser tab title both track the current phase so the timer is glanceable from another tab.</p>
+  <p class="lede">Durations are read on Start, not on every input change, so mid-session edits do not resize the current phase. After four completed work sessions, the next break is a long one and the count resets. The card border and the browser tab title both track the current phase so the timer is glanceable from another tab.</p>
 
   <section class="source" data-files="main.py"></section>
 </main>

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Tetris-lite (pro-style) &mdash; nanopython demos</title>
+<title>Tetris-lite (pro-style) · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -19,7 +20,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; tetris-lite</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; tetris-lite</div>
   <header>
     <h1>Tetris-lite</h1>
     <p class="lede">Pro-style demo of the <code>nanopy</code> library. A <code>Game</code> class owns the playfield + active piece; <code>@on_key</code> decorators bind input; a <code>Ticker</code> runs gravity. Everything else (the bridge, the DOM, the canvas property writes, the localStorage dance) is in the library.</p>

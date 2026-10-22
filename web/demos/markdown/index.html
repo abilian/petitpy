@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Markdown editor — nanopython demos</title>
+<title>Markdown editor · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -81,7 +82,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; markdown</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; markdown</div>
   <header>
     <h1>Markdown editor with live preview</h1>
     <p class="lede">Every keystroke in the textarea fires an <code>input</code> event into Python (via the ADR-006 <code>js</code> bridge). <code>main.py</code> parses the Markdown source into HTML and writes the result straight into the preview pane via <code>set("innerHTML", html)</code>. JavaScript only boots the wasm. Save persists the source to <code>localStorage</code>; Load restores it.</p>

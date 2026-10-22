@@ -87,7 +87,7 @@ class Snake:
                 bold=True,
             )
             canvas.text(
-                "Score " + str(self.score) + " — press R to restart",
+                "Score " + str(self.score) + ". Press R to restart",
                 W // 2,
                 W // 2 + 18,
                 "gray",
@@ -100,7 +100,7 @@ class Snake:
         self.over = True
         self.ticker.stop()
         self.render()
-        status("Game over — press R to restart.", "err")
+        status("Game over. Press R to restart.", "err")
 
     def turn(self, dx, dy):
         if self.over:

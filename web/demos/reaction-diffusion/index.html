@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Reaction-diffusion &mdash; nanopython demos</title>
+<title>Reaction-diffusion · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -16,7 +17,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; reaction-diffusion</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; reaction-diffusion</div>
   <header>
     <h1>Reaction-diffusion (Gray-Scott)</h1>
     <p class="lede">A Gray-Scott reaction-diffusion solver running in <code>main.py</code>. The 80&times;80 grid of two chemicals U and V is integrated in Q-scaled integer math (Q=10000) since the nano build has no float marshaling. Python drives the <code>setInterval</code> animation loop, renders each cell via <code>ctx.fillRect</code>, and listens for mouse drag events to paint V (seeding the reaction). JavaScript only boots wasm.</p>
@@ -26,7 +27,7 @@
 
   <div class="rd-layout">
     <canvas id="rd-canvas" width="400" height="400"
-            role="img" aria-label="Reaction-diffusion grid &mdash; drag to paint"></canvas>
+            role="img" aria-label="Reaction-diffusion grid: drag to paint"></canvas>
     <div>
       <h2>Parameters</h2>
       <div id="sliders">

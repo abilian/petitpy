@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Validation — nanopython demos</title>
+<title>Validation · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; validation</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; validation</div>
   <header>
     <h1>Form validation, Python on both sides</h1>
-    <p class="lede">The Python rules in <code>validators.py</code> are lifted verbatim from Prescrypt's <code>validation-library</code> demo. Clicking <em>Validate</em> hands control to <code>main.py</code>, which reads each field, runs the validators, and writes errors straight back into the DOM via the ADR-006 <code>js</code> bridge &mdash; no stdout protocol. The same module would run on the server.</p>
+    <p class="lede">The Python rules in <code>validators.py</code> are lifted verbatim from Prescrypt's <code>validation-library</code> demo. Clicking <em>Validate</em> hands control to <code>main.py</code>, which reads each field, runs the validators, and writes errors straight back into the DOM via the ADR-006 <code>js</code> bridge, with no stdout protocol. The same module would run on the server.</p>
   </header>
 
   <p class="status" id="status">Loading&hellip;</p>

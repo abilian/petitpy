@@ -321,5 +321,5 @@ for bid in ("run-btn", "step-btn", "clear-btn", "random-btn"):
     _g(bid).disabled = False
 
 status = _g("status")
-_set_text(status, "Ready — click or drag to paint, then press Start.")
+_set_text(status, "Ready. Click or drag to paint, then press Start.")
 status.classList.add("ok")

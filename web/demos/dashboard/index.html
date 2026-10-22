@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Dashboard — nanopython demos</title>
+<title>Dashboard · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -17,10 +18,10 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; dashboard</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; dashboard</div>
   <header>
     <h1>Sales dashboard</h1>
-    <p class="lede">Python (in <code>main.py</code>) owns the dataset, computes every aggregation, and draws each canvas chart directly through the ADR-006 <code>js</code> bridge &mdash; <code>ctx.fillRect</code>, <code>beginPath</code>, <code>moveTo</code>/<code>lineTo</code>, <code>stroke</code>, <code>fillText</code>. JavaScript only boots wasm once. Click a region filter (wired by Python via <code>addEventListener</code>) to re-aggregate.</p>
+    <p class="lede">Python (in <code>main.py</code>) owns the dataset, computes every aggregation, and draws each canvas chart directly through the ADR-006 <code>js</code> bridge: <code>ctx.fillRect</code>, <code>beginPath</code>, <code>moveTo</code>/<code>lineTo</code>, <code>stroke</code>, <code>fillText</code>. JavaScript only boots wasm once. Click a region filter (wired by Python via <code>addEventListener</code>) to re-aggregate.</p>
   </header>
 
   <p class="status" id="status">Loading&hellip;</p>
@@ -39,12 +40,12 @@
   <h2>Charts</h2>
   <div class="charts">
     <canvas id="chart-region" width="500" height="300"
-            role="img" aria-label="Sales by region — horizontal bar chart"></canvas>
+            role="img" aria-label="Sales by region, horizontal bar chart"></canvas>
     <canvas id="chart-month" width="500" height="300"
-            role="img" aria-label="Sales by month — stacked bar chart"></canvas>
+            role="img" aria-label="Sales by month, stacked bar chart"></canvas>
   </div>
   <canvas id="chart-trend" width="1020" height="320" style="margin-top:16px"
-          role="img" aria-label="Monthly sales trend per region — line chart"></canvas>
+          role="img" aria-label="Monthly sales trend per region, line chart"></canvas>
 
   <h2>Top performers</h2>
   <table>

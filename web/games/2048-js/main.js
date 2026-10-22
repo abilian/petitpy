@@ -220,7 +220,7 @@ function on_press(key) {
   spawn();
   if (!any_move_possible()) {
     over = true;
-    nanopy.status("Game over — press R to restart.", "err");
+    nanopy.status("Game over. Press R to restart.", "err");
   }
   draw();
 }

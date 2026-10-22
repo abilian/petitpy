@@ -144,7 +144,7 @@ function update() {
         nanopy.set_text("high", score);
         nanopy.storage.set_int("breakout_js_high", score);
       }
-      nanopy.status("Game over — press R to play again.", "err");
+      nanopy.status("Game over. Press R to play again.", "err");
       return;
     }
     park_ball();
@@ -175,7 +175,7 @@ function draw() {
     screen.rect(0, H / 2 - 50, W, 100, "rgba(0, 0, 0, 0.78)");
     screen.text("Game over", W / 2, H / 2 - 10, "white", 28, "center", "middle", true);
     screen.text(
-      `Score ${score} — press R to play again`,
+      `Score ${score}. Press R to play again`,
       W / 2,
       H / 2 + 18,
       "gray",
@@ -187,7 +187,7 @@ function draw() {
     screen.rect(0, H / 2 - 50, W, 100, "rgba(0, 0, 0, 0.78)");
     screen.text("Cleared!", W / 2, H / 2 - 10, "yellow", 28, "center", "middle", true);
     screen.text(
-      `Score ${score} — press R for another round`,
+      `Score ${score}. Press R for another round`,
       W / 2,
       H / 2 + 18,
       "gray",

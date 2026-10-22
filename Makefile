@@ -722,7 +722,7 @@ wasm-gc-check: web
 
 ## npm-package: assemble the npm package in npm/dist/ (the web wasm, the
 ##              JS bridge and npm/'s API module), versioned from build.zig.
-##              Publishing (`npm publish npm/dist`) is the maintainer's step.
+##              Publishing (`npm publish ./npm/dist`) is the maintainer's step.
 npm-package: web
 	rm -rf npm/dist && mkdir -p npm/dist
 	cp npm/index.js npm/index.d.ts npm/README.md LICENSE web/lib/js-bridge.js web/lib/wasi-fs.js npm/dist/
@@ -759,7 +759,7 @@ release-publish:
 	  tag=$$(git describe --exact-match --tags HEAD 2>/dev/null); \
 	  [ "$$tag" = "v$$version" ] || { echo "HEAD is tagged '$$tag', not v$$version; tag the release first"; exit 1; }
 	uv publish dist/*.tar.gz dist/*.whl
-	npm publish npm/dist
+	npm publish ./npm/dist
 
 ## publish: clean, rebuild dist/ and upload it to PyPI (not npm). Needs
 ##          PyPI credentials for twine.

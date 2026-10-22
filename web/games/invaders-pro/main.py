@@ -189,7 +189,7 @@ class Game:
             self.high = self.score
             set_text("high", self.high)
             storage.set_int(STORAGE_KEY, self.high)
-        status(message + " — press R to play again.", "err")
+        status(message + ". Press R to play again.", "err")
 
     def wave_clear(self):
         self.won = True
@@ -213,7 +213,7 @@ class Game:
         self.won = False
         self.over = False
         self.ticker.start()
-        status("Wave " + str(self.wave) + " — A/D move, space fire.", "ok")
+        status("Wave " + str(self.wave) + ": A/D to move, space to fire.", "ok")
 
     # ---- per-tick update + render ----------------------------------------
 

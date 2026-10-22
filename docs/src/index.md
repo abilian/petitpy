@@ -17,6 +17,10 @@ petitpy script.py
 
 MicroPython proved a small Python is possible, but it targets microcontrollers. Pyodide brings CPython to the browser at tens of megabytes. petitpy aims between the two, with more of CPython's language than MicroPython accepts: `match` statements, Unicode strings on every build, exception chaining, class annotations and dataclass fields.
 
+## In six slides
+
+<div class="deck" data-pdf="pdf/petitpy.pdf"><a href="pdf/petitpy.pdf">petitpy, in six slides (PDF)</a></div>
+
 ## Where to go next
 
 - **See it run.** The [demos](/play/) run petitpy in your browser: [games](/play/games/), small [apps](/play/demos/), and a [playground](/play/demos/playground/) to type Python into.

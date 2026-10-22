@@ -112,7 +112,7 @@ def game_over(message):
         high = score
         nanopy.set_text("high", high)
         nanopy.storage.set_int("invaders_kid_high", high)
-    nanopy.status(message + " — press R to play again.", "err")
+    nanopy.status(message + ". Press R to play again.", "err")
 
 
 def wave_clear():
@@ -140,7 +140,7 @@ def next_wave():
     won = False
     over = False
     _start_ticker()
-    nanopy.status("Wave " + str(wave) + " — A/D move, space fire.", "ok")
+    nanopy.status("Wave " + str(wave) + ": A/D to move, space to fire.", "ok")
 
 
 def update():

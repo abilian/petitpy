@@ -141,7 +141,7 @@ class Game:
                     self.high = self.score
                     set_text("high", self.score)
                     storage.set_int("breakout_pro_high", self.score)
-                status("Game over — press R to play again.", "err")
+                status("Game over. Press R to play again.", "err")
             else:
                 self._park_ball()
 
@@ -179,7 +179,7 @@ class Game:
                 bold=True,
             )
             canvas.text(
-                "Score " + str(self.score) + " — press R to play again",
+                "Score " + str(self.score) + ". Press R to play again",
                 W // 2,
                 H // 2 + 18,
                 "gray",
@@ -200,7 +200,7 @@ class Game:
                 bold=True,
             )
             canvas.text(
-                "Score " + str(self.score) + " — press R for another round",
+                "Score " + str(self.score) + ". Press R for another round",
                 W // 2,
                 H // 2 + 18,
                 "gray",

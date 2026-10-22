@@ -98,7 +98,7 @@ function saveStore(obj) {
 function refreshSavedDropdown(selectName = "") {
   const store = loadStore();
   const names = Object.keys(store).sort();
-  $saved.innerHTML = '<option value="">— none —</option>';
+  $saved.innerHTML = '<option value="">(none)</option>';
   for (const name of names) {
     const opt = document.createElement("option");
     opt.value = name;
@@ -480,7 +480,7 @@ function populateGallery() {
   for (const [name, summary] of GALLERY) {
     const opt = document.createElement("option");
     opt.value = `gallery:${name}`;
-    opt.textContent = summary ? `${name} — ${summary}` : name;
+    opt.textContent = summary ? `${name}: ${summary}` : name;
     group.appendChild(opt);
   }
   $example.appendChild(group);

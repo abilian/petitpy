@@ -133,7 +133,7 @@ def draw():
             bold=True,
         )
         screen.text(
-            "In " + str(moves) + " moves — click to play again",
+            "In " + str(moves) + " moves. Click to play again",
             W // 2,
             W // 2 + 18,
             "gray",

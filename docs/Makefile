@@ -5,3 +5,6 @@ build:
 
 deploy: build
 	hop3 deploy --context prod -y
+
+clean:
+	rm -rf site

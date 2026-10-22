@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Game of Life &mdash; nanopython demos</title>
+<title>Game of Life · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -17,10 +18,10 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; life</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; life</div>
   <header>
     <h1>Conway's Game of Life</h1>
-    <p class="lede">A classic cellular automaton, with the rules and rendering driven entirely from <code>main.py</code>. Click or drag on the grid to paint cells. Python computes each generation on a 60&times;40 torus, then only redraws the cells that changed since the previous step &mdash; minimising the bridge traffic to the canvas.</p>
+    <p class="lede">A classic cellular automaton, with the rules and rendering driven entirely from <code>main.py</code>. Click or drag on the grid to paint cells. Python computes each generation on a 60&times;40 torus, then only redraws the cells that changed since the previous step, which keeps the bridge traffic to the canvas low.</p>
   </header>
 
   <p class="status" id="status">Loading&hellip;</p>

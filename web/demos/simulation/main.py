@@ -347,7 +347,7 @@ def on_tick(*_):
         STATE["running"] = False
         _stop_timer()
         _update_buttons()
-        set_status("Done — " + str(n) + " steps. Press Start to rerun.", "ok")
+        set_status("Done: " + str(n) + " steps. Press Start to rerun.", "ok")
 
 
 def on_start(*_):
@@ -441,4 +441,4 @@ _wire_sliders()
 
 draw_idle()
 _g("start-btn").disabled = False
-set_status("Ready — press Start to run a simulation.", "ok")
+set_status("Ready. Press Start to run a simulation.", "ok")

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Snake — nanopython demos</title>
+<title>Snake · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -15,7 +16,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; snake</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; snake</div>
   <header>
     <h1>Snake</h1>
     <p class="lede">Classic Snake driven from <code>main.py</code>. Python owns the game state, draws each frame to a canvas through the ADR-006 <code>js</code> bridge, and reads <code>keydown</code> events via <code>addEventListener</code>. JavaScript only boots the wasm.</p>

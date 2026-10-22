@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>nanopython — browser gallery</title>
+<title>petitpy demos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="./shared.css">
 <style>
@@ -62,43 +63,43 @@
 <body>
 <main>
   <section class="hero">
-    <h1>nanopython in the browser</h1>
-    <p class="lede">A Zig/C strangler of MicroPython compiled to <code>wasm32-wasi</code>, running locally via <a href="https://github.com/bjorn3/browser_wasi_shim">@bjorn3/browser_wasi_shim</a>. Python does the computation; JavaScript does the rendering. Pick a section below &mdash; everything runs entirely in your browser, no server. See the <a href="https://sr.ht/~sfermigier/nanopython/">project page</a> for the runtime itself.</p>
+    <h1>petitpy in the browser</h1>
+    <p class="lede">petitpy is a small Python runtime written in Zig. Here it is compiled to <code>wasm32-wasi</code> and runs in your browser through <a href="https://github.com/bjorn3/browser_wasi_shim">@bjorn3/browser_wasi_shim</a>. Python does the computation; JavaScript does the rendering. Everything below runs locally, with no server. The <a href="../">documentation</a> covers the runtime itself.</p>
   </section>
 
   <div class="section-grid">
     <a class="big-card play" href="./demos/playground/">
       <div class="pill">Playground</div>
       <h2>Write Python, right here</h2>
-      <p>An editor, a Run button, and the bytecode the compiler produced &mdash; the string table, the constants, then the opcodes for each scope. Load any of the 580 corpus programs known to run on wasm, or paste your own.</p>
+      <p>An editor, a Run button, and the bytecode the compiler produced: the string table, the constants, then the opcodes for each scope. Load any corpus program known to run on wasm, or paste your own.</p>
       <div class="meta">run &amp; disassemble &rarr;</div>
     </a>
 
     <a class="big-card games" href="./games/">
       <div class="pill">Games</div>
       <h2>Play something</h2>
-      <p>Six classics &mdash; Snake, Catch, Breakout, 2048, Tetris, Space Invaders &mdash; each written three ways: <strong style="color:#9ece6a;">kid</strong> (Python, no classes), <strong style="color:#bb9af7;">pro</strong> (Python, classes + decorators), <strong style="color:#f0c449;">js</strong> (JavaScript). Plus a memory-match demo that shows clicks + sound + collision helpers.</p>
+      <p>Six classics (Snake, Catch, Breakout, 2048, Tetris, Space Invaders), each written three ways: <strong style="color:#9ece6a;">kid</strong> (Python, no classes), <strong style="color:#bb9af7;">pro</strong> (Python, classes + decorators), <strong style="color:#f0c449;">js</strong> (JavaScript). Plus a memory-match demo that shows clicks + sound + collision helpers.</p>
       <div class="meta">19 playable variants &rarr;</div>
     </a>
 
     <a class="big-card demos" href="./demos/">
       <div class="pill">Demos</div>
       <h2>See what Python can do</h2>
-      <p>Twelve interactive showcases &mdash; a Python REPL, a snippet runner, form validation, a sales dashboard, a Lotka-Volterra simulator, Conway's Game of Life, a markdown editor, reaction-diffusion, TodoMVC, a Pomodoro timer, a calculator, a color picker.</p>
+      <p>Twelve interactive showcases: a Python REPL, a snippet runner, form validation, a sales dashboard, a Lotka-Volterra simulator, Conway's Game of Life, a markdown editor, reaction-diffusion, TodoMVC, a Pomodoro timer, a calculator, a color picker.</p>
       <div class="meta">12 demos &rarr;</div>
     </a>
 
     <a class="big-card exts" href="./extensions/">
       <div class="pill">Extensions</div>
       <h2>Beyond the page</h2>
-      <p>Browser extensions and offline projects built on nanopython. Currently one: Nano Build Monitor, a Chrome/Firefox extension that watches CI builds across Sourcehut, GitHub, and GitLab, with all logic written in nanopython.</p>
+      <p>Browser extensions and offline projects built on petitpy. Currently one: Nano Build Monitor, a Chrome/Firefox extension that watches CI builds across Sourcehut, GitHub, and GitLab, with all its logic in Python.</p>
       <div class="meta">1 extension &rarr;</div>
     </a>
   </div>
 
   <footer>
     <p style="margin-top: 32px; color: var(--fg-dim); font-size: 13px;">
-      <a href="https://sr.ht/~sfermigier/nanopython/">project</a> &nbsp;&middot;&nbsp;
+      <a href="https://github.com/abilian/petitpy">source</a> &nbsp;&middot;&nbsp;
       <a href="../">docs</a> &nbsp;&middot;&nbsp;
       <a href="https://github.com/bjorn3/browser_wasi_shim">WASI shim</a>
     </p>

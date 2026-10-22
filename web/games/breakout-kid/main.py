@@ -198,7 +198,7 @@ def update():
                 high = score
                 nanopy.set_text("high", score)
                 nanopy.storage.set_int("breakout_lite_high", score)
-            nanopy.status("Game over — press R to play again.", "err")
+            nanopy.status("Game over. Press R to play again.", "err")
             return
         park_ball()
 
@@ -242,7 +242,7 @@ def draw():
             bold=True,
         )
         screen.text(
-            "Score " + str(score) + " — press R to play again",
+            "Score " + str(score) + ". Press R to play again",
             W // 2,
             H // 2 + 18,
             "gray",
@@ -263,7 +263,7 @@ def draw():
             bold=True,
         )
         screen.text(
-            "Score " + str(score) + " — press R for another round",
+            "Score " + str(score) + ". Press R for another round",
             W // 2,
             H // 2 + 18,
             "gray",

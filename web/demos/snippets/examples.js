@@ -9,10 +9,10 @@ export const EXAMPLES = [
     title: "Hello World",
     code: `# Hello World - Your First Program
 print("Hello, World!")
-print("Welcome to nanopython!")
+print("Welcome to petitpy!")
 print()
 print("This Python runs in a WebAssembly sandbox")
-print("compiled from the nanopython interpreter.")
+print("compiled from the petitpy interpreter.")
 `,
   },
   {

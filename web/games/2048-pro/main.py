@@ -112,7 +112,7 @@ class Game:
         self._spawn()
         if not self._any_move():
             self.over = True
-            status("Game over — press R to restart.", "err")
+            status("Game over. Press R to restart.", "err")
         self.render()
 
     # ----- rendering -------------------------------------------------------

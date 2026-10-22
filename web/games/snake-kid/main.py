@@ -57,7 +57,7 @@ def update():
     # Wall collision.
     if nx < 0 or nx >= GRID or ny < 0 or ny >= GRID:
         game_over = True
-        nanopy.status("Game over — press R to restart.", "err")
+        nanopy.status("Game over. Press R to restart.", "err")
         return
 
     new_head = (nx, ny)
@@ -65,7 +65,7 @@ def update():
     body_to_check = snake if ate else snake[:-1]
     if new_head in body_to_check:
         game_over = True
-        nanopy.status("Game over — press R to restart.", "err")
+        nanopy.status("Game over. Press R to restart.", "err")
         return
 
     snake = [new_head] + (snake if ate else snake[:-1])
@@ -103,7 +103,7 @@ def draw():
             bold=True,
         )
         screen.text(
-            "Score " + str(score.value) + " — press R to restart",
+            "Score " + str(score.value) + ". Press R to restart",
             W // 2,
             W // 2 + 18,
             "gray",

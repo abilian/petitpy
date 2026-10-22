@@ -1,6 +1,6 @@
 # nanopython — browser demos
 
-A self-contained in-browser gallery of thirteen demos for [nanopython](../) (a Zig/C strangler of MicroPython). The interpreter is compiled to `wasm32-wasi` and run via [`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) loaded from a CDN.
+A self-contained in-browser gallery of thirteen demos for [petitpy](../), a small Python runtime written in Zig. The interpreter is compiled to `wasm32-wasi` and run via [`@bjorn3/browser_wasi_shim`](https://github.com/bjorn3/browser_wasi_shim) loaded from a CDN.
 
 The demos live as siblings under `web/`: `playground/` (the rich Python REPL with examples, package fetcher, stdin pane, and Save/Share), `snippets/`, `validation/`, `dashboard/`, `simulation/`, `life/`, `markdown/`, `snake/`, `reaction-diffusion/`, `todo/`, `pomodoro/`, `calculator/`, `color/`. The single shared `web/nanopython.wasm` is fetched relatively (`../nanopython.wasm`) from each demo.
 

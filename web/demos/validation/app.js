@@ -70,7 +70,7 @@ try {
   bridge.attachMemory(inst.exports.memory);
   bridge.attachExports(inst.exports);
   wasi.start(inst);
-  setStatus("Fill in the form — fields validate on blur, or click Validate.", "ok");
+  setStatus("Fill in the form. Fields validate on blur, or click Validate.", "ok");
   $btn.disabled = false;
 } catch (e) {
   setStatus(`host error: ${e?.message ?? e}`, "err");

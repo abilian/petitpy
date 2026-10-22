@@ -79,7 +79,7 @@ function update() {
         nanopy.set_text("high", score);
         nanopy.storage.set_int("catch_js_high", score);
       }
-      nanopy.status("Game over — press R to play again.", "err");
+      nanopy.status("Game over. Press R to play again.", "err");
       return;
     }
     reset_fruit();
@@ -102,7 +102,7 @@ function draw() {
     screen.rect(0, H / 2 - 50, W, 100, "rgba(0, 0, 0, 0.78)");
     screen.text("Game over", W / 2, H / 2 - 10, "white", 28, "center", "middle", true);
     screen.text(
-      `Caught ${score} — press R to play again`,
+      `Caught ${score}. Press R to play again`,
       W / 2,
       H / 2 + 18,
       "gray",

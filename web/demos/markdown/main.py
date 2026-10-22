@@ -234,4 +234,4 @@ _g("load-btn").addEventListener("click", on_load)
 
 _g("save-btn").disabled = False
 _g("load-btn").disabled = False
-set_status("Edit on the left — preview updates on every keystroke.", "ok")
+set_status("Edit on the left; the preview updates on every keystroke.", "ok")

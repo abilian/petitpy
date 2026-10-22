@@ -264,7 +264,7 @@ def on_press(key):
     spawn()
     if not any_move_possible():
         over = True
-        nanopy.status("Game over — press R to restart.", "err")
+        nanopy.status("Game over. Press R to restart.", "err")
     draw()
 
 

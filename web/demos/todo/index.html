@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>TodoMVC &mdash; nanopython demos</title>
+<title>TodoMVC · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -77,7 +78,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; todo</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; todo</div>
   <header>
     <h1>TodoMVC, Python on the wire</h1>
     <p class="lede">A classic TodoMVC built with the ADR-006 <code>js</code> bridge. Python owns the todo list, the filter state, and the DOM rendering; JS owns only the wasm loader and a tiny event-stash shim that surfaces clicked list-item ids back into Python. List state round-trips through <code>localStorage</code> as hand-rolled JSON because the bridge doesn't marshal native dicts.</p>
@@ -101,7 +102,7 @@
   </div>
 
   <h2>Notes</h2>
-  <p class="lede">Each <code>li</code> carries its todo id on a <code>data-id</code> attribute. A single delegated click handler on the <code>ul</code> reads <code>e.target.closest("li").dataset.id</code> and the action (<code>toggle</code> or <code>delete</code>) from the clicked element, stashes them on <code>window._todoId</code>/<code>window._todoAction</code>, then invokes the zero-arg <code>window._py_action</code> &mdash; the standard globals-stash workaround for the bridge dropping callback arguments.</p>
+  <p class="lede">Each <code>li</code> carries its todo id on a <code>data-id</code> attribute. A single delegated click handler on the <code>ul</code> reads <code>e.target.closest("li").dataset.id</code> and the action (<code>toggle</code> or <code>delete</code>) from the clicked element, stashes them on <code>window._todoId</code>/<code>window._todoAction</code>, then invokes the zero-arg <code>window._py_action</code>. Stashing on globals works around the bridge dropping callback arguments.</p>
 
   <section class="source" data-files="main.py"></section>
 </main>

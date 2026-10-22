@@ -103,7 +103,7 @@ def update():
                 high = score
                 nanopy.set_text("high", score)
                 nanopy.storage.set_int("catch_lite_high", score)
-            nanopy.status("Game over — press R to play again.", "err")
+            nanopy.status("Game over. Press R to play again.", "err")
             return
         reset_fruit()
 
@@ -137,7 +137,7 @@ def draw():
             bold=True,
         )
         screen.text(
-            "Caught " + str(score) + " — press R to play again",
+            "Caught " + str(score) + ". Press R to play again",
             W // 2,
             H // 2 + 18,
             "gray",

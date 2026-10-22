@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Extensions &mdash; nanopython</title>
+<title>Extensions · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../shared.css">
 <style>
@@ -28,15 +29,15 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../">nanopython</a> &nbsp;/&nbsp; extensions</div>
+  <div class="crumb"><a href="../">petitpy</a> &nbsp;/&nbsp; extensions</div>
   <header>
     <h1>Extensions</h1>
-    <p class="lede">Browser extensions and offline projects built on the nanopython runtime &mdash; things that go beyond a single page. Each extension loads <code>nanopython.wasm</code> in a privileged context (background script, options page, popup) and runs Python source there.</p>
+    <p class="lede">Browser extensions and offline projects built on petitpy, for things that go beyond a single page. Each extension loads <code>nanopython.wasm</code> in a privileged context (background script, options page, popup) and runs Python source there.</p>
   </header>
 
   <a class="ext-card" href="./ci-build-monitor/popup.html">
     <h3>Nano Build Monitor</h3>
-    <p>A Chrome/Firefox extension that watches CI builds across Sourcehut, GitHub, and GitLab. Background polling, badge updates, options page, popup &mdash; all driven by Python sources running on the nanopython wasm runtime via the ADR-006 JS bridge. Originally a Prescrypt-targeted Python-to-JS extension; this is the in-progress nanopython port.</p>
+    <p>A Chrome/Firefox extension that watches CI builds across Sourcehut, GitHub, and GitLab. Background polling, badge updates, options page and popup are all driven by Python sources running on petitpy's wasm build, through the JS bridge (ADR 006). Originally a Prescrypt-targeted Python-to-JS extension; this is the in-progress petitpy port.</p>
     <div class="meta">popup.html &middot; options.html &middot; live</div>
   </a>
 

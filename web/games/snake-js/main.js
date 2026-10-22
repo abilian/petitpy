@@ -62,7 +62,7 @@ function update() {
 
   if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID) {
     gameOver = true;
-    nanopy.status("Game over — press R to restart.", "err");
+    nanopy.status("Game over. Press R to restart.", "err");
     return;
   }
 
@@ -71,7 +71,7 @@ function update() {
   const check = ate ? snake : snake.slice(0, -1);
   if (check.some((p) => p[0] === newHead[0] && p[1] === newHead[1])) {
     gameOver = true;
-    nanopy.status("Game over — press R to restart.", "err");
+    nanopy.status("Game over. Press R to restart.", "err");
     return;
   }
 
@@ -107,7 +107,7 @@ function draw() {
     screen.rect(0, W / 2 - 50, W, 100, "rgba(0, 0, 0, 0.78)");
     screen.text("Game over", W / 2, W / 2 - 10, "white", 28, "center", "middle", true);
     screen.text(
-      `Score ${score} — press R to restart`,
+      `Score ${score}. Press R to restart`,
       W / 2,
       W / 2 + 18,
       "gray",

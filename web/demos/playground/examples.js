@@ -149,7 +149,7 @@ print("second:", b)
 print("upper :", (a + " " + b).upper())
 `,
 
-  "JS interop (browser only)": `# ADR-006 — direct JS / DOM access from Python.
+  "JS interop (browser only)": `# Direct JS / DOM access from Python (ADR 006).
 # 'import js' raises ImportError under native + wasmtime;
 # js.is_browser() returns True only when the JS host bridge is live.
 

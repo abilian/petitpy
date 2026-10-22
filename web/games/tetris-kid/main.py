@@ -221,7 +221,7 @@ def game_over():
     over = True
     _stop_ticker()
     draw()
-    nanopy.status("Game over — press R to restart.", "err")
+    nanopy.status("Game over. Press R to restart.", "err")
 
 
 # Manual timer wrap (couldn't use Ticker class without falling back to OO).
@@ -351,7 +351,7 @@ def on_press(key):
     elif key == "p" or key == "P":
         paused = not paused
         nanopy.status(
-            "Paused — press P to resume." if paused else "Stack 'em up.",
+            "Paused. Press P to resume." if paused else "Stack 'em up.",
             "" if paused else "ok",
         )
         draw()

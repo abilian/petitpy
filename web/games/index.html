@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Games &mdash; nanopython</title>
+<title>Games · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../shared.css">
 <style>
@@ -54,7 +55,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../">nanopython</a> &nbsp;/&nbsp; games</div>
+  <div class="crumb"><a href="../">petitpy</a> &nbsp;/&nbsp; games</div>
   <header>
     <h1>Games</h1>
     <p class="lede">Six classics, each written three ways against a small shared library (<code>nanopy.py</code> for Python, <code>nanopy.js</code> for JavaScript). Same game, same library shape, different writing style.</p>
@@ -63,9 +64,9 @@
   <div class="intro">
     <p style="margin: 0; font-size: 13.5px; line-height: 1.55;">Pick a variant to play it. Each row is one game with three flavors:</p>
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot legend-kid"></span><strong style="color:#9ece6a;">Kid</strong> &mdash; Python, module-level functions, no classes or decorators</span>
-      <span class="legend-item"><span class="legend-dot legend-pro"></span><strong style="color:#bb9af7;">Pro</strong> &mdash; Python, classes + <code>@on_key</code> decorators + <code>Ticker</code></span>
-      <span class="legend-item"><span class="legend-dot legend-js"></span><strong style="color:#f0c449;">JS</strong> &mdash; JavaScript, same library API, same writing style as the kid version</span>
+      <span class="legend-item"><span class="legend-dot legend-kid"></span><strong style="color:#9ece6a;">Kid</strong>: Python, module-level functions, no classes or decorators</span>
+      <span class="legend-item"><span class="legend-dot legend-pro"></span><strong style="color:#bb9af7;">Pro</strong>: Python, classes + <code>@on_key</code> decorators + <code>Ticker</code></span>
+      <span class="legend-item"><span class="legend-dot legend-js"></span><strong style="color:#f0c449;">JS</strong>: JavaScript, same library API, same writing style as the kid version</span>
     </div>
   </div>
 
@@ -152,7 +153,7 @@
   </div>
 
   <p class="lede" style="margin-top: 24px; font-size: 12.5px;">
-    The un-refactored <a href="./snake/"><code>snake/</code></a> is also still here as the comparison reference &mdash; same game without the library.
+    The un-refactored <a href="./snake/"><code>snake/</code></a> is also still here for comparison: the same game without the library.
   </p>
 
 </main>

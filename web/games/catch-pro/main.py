@@ -82,7 +82,7 @@ class Game:
                     self.high = self.score
                     set_text("high", self.score)
                     storage.set_int("catch_pro_high", self.score)
-                status("Game over — press R to play again.", "err")
+                status("Game over. Press R to play again.", "err")
             else:
                 self._reset_fruit()
         self.render()
@@ -112,7 +112,7 @@ class Game:
                 bold=True,
             )
             canvas.text(
-                "Caught " + str(self.score) + " — press R to play again",
+                "Caught " + str(self.score) + ". Press R to play again",
                 W // 2,
                 H // 2 + 18,
                 "gray",

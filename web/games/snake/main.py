@@ -147,7 +147,7 @@ def _draw_overlay(ctx, score):
     ctx.fillText("Game over", W // 2, W // 2 - 10)
     ctx.font = "14px system-ui"
     ctx.fillStyle = DIM
-    ctx.fillText("Score " + str(score) + " — press R to restart", W // 2, W // 2 + 18)
+    ctx.fillText("Score " + str(score) + ". Press R to restart", W // 2, W // 2 + 18)
     ctx.textAlign = "left"
 
 
@@ -282,7 +282,7 @@ def _game_over():
     STATE["over"] = True
     _stop_timer()
     _render()
-    _set_status("Game over — press R to restart.", "err")
+    _set_status("Game over. Press R to restart.", "err")
 
 
 # ---------------------------------------------------------------------------

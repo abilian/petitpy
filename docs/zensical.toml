@@ -13,8 +13,13 @@ docs_dir = "src"
 site_dir = "site"
 
 # Repository information
-repo_url = "https://git.sr.ht/~sfermigier/petitpy"
-edit_uri = "tree/main/item/docs/src"
+repo_url = "https://github.com/abilian/petitpy"
+edit_uri = "edit/main/docs/src"
+
+# deck.js is the slide viewer the home page embeds its PDF deck with (pdf.js,
+# loaded from jsDelivr only on a page that has a deck).
+extra_javascript = ["assets/deck.js"]
+extra_css = ["assets/deck.css"]
 
 copyright = """
 Copyright &copy; 2025-2026 Stefane Fermigier

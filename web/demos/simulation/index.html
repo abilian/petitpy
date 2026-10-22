@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Simulation — nanopython demos</title>
+<title>Simulation · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -15,10 +16,10 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; simulation</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; simulation</div>
   <header>
     <h1>Predator-prey simulation</h1>
-    <p class="lede">Lotka-Volterra in <code>main.py</code>. Python reads the sliders, integrates the trajectory, then drives a <code>setInterval</code> animation loop &mdash; drawing each frame to the canvas via the <code>js</code> bridge. JavaScript only boots the wasm.</p>
+    <p class="lede">Lotka-Volterra in <code>main.py</code>. Python reads the sliders, integrates the trajectory, then drives a <code>setInterval</code> animation loop that draws each frame to the canvas via the <code>js</code> bridge. JavaScript only boots the wasm.</p>
   </header>
 
   <p class="status" id="status">Loading&hellip;</p>
@@ -70,7 +71,7 @@
   </div>
 
   <h2>Notes</h2>
-  <p class="lede">The wasm instance boots once on page load &mdash; <code>main.py</code> wires the Start / Stop / Reset clicks and the slider inputs through the <code>js</code> bridge, then exits. From then on every click and every animation frame fires straight into the still-live Python module. Sliders are integer-valued (and rate sliders are pre-scaled by Q=1000) so the float-less nano build never touches floats.</p>
+  <p class="lede">The wasm instance boots once on page load. <code>main.py</code> wires the Start / Stop / Reset clicks and the slider inputs through the <code>js</code> bridge, then exits. From then on every click and every animation frame fires straight into the still-live Python module. Sliders are integer-valued (and rate sliders are pre-scaled by Q=1000) so the float-less nano build never touches floats.</p>
 
   <section class="source" data-files="main.py"></section>
 </main>

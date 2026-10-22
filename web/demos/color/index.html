@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if (!location.pathname.endsWith("/") && !location.pathname.endsWith(".html")) location.replace(location.pathname + "/" + location.search + location.hash);</script>
 <meta charset="UTF-8">
-<title>Color picker &mdash; nanopython demos</title>
+<title>Color picker · petitpy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../../shared.css">
 <style>
@@ -66,7 +67,7 @@
 </head>
 <body>
 <main>
-  <div class="crumb"><a href="../../">nanopython</a> &nbsp;/&nbsp; color</div>
+  <div class="crumb"><a href="../../">petitpy</a> &nbsp;/&nbsp; color</div>
   <header>
     <h1>HSL / RGB color picker</h1>
     <p class="lede">Two coupled slider banks, one Python state. Moving an HSL slider recomputes the RGB triple in <code>main.py</code> and back-fills the RGB sliders; moving an RGB slider does the reverse. Float-less integer sector arithmetic on both sides of the conversion.</p>

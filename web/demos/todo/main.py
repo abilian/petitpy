@@ -257,7 +257,7 @@ def render():
     if not visible:
         li = js.document.createElement("li")
         li.className = "empty-msg"
-        msg = "No todos yet — add one above."
+        msg = "No todos yet. Add one above."
         if TODOS.filter == "active":
             msg = "Nothing active. Nice."
         elif TODOS.filter == "completed":
@@ -360,5 +360,5 @@ _g("new-todo").disabled = False
 _g("add-btn").disabled = False
 
 status = _g("status")
-_set_text(status, "Ready — type a todo and press Add.")
+_set_text(status, "Ready. Type a todo and press Add.")
 status.classList.add("ok")

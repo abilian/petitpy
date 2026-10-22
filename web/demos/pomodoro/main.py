@@ -161,5 +161,5 @@ _g("skip-btn").addEventListener("click", on_skip)
 _render()
 for bid in ("start-btn", "reset-btn", "skip-btn"):
     _g(bid).disabled = False
-_g("status").textContent = "Ready — press Start to begin a Pomodoro."
+_g("status").textContent = "Ready. Press Start to begin a Pomodoro."
 _g("status").classList.add("ok")
