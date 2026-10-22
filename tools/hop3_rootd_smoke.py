@@ -594,17 +594,6 @@ def build_shim(shim_dir: Path, hop3_src: Path) -> None:
         if ": TypeAlias =" in src:
             src = _erase_type_aliases(src)
             changed = True
-        if "os.fdopen(" in src or "os.environ" in src:
-            # `os.fdopen` / `os.environ` aren't on the ROM os module.
-            # Redirect via os_ext for the CPython idioms
-            # `os.fdopen(fd, "w", …)` / `os.environ["NAME"]`.
-            new = src
-            if "os.fdopen(" in new:
-                new = new.replace("os.fdopen(", "_os_ext.fdopen(")
-            if "os.environ" in new:
-                new = new.replace("os.environ", "_os_ext.environ")
-            src = "import os_ext as _os_ext\n" + new
-            changed = True
         if ".value" in src and ("ErrorCode" in src or ".code.value" in src):
             # Nanopython has no Enum metaclass, so `class X(str, Enum)`
             # members stay as raw strings (see nanopython-lib/enum.py).

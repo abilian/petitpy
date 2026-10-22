@@ -34,6 +34,7 @@ There are two builds:
 | Files (native) | A write is visible to a reread only after `close()` or `flush()`. | Same rule, but CPython closes a dropped file at once (reference counting). |
 | Files and `os` (browser) | No `open()` or `os`; programs see the files the page passes in. | Full file system and `os` module. |
 | Threads | `_thread` is a stub. | Available. |
+| `subprocess` (native) | `run()`, `check_output()` and `call()` only, without `shell=True`; no `Popen`. A command that cannot be started gives return code 127. | `Popen`, and `FileNotFoundError` for a missing command. |
 | Missing module | `import nope` and `import os.nope` raise `ImportError`; there is no `ModuleNotFoundError`. | Raises `ModuleNotFoundError`. |
 
 ## Reporting a difference

@@ -4,7 +4,7 @@ The whole set gates on `try: import os` so every case is
 profile-agnostic — under nano's frozen 541/541 (where `os` is absent)
 the ImportError branch prints the same "expected" line.
 
-Cases: 34.
+Cases: 36.
 """
 
 from __future__ import annotations
@@ -827,6 +827,42 @@ CASES = [
             "    print('127')\n"
         ),
         "127\n",
+    ),
+    # Output is read while the child runs: a child that writes more than
+    # a pipe holds used to block until the timeout.
+    (
+        "subprocess_large_output_does_not_block",
+        (
+            "try:\n"
+            "    import subprocess\n"
+            "    r = subprocess.run(['/bin/sh', '-c', 'head -c 300000 /dev/zero; head -c 200000 /dev/zero >&2'], capture_output=True, timeout=10)\n"
+            "    r2 = subprocess.run(['/bin/cat'], input=b'x' * 300000, capture_output=True, timeout=10)\n"
+            "    print(r.returncode, len(r.stdout), len(r.stderr), len(r2.stdout))\n"
+            "except ImportError:\n"
+            "    print('0 300000 200000 300000')\n"
+        ),
+        "0 300000 200000 300000\n",
+    ),
+    (
+        "subprocess_streams_env_cwd_text",
+        (
+            "try:\n"
+            "    import subprocess, sys\n"
+            "    sys.stdout.flush()\n"
+            "    subprocess.run(['/bin/echo', 'inherited'])\n"
+            "    r = subprocess.run(['/bin/sh', '-c', 'echo $NPY_E; echo err >&2'], env={'NPY_E': 'e1'}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)\n"
+            "    print(repr(r.stdout), r.stderr)\n"
+            "    print(subprocess.run(['/bin/pwd'], cwd='/', capture_output=True, text=True).stdout.strip())\n"
+            "    print(subprocess.run(['/bin/echo', 'hidden'], stdout=subprocess.DEVNULL).stdout)\n"
+            "    print(subprocess.check_output(['/bin/echo', 'co']))\n"
+            "except ImportError:\n"
+            "    print('inherited')\n"
+            "    print(\"'e1\\\\nerr\\\\n' None\")\n"
+            "    print('/')\n"
+            "    print('None')\n"
+            "    print(\"b'co\\\\n'\")\n"
+        ),
+        "inherited\n'e1\\nerr\\n' None\n/\nNone\nb'co\\n'\n",
     ),
     (
         "signal_signal_records_and_returns_prev",

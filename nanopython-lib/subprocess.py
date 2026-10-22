@@ -6,22 +6,13 @@ CPython-shaped surface. The low-level primitive lives in the C-side
 handles the kwargs surface, the CompletedProcess / CalledProcessError
 / TimeoutExpired classes, and the `capture_output` sugar.
 
-Supported kwargs to run():
-  * input          — bytes to send to child stdin
-  * capture_output — True to capture stdout/stderr, False to discard
-                     (default False)
-  * timeout        — float seconds; when exceeded, child is SIGTERM'd
-                     and TimeoutExpired raised
-  * check          — True to raise CalledProcessError on non-zero exit
-                     (default False)
-  * env            — accepted but currently IGNORED by the low-level;
-                     parent env is always inherited. Silent no-op.
-  * shell          — must be False (or omitted); shell=True raises
-                     ValueError.
-  * stdin, stdout, stderr — accepted but ignored beyond capture_output.
+run() takes CPython's arguments except `shell=True` and `preexec_fn`
+and friends: `input`, `capture_output`, `timeout`, `check`, `env`, `cwd`,
+`stdin`/`stdout`/`stderr` (PIPE, STDOUT, DEVNULL, a file descriptor or
+a file object), and `text`/`universal_newlines`/`encoding`/`errors`.
+A command that cannot be run returns 127 rather than raising.
 
-Not supported: `Popen` (deferred — hop3-rootd doesn't need it),
-`check_output` (add if a caller needs it — cheap wrapper on run).
+Not supported: `Popen`.
 """
 import _subprocess
 
@@ -79,46 +70,69 @@ class TimeoutExpired(SubprocessError):
         super().__init__("Command " + repr(cmd) + " timed out after " + str(timeout) + " seconds")
 
 
-def run(argv, input=None, capture_output=False, timeout=None,
-        check=False, env=None, shell=False,
-        stdin=None, stdout=None, stderr=None):
-    """Run argv, wait, return CompletedProcess.
+INHERIT = -4  # _subprocess's mode for "same as the parent"
 
-    See module docstring for supported kwargs. `env` is currently a
-    silent no-op (child inherits parent env). `shell=True` raises.
-    """
+
+def _mode(stream):
+    if stream is None:
+        return INHERIT
+    if isinstance(stream, int):
+        return stream
+    return stream.fileno()
+
+
+def run(args, input=None, capture_output=False, timeout=None,
+        check=False, env=None, shell=False, cwd=None,
+        stdin=None, stdout=None, stderr=None,
+        text=None, universal_newlines=None, encoding=None, errors=None):
+    """Run args, wait, return CompletedProcess."""
     if shell:
         raise ValueError("shell=True is not supported")
+    if capture_output:
+        if stdout is not None or stderr is not None:
+            raise ValueError("stdout and stderr arguments may not be used with capture_output.")
+        stdout = stderr = PIPE
+    text = text or universal_newlines or encoding is not None or errors is not None
+    if input is not None:
+        if text:
+            input = input.encode(encoding or "utf-8", errors or "strict")
+        stdin = PIPE
+    if env is not None:
+        env = [k + "=" + v for k, v in env.items()]
+    if cwd is not None:
+        cwd = str(cwd)
 
     # Pass timeout as -1 to signal "no timeout" to the C layer.
     to = -1.0 if timeout is None else float(timeout)
 
-    returncode, out_bytes, err_bytes, timed_out = _subprocess._spawn_and_wait(
-        list(argv), input, to, env,
+    returncode, out, err, timed_out = _subprocess._spawn_and_wait(
+        [str(a) for a in args], input, to, env, cwd,
+        _mode(stdin), _mode(stdout), _mode(stderr),
     )
-
-    # Capture semantics: if capture_output=False, drop stdout/stderr
-    # so CompletedProcess reports them as None (matches CPython).
-    out = out_bytes if capture_output else None
-    err = err_bytes if capture_output else None
+    if text:
+        out = _decode(out, encoding, errors)
+        err = _decode(err, encoding, errors)
 
     if timed_out:
-        raise TimeoutExpired(argv, timeout, out, err)
+        raise TimeoutExpired(args, timeout, out, err)
 
     if check and returncode != 0:
-        raise CalledProcessError(returncode, argv, out, err)
+        raise CalledProcessError(returncode, args, out, err)
 
-    return CompletedProcess(argv, returncode, out, err)
-
-
-def check_output(argv, **kwargs):
-    """Run argv, return stdout bytes. Raise CalledProcessError on non-zero exit."""
-    kwargs["capture_output"] = True
-    kwargs["check"] = True
-    result = run(argv, **kwargs)
-    return result.stdout
+    return CompletedProcess(args, returncode, out, err)
 
 
-def call(argv, **kwargs):
-    """Run argv, wait, return returncode."""
-    return run(argv, **kwargs).returncode
+def _decode(data, encoding, errors):
+    if data is None:
+        return None
+    return data.decode(encoding or "utf-8", errors or "strict").replace("\r\n", "\n").replace("\r", "\n")
+
+
+def check_output(args, **kwargs):
+    """Run args, return its stdout. Raise CalledProcessError on non-zero exit."""
+    return run(args, stdout=PIPE, check=True, **kwargs).stdout
+
+
+def call(args, **kwargs):
+    """Run args, wait, return returncode."""
+    return run(args, **kwargs).returncode

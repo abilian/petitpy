@@ -10,7 +10,6 @@ The daemon and its tests run from their own source, unedited in the hop3-rootd r
 
 The copies get a few text rewrites, for things petitpy does not do yet:
 
-- `os.environ` and `os.fdopen` go through petitpy's `os_ext` module, whose `environ` holds a snapshot of common variables only.
 - `ErrorCode.X.value` becomes `ErrorCode.X`: a petitpy `Enum` member is its raw value.
 - The one `TypeAlias` assignment gets `object` as its value, since petitpy does not evaluate `list[str]` or `int | None` at run time yet.
 

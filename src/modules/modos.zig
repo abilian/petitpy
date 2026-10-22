@@ -80,11 +80,14 @@
 //! MP_QSTR_st_mtime
 //! MP_QSTR_st_ctime
 //! MP_QSTR_os_path
+//! MP_QSTR_os_ext
+//! MP_QSTR__environ
 //! MP_QSTR___getattr__
 //! MP_REGISTER_MODULE(MP_QSTR_os, mp_module_os);
 //! #endif
 //! __qstr_shadow_end__
 
+const std = @import("std");
 const build_options = @import("build_options");
 const mirrors = @import("../mp_mirrors.zig");
 const argcheck = @import("../runtime/argcheck.zig");
@@ -195,19 +198,45 @@ const Body = if (enabled) struct {
     extern fn mp_obj_list_append(list: Obj, item: Obj) callconv(.c) Obj;
 
     extern fn mp_import_name(name: Qstr, fromlist: Obj, level: Obj) callconv(.c) Obj;
+    extern fn mp_load_method_maybe(base: Obj, attr: Qstr, dest: *[2]Obj) callconv(.c) void;
+    extern fn mp_obj_new_dict(n: usize) callconv(.c) Obj;
+    extern fn mp_obj_dict_store(dict: Obj, key: Obj, value: Obj) callconv(.c) Obj;
+    extern fn mp_obj_new_str(data: [*]const u8, len: usize) callconv(.c) Obj;
     extern fn mp_obj_new_exception_msg_varg(t: *const anyopaque, fmt: [*:0]const u8, ...) callconv(.c) Obj;
     extern const mp_type_AttributeError: anyopaque;
 
     // PEP 562 module __getattr__: `os.path` is nanopython-lib/os_path.py,
     // imported on first access, since the ROM globals dict cannot hold a
-    // module loaded at run time.
+    // module loaded at run time. Anything else `os` lacks natively, such
+    // as `environ` and `makedirs`, comes from nanopython-lib/os_ext.py.
     fn py_os_getattr(name: Obj) callconv(.c) Obj {
         const attr = mirrors.qstrValue(name);
         if (attr == mp.MP_QSTR_path) {
             return mp_import_name(mp.MP_QSTR_os_path, returnNone(), mirrors.newSmallInt(0));
         }
+        const ext = mp_import_name(mp.MP_QSTR_os_ext, returnNone(), mirrors.newSmallInt(0));
+        // Without os_ext on the path, the attribute is just missing.
+        pyerr.pending_exc = 0;
+        if (ext != mirrors.OBJ_NULL) {
+            var dest: [2]Obj = .{ mirrors.OBJ_NULL, mirrors.OBJ_NULL };
+            mp_load_method_maybe(ext, attr, &dest);
+            if (dest[0] != mirrors.OBJ_NULL) return dest[0];
+        }
         pyerr.pending_exc = mp_obj_new_exception_msg_varg(&mp_type_AttributeError, "no attribute '%q'", @as(usize, attr));
         return mirrors.OBJ_NULL;
+    }
+
+    // os._environ(): the process environment as a new dict, which
+    // os_ext.environ starts from.
+    fn py_os_environ() callconv(.c) Obj {
+        const d = mp_obj_new_dict(0);
+        var p = std.c.environ;
+        while (p[0]) |entry| : (p += 1) {
+            const s = std.mem.span(entry);
+            const eq = std.mem.indexOfScalar(u8, s, '=') orelse continue;
+            _ = mp_obj_dict_store(d, mp_obj_new_str(s.ptr, eq), mp_obj_new_str(s.ptr + eq + 1, s.len - eq - 1));
+        }
+        return d;
     }
 
     fn raiseOSError(err: c_int) Obj {
@@ -560,6 +589,7 @@ const Body = if (enabled) struct {
 
     // ── Function-object exports ──────────────────────────────────────
 
+    pub export const mp_os_environ_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_0 }, .fun = @ptrCast(&py_os_environ) };
     pub export const mp_os_getattr_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_os_getattr) };
     pub export const mp_os_urandom_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_os_urandom) };
     pub export const mp_os_open_obj: mirrors.MpObjFunBuiltinVar = .{ .base = .{ .type = &mp_type_fun_builtin_var }, .sig = mirrors.makeFunSig(2, 3, false), .fun = @ptrCast(&py_os_open) };
@@ -622,6 +652,7 @@ const Body = if (enabled) struct {
         .{ .key = qKey(mp.MP_QSTR_getcwd), .value = &mp_os_getcwd_obj },
         .{ .key = qKey(mp.MP_QSTR_chdir), .value = &mp_os_chdir_obj },
         .{ .key = qKey(mp.MP_QSTR_getenv), .value = &mp_os_getenv_obj },
+        .{ .key = qKey(mp.MP_QSTR__environ), .value = &mp_os_environ_obj },
         .{ .key = qKey(mp.MP_QSTR_putenv), .value = &mp_os_putenv_obj },
         .{ .key = qKey(mp.MP_QSTR_unsetenv), .value = &mp_os_unsetenv_obj },
         // remove is CPython's canonical name; unlink is the POSIX alias.
@@ -711,6 +742,7 @@ comptime {
         _ = &Body.mp_os_getcwd_obj;
         _ = &Body.mp_os_chdir_obj;
         _ = &Body.mp_os_getenv_obj;
+        _ = &Body.mp_os_environ_obj;
         _ = &Body.mp_os_putenv_obj;
         _ = &Body.mp_os_unsetenv_obj;
         _ = &Body.mp_os_unlink_obj;

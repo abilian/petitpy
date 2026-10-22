@@ -56,6 +56,9 @@ extern const mp_op_delitem_obj: mirrors.MpObjFunBuiltinFixed;
 
 // ── extern C runtime fns ────────────────────────────────────────────
 extern fn mp_getiter(o: Obj, iter_buf: ?*anyopaque) callconv(.c) Obj;
+extern fn mp_load_method_maybe(base: Obj, attr: Qstr, dest: *[2]Obj) callconv(.c) void;
+extern fn mp_call_method_n_kw(n_args: usize, n_kw: usize, args: [*c]const Obj) callconv(.c) Obj;
+extern fn mp_obj_subscr(base: Obj, index: Obj, value: Obj) callconv(.c) Obj;
 extern fn mp_iternext(o: Obj) callconv(.c) Obj;
 extern fn mp_obj_new_tuple(n: usize, items: [*c]const Obj) callconv(.c) Obj;
 extern fn mp_obj_equal(o1: Obj, o2: Obj) callconv(.c) bool;
@@ -419,6 +422,28 @@ inline fn isDictOrOrdered(o: Obj) bool {
     return @intFromPtr(slot) == @intFromPtr(&mp_obj_dict_make_new);
 }
 
+/// CPython's rule for a non-dict argument: one with a `keys()` method is
+/// a mapping, read through `keys()` and subscripting. MicroPython reads
+/// every non-dict as (key, value) pairs. False when `other` has no keys().
+fn updateFromKeys(self: Obj, other: Obj) PyError!bool {
+    var dest: [2]Obj = .{ mirrors.OBJ_NULL, mirrors.OBJ_NULL };
+    mp_load_method_maybe(other, mp.MP_QSTR_keys, &dest);
+    if (dest[0] == mirrors.OBJ_NULL) return false;
+    const keys = mp_call_method_n_kw(0, 0, &dest);
+    if (pyerr.pending_exc != 0) return error.PyRaise;
+    const iter = mp_getiter(keys, null);
+    if (pyerr.pending_exc != 0) return error.PyRaise;
+    while (true) {
+        const k = mp_iternext(iter);
+        if (k == mirrors.OBJ_STOP_ITERATION) break;
+        if (pyerr.pending_exc != 0) return error.PyRaise;
+        const v = mp_obj_subscr(other, k, mirrors.OBJ_SENTINEL);
+        if (pyerr.pending_exc != 0) return error.PyRaise;
+        mp_map_lookup(&mirrors.MpObjDict.fromObj(self).map, k, mp.MP_MAP_LOOKUP_ADD_IF_NOT_FOUND).?.value = v;
+    }
+    return true;
+}
+
 fn dictUpdateImpl(n_args: usize, args: [*c]const Obj, kwargs: *mirrors.MpMap) PyError!Obj {
     try ensureNotFixed(args[0]);
     mp_arg_check_num_sig(n_args, kwargs.bits.used, ARG_SIG_UPDATE);
@@ -435,6 +460,8 @@ fn dictUpdateImpl(n_args: usize, args: [*c]const Obj, kwargs: *mirrors.MpMap) Py
                     elem.?.value = v;
                 }
             }
+        } else if (build_options.is_full and try updateFromKeys(args[0], args[1])) {
+            // A mapping that is not a dict, such as a dict subclass.
         } else {
             // iterable of (key, value) pairs
             const iter = mp_getiter(args[1], null);

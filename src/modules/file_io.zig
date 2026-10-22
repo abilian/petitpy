@@ -17,6 +17,7 @@
 //! MP_QSTR_TextIOWrapper
 //! MP_QSTR_buffer
 //! MP_QSTR_readlines
+//! MP_QSTR_fileno
 //! #endif
 //! __qstr_shadow_end__
 
@@ -233,6 +234,21 @@ fn npyFilePrint(print: ?*const anyopaque, self_in: Obj, kind: c_int) callconv(.c
     _ = mp_printf(print, "<io.%s %d>", qstr_str(@intCast(t.name)), fd);
 }
 
+// ── fileno() ───────────────────────────────────────────────────────────
+extern const mp_type_fun_builtin_1: anyopaque;
+extern fn mp_raise_OSError_polled(errno_: c_int) callconv(.c) void;
+
+fn npyFileFileno(self_in: Obj) callconv(.c) Obj {
+    const self: *NpyFile = @ptrFromInt(self_in);
+    const fp = self.fp orelse {
+        mp_raise_OSError_polled(EBADF);
+        return mirrors.OBJ_NULL;
+    };
+    return mirrors.newSmallInt(fileno(fp));
+}
+
+const npy_file_fileno_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&npyFileFileno) };
+
 // ── locals_dict for FileIO/TextIOWrapper ───────────────────────────────
 const RomEntry = extern struct {
     key: Obj,
@@ -248,6 +264,7 @@ const npy_file_locals_dict_table = [_]RomEntry{
     .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR_seek)), .value = &mp_stream_seek_obj },
     .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR_tell)), .value = &mp_stream_tell_obj },
     .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR_flush)), .value = &mp_stream_flush_obj },
+    .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR_fileno)), .value = &npy_file_fileno_obj },
     .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR_close)), .value = &mp_stream_close_obj },
     .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR___del__)), .value = &mp_stream_close_obj },
     .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR___enter__)), .value = &mp_identity_obj },

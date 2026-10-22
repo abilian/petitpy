@@ -41,6 +41,23 @@ def load_hook() -> types.ModuleType:
     return module
 
 
+OS_EXT_CHECK = """\
+import os, subprocess
+from os import environ, makedirs
+os.environ['NPY_WL'] = 'v'
+assert os.getenv('NPY_WL') == 'v' and environ is os.environ
+assert subprocess.run(['/bin/sh', '-c', 'echo $NPY_WL'], capture_output=True).stdout == b'v\\n'
+assert subprocess.run(['/bin/sh', '-c', 'echo $NPY_WL'], capture_output=True, env={**os.environ, 'NPY_WL': 'w'}).stdout == b'w\\n'
+del os.environ['NPY_WL']
+assert os.getenv('NPY_WL') is None and 'NPY_WL' not in os.environ
+makedirs('d/a/b')
+makedirs('d/a', exist_ok=True)
+open('d/a/f', 'w').close()
+assert [(p, sorted(f)) for p, d, f in os.walk('d')] == [('d', []), ('d/a', ['f']), ('d/a/b', [])]
+assert hasattr(os, 'fdopen') and not hasattr(os, 'nope')
+"""
+
+
 def module_name(dest: str) -> str:
     """`collections/__init__.py` -> `collections`, `unittest/mock.py` -> `unittest.mock`."""
     parts = dest.removesuffix(".py").split("/")
@@ -68,6 +85,8 @@ def main() -> int:
         sources = [f"import {module_name(d)}" for d in sorted(files.values())]
         sources += ["from collections import Counter, abc", "from importlib import metadata"]
         sources += ["import os\nassert os.path.join('a', 'b') == 'a/b'", "from os import path", "import os.path"]
+        # The parts of os written in Python (os_ext.py, also through os.__getattr__).
+        sources += [OS_EXT_CHECK]
         script = Path(tmp) / "case.py"
         for source in sources:
             script.write_text(source + "\n")

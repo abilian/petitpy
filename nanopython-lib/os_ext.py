@@ -1,10 +1,9 @@
-"""nanopython — os module extensions.
+"""nanopython — the parts of `os` written in Python.
 
-Nanopython's C-side `os` module is registered from a ROM globals dict
-so we can't monkey-patch new functions onto it at runtime. This module
-provides the missing helpers under a separate name; runner-level source
-rewrites redirect `os.fdopen(fd, …)` → `_os_ext.fdopen(fd, …)` in
-hop3-rootd-style code that reaches for the CPython idiom."""
+Nanopython's `os` module is native, with a ROM globals dict that cannot
+take new entries at run time. Its module `__getattr__` looks up any
+name it lacks here, so `os.environ`, `os.makedirs`, `os.walk` and the
+rest of this module are reached as ordinary `os` attributes."""
 
 import os
 
@@ -103,34 +102,98 @@ def fdopen(fd, mode="r", buffering=-1, encoding=None, errors=None,
     return _FdFile(fd, mode, encoding=encoding)
 
 
-_COMMON_ENV_VARS = (
-    "PATH", "HOME", "USER", "LOGNAME", "SHELL", "TERM", "LANG",
-    "LC_ALL", "LC_CTYPE", "PWD", "OLDPWD", "TMPDIR", "TMP", "TEMP",
-    "MAIL", "HOSTNAME", "DISPLAY", "XDG_RUNTIME_DIR", "XDG_CONFIG_HOME",
-    "XDG_CACHE_HOME", "XDG_DATA_HOME", "PYTHONPATH", "PYTHONHOME",
-    "PETITPY_LIB", "SSH_AUTH_SOCK", "SSH_AGENT_PID", "SSH_CONNECTION",
-    "EDITOR", "VISUAL", "PAGER", "MANPATH", "COLORTERM",
-)
+devnull = "/dev/null"
+pathsep = ":"
 
 
-def _build_environ():
-    """Build the process env snapshot. A plain dict so ``{**environ}``
-    and ``dict.update(environ)`` work with vendor MicroPython's
-    pair-iterating update semantics (there's no keys()-protocol seam).
+class _Environ(dict):
+    """`os.environ`: the environment at startup, as a dict whose writes
+    reach the process environment, so child processes inherit them."""
 
-    Nanopython's C-side ``os`` doesn't expose the environ table for
-    iteration, so we probe a curated list of well-known names via
-    ``os.getenv`` and stash the ones that were set. Callers can add
-    entries by assigning; those don't automatically propagate to
-    ``os.putenv`` — pair the two calls when the child processes need
-    to inherit the value."""
-    out = {}
-    if hasattr(os, "getenv"):
-        for name in _COMMON_ENV_VARS:
-            v = os.getenv(name)
-            if v is not None:
-                out[name] = v
-    return out
+    def __setitem__(self, key, value):
+        os.putenv(key, value)
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        os.unsetenv(key)
+        super().__delitem__(key)
+
+    def pop(self, key, *default):
+        if key in self:
+            os.unsetenv(key)
+        return super().pop(key, *default)
+
+    def popitem(self):
+        key, value = super().popitem()
+        os.unsetenv(key)
+        return key, value
+
+    def setdefault(self, key, value=None):
+        if key not in self:
+            self[key] = value
+        return self[key]
+
+    def update(self, *args, **kwargs):
+        for key, value in dict(*args, **kwargs).items():
+            self[key] = value
+
+    def clear(self):
+        for key in list(self):
+            del self[key]
+
+    def copy(self):
+        return dict(self)
 
 
-environ = _build_environ()
+environ = _Environ(os._environ())
+
+
+def fspath(p):
+    if isinstance(p, (str, bytes)):
+        return p
+    if hasattr(p, "__fspath__"):
+        return p.__fspath__()
+    raise TypeError("expected str, bytes or os.PathLike object")
+
+
+def replace(src, dst):
+    # rename(2) replaces an existing destination on POSIX.
+    os.rename(src, dst)
+
+
+def makedirs(name, mode=0o777, exist_ok=False):
+    from os import path
+
+    head, tail = path.split(name)
+    if not tail:
+        head, tail = path.split(head)
+    if head and tail and not path.exists(head):
+        makedirs(head, mode, exist_ok=True)
+    try:
+        os.mkdir(name, mode)
+    except OSError:
+        if not exist_ok or not path.isdir(name):
+            raise
+
+
+def walk(top, topdown=True, onerror=None, followlinks=False):
+    from os import path
+
+    try:
+        names = os.listdir(top)
+    except OSError as e:
+        if onerror is not None:
+            onerror(e)
+        return
+    dirs = []
+    files = []
+    for name in names:
+        (dirs if path.isdir(path.join(top, name)) else files).append(name)
+    if topdown:
+        yield top, dirs, files
+    for name in dirs:
+        sub = path.join(top, name)
+        if followlinks or not path.islink(sub):
+            yield from walk(sub, topdown, onerror, followlinks)
+    if not topdown:
+        yield top, dirs, files
