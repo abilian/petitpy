@@ -26,6 +26,8 @@ const mp = @cImport({
     @cInclude("py/objstr.h");
 });
 const mirrors = @import("../../mp_mirrors.zig");
+const argcheck = @import("../../runtime/argcheck.zig");
+const objstr = @import("../strings/objstr.zig");
 const types = @import("../../mp_type_roms.zig");
 const pyerr = @import("../../pyerr.zig");
 const PyError = pyerr.PyError;
@@ -304,6 +306,10 @@ fn bytearrayMakeNewImpl(n_args: usize, n_kw: usize, args: [*c]const Obj) PyError
 
 export fn npy_bytearray_make_new(type_in: ?*const anyopaque, n_args: usize, n_kw: usize, args: [*c]const Obj) callconv(.c) Obj {
     _ = type_in;
+    if (build_options.is_full and n_kw != 0) {
+        var a = argcheck.kwMakeNew(&.{ mp.MP_QSTR_source, mp.MP_QSTR_encoding, mp.MP_QSTR_errors }, objstr.codec_ctor_defaults, n_args, n_kw, args) catch return mirrors.OBJ_NULL;
+        return pyerr.bridge(Obj, bytearrayMakeNewImpl(a.n, 0, &a.args));
+    }
     return pyerr.bridge(Obj, bytearrayMakeNewImpl(n_args, n_kw, args));
 }
 

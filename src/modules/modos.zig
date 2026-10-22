@@ -87,6 +87,7 @@
 
 const build_options = @import("build_options");
 const mirrors = @import("../mp_mirrors.zig");
+const argcheck = @import("../runtime/argcheck.zig");
 const pyerr = @import("../pyerr.zig");
 const qstr_hash = @import("../support/qstr_hash.zig");
 const errno_compat = @import("../support/errno_compat.zig");
@@ -574,7 +575,7 @@ const Body = if (enabled) struct {
     pub export const mp_os_umask_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_os_umask) };
     pub export const mp_os_getcwd_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_0 }, .fun = @ptrCast(&py_os_getcwd) };
     pub export const mp_os_chdir_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_os_chdir) };
-    pub export const mp_os_getenv_obj: mirrors.MpObjFunBuiltinVar = .{ .base = .{ .type = &mp_type_fun_builtin_var }, .sig = mirrors.makeFunSig(1, 2, false), .fun = @ptrCast(&py_os_getenv) };
+    pub export const mp_os_getenv_obj = argcheck.kwVar(1, &.{ 0, mp.MP_QSTR_default }, .{ mirrors.OBJ_NULL, mirrors.OBJ_NONE }, &py_os_getenv);
     pub export const mp_os_putenv_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_2 }, .fun = @ptrCast(&py_os_putenv) };
     pub export const mp_os_unsetenv_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_os_unsetenv) };
     pub export const mp_os_unlink_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_os_unlink) };

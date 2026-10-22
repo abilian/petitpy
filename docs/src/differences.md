@@ -16,6 +16,7 @@ There are two builds:
 | Integers (browser) | 64-bit: `2**100` raises `OverflowError`. Native has arbitrary precision. | Arbitrary precision. |
 | Float literals (browser) | A literal with 17 significant digits can parse one ulp off. Native parses correctly rounded; `repr` is the shortest round-trip form on both. | Correctly rounded. |
 | Complex numbers | `2j` does not compile. | Supported. |
+| Keyword arguments to built-ins | Native takes them where CPython does, except `int(x, base=)`, `int.to_bytes` and `int.from_bytes`, which take positional arguments only and ignore `signed`. The browser build takes them only where MicroPython does (`sorted(key=)`, `print(sep=)`, …). | Taken by name wherever the signature allows. |
 | `slice(a, b)` | The constructor is unavailable; slice syntax, including steps, works. | Available. |
 | Implicit exception chaining | `__context__` is always `None`; `raise ... from` works, with `__cause__` and a chained traceback. | Recorded and printed. |
 | Class `__annotations__` | An `OrderedDict` of the annotations' source text, as under `from __future__ import annotations`. | Evaluated objects (or lazy, 3.14). |

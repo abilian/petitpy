@@ -14,6 +14,7 @@ const std = @import("std");
 const build_options = @import("build_options");
 
 const mirrors = @import("../mp_mirrors.zig");
+const argcheck = @import("../runtime/argcheck.zig");
 /// MicroPython enum/flag constants via direct @cImport.
 const mp = @cImport({
     @cInclude("py/obj.h");
@@ -474,7 +475,9 @@ inline fn objIsInt(o: Obj) bool {
     return mirrors.isSmallInt(o) or mirrors.isExactType(o, &mp_type_int);
 }
 
-fn roundImpl(n_args: usize, args: [*c]const Obj) PyError!Obj {
+fn roundImpl(n_args_in: usize, args: [*c]const Obj) PyError!Obj {
+    // `round(x, None)` is `round(x)` in CPython; MicroPython rejects it.
+    const n_args = if (build_options.is_full and n_args_in == 2 and args[1] == mirrors.OBJ_NONE) 1 else n_args_in;
     const o_in = args[0];
     if (objIsInt(o_in)) {
         if (n_args <= 1) return o_in;
@@ -638,6 +641,7 @@ export fn mp_builtin_print(n_args: usize, pos_args: [*c]const Obj, kw_args: ?*an
     var sep: Obj = 0;
     var end: Obj = 0;
     var file: Obj = 0;
+    var flush = false;
 
     if (comptime build_options.is_full) {
         // Full has file= kwarg. Default = &mp_sys_stdout_obj.
@@ -645,13 +649,15 @@ export fn mp_builtin_print(n_args: usize, pos_args: [*c]const Obj, kw_args: ?*an
             .{ .qst = mp.MP_QSTR_sep, .flags = 0x203, .defval = .{ .u_rom_obj = mirrors.objFromQstr(@as(usize, mp.MP_QSTR__space_)) } },
             .{ .qst = mp.MP_QSTR_end, .flags = 0x203, .defval = .{ .u_rom_obj = mirrors.objFromQstr(@as(usize, mp.MP_QSTR__0x0a_)) } },
             .{ .qst = mp.MP_QSTR_file, .flags = 0x203, .defval = .{ .u_rom_obj = @intFromPtr(&mp_sys_stdout_obj) } },
+            .{ .qst = mp.MP_QSTR_flush, .flags = 0x201, .defval = .{ .u_bool = false } }, // MP_ARG_KW_ONLY | MP_ARG_BOOL
         };
-        var parsed: [3]mirrors.MpArgVal = undefined;
+        var parsed: [4]mirrors.MpArgVal = undefined;
         mp_arg_parse_all(0, null, kw_args, print_allowed_args_full.len, &print_allowed_args_full, &parsed);
         if (pyerr.pending_exc != 0) return mirrors.OBJ_NULL;
         sep = parsed[0].u_obj;
         end = parsed[1].u_obj;
         file = parsed[2].u_obj;
+        flush = parsed[3].u_bool;
     } else {
         var parsed: [2]mirrors.MpArgVal = undefined;
         mp_arg_parse_all(0, null, kw_args, print_allowed_args_nano.len, &print_allowed_args_nano, &parsed);
@@ -684,6 +690,12 @@ export fn mp_builtin_print(n_args: usize, pos_args: [*c]const Obj, kw_args: ?*an
         }
         _ = mp_get_stream_raise(file, 2);
         mp_stream_write_adaptor(mirrors.objToPtr(file), end_data, end_len);
+        if (flush) {
+            var dest: [2]Obj = undefined;
+            mp_load_method(file, mp.MP_QSTR_flush, &dest);
+            if (pyerr.pending_exc != 0) return mirrors.OBJ_NULL;
+            _ = mp_call_method_n_kw(0, 0, &dest);
+        }
     } else {
         const printer = pythonPrinter();
         var i: usize = 0;
@@ -875,12 +887,16 @@ pub export const mp_builtin_iter_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = 
 pub export const mp_builtin_next_obj: mirrors.MpObjFunBuiltinVar = varFun(1, 2, @ptrCast(&mp_builtin_next));
 pub export const mp_builtin_oct_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&mp_builtin_oct) };
 pub export const mp_builtin_ord_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&mp_builtin_ord) };
-pub export const mp_builtin_pow_obj: mirrors.MpObjFunBuiltinVar = varFun(2, 3, @ptrCast(&mp_builtin_pow));
+pub export const mp_builtin_pow_obj = argcheck.kwVar(2, &.{ 0, 0, mq.MP_QSTR_mod }, .{ mirrors.OBJ_NULL, mirrors.OBJ_NULL, mirrors.OBJ_NONE }, &mp_builtin_pow);
 pub export const mp_builtin_print_obj: mirrors.MpObjFunBuiltinVar = kwFun(0, @ptrCast(&mp_builtin_print));
 pub export const mp_builtin___repl_print___obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&mp_builtin___repl_print__) };
 pub export const mp_builtin_repr_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&mp_builtin_repr) };
-pub export const mp_builtin_round_obj: mirrors.MpObjFunBuiltinVar = varFun(1, 2, @ptrCast(&mp_builtin_round));
-pub export const mp_builtin_sum_obj: mirrors.MpObjFunBuiltinVar = varFun(1, 2, @ptrCast(&mp_builtin_sum));
+// __qstr_shadow_begin__
+// MP_QSTR_ndigits
+// MP_QSTR_mod
+// __qstr_shadow_end__
+pub export const mp_builtin_round_obj = argcheck.kwVar(1, &.{ 0, mq.MP_QSTR_ndigits }, .{ mirrors.OBJ_NULL, mirrors.OBJ_NONE }, &mp_builtin_round);
+pub export const mp_builtin_sum_obj = argcheck.kwVar(1, &.{ 0, mq.MP_QSTR_start }, .{ mirrors.OBJ_NULL, mirrors.newSmallInt(0) }, &mp_builtin_sum);
 pub export const mp_builtin_sorted_obj: mirrors.MpObjFunBuiltinVar = kwFun(1, @ptrCast(&mp_builtin_sorted));
 pub export const mp_builtin_min_obj: mirrors.MpObjFunBuiltinVar = kwFun(1, @ptrCast(&mp_builtin_min));
 pub export const mp_builtin_max_obj: mirrors.MpObjFunBuiltinVar = kwFun(1, @ptrCast(&mp_builtin_max));

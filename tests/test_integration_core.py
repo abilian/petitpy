@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 124. Coverage for `os` lives in test_integration_os.py.
+Cases: 125. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -889,6 +889,38 @@ CASES = [
                 "['z', 'a'] ['z', 'a'] ['q', 'b']\n"
                 '{"z": [1, {"y": 2, "b": 3}], "a": null}\n'
                 "51 [1, 3, 5] [99, 0] True\n"
+            ),
+            "nano": None,
+        },
+    ),
+    # Keyword arguments to built-in methods and constructors, on full, as
+    # CPython takes them. nano keeps MicroPython's positional-only builtins.
+    (
+        "builtin_keyword_args",
+        (
+            "import io\n"
+            "print('a b  c'.split(maxsplit=1), 'a,b,c'.rsplit(',', maxsplit=1), 'a,b'.split(sep=','))\n"
+            "print('\u00e9'.encode(encoding='utf-8'), b'\\xc3\\xa9'.decode(errors='strict'))\n"
+            "print(str(b'ab', encoding='utf-8'), str(object=5), bytes('a', encoding='utf-8'), bytearray('a', encoding='utf-8'))\n"
+            "print('aaa'.replace('a', 'b', count=2), sum([1, 2], start=10), round(2.567, ndigits=2), round(2.5, None), pow(2, 3, mod=5))\n"
+            "f = io.StringIO()\n"
+            "print('x', 'y', sep='-', file=f, flush=True)\n"
+            "print(repr(f.getvalue()))\n"
+            "for bad in ['\"a\".split(bogus=1)', '\"a\".split(\",\", sep=\",\")']:\n"
+            "    try:\n"
+            "        eval(bad)\n"
+            "    except TypeError:\n"
+            "        print('TypeError')\n"
+        ),
+        {
+            "full": (
+                "['a', 'b  c'] ['a,b', 'c'] ['a', 'b']\n"
+                "b'\\xc3\\xa9' \u00e9\n"
+                "ab 5 b'a' bytearray(b'a')\n"
+                "bba 13 2.57 2 3\n"
+                "'x-y\\n'\n"
+                "TypeError\n"
+                "TypeError\n"
             ),
             "nano": None,
         },

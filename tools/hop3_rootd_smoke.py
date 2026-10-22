@@ -605,32 +605,6 @@ def build_shim(shim_dir: Path, hop3_src: Path) -> None:
                 new = new.replace("os.environ", "_os_ext.environ")
             src = "import os_ext as _os_ext\n" + new
             changed = True
-        if ".decode(" in src and "errors=" in src:
-            # Vendor MicroPython's bytes.decode is defined as
-            # MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(_, 1, 3, _) — takes
-            # positional args only, no kwargs (there's an explicit
-            # TODO in objstr.c). Rewrite `errors="replace"` kwarg to
-            # positional so hop3-rootd's `.decode("utf-8", errors=…)`
-            # works without patching the vendor.
-            import re as _re
-
-            src = _re.sub(
-                r"\.decode\(([^,)]+),\s*errors=(['\"][^'\"]*['\"])\)",
-                r".decode(\1, \2)",
-                src,
-            )
-            changed = True
-        if ".split(maxsplit=" in src:
-            # str.split has the same vendor limitation — positional
-            # args only, no kwargs. `s.split(maxsplit=N)` → `s.split(None, N)`.
-            import re as _re
-
-            src = _re.sub(
-                r"\.split\(maxsplit=(\d+)\)",
-                r".split(None, \1)",
-                src,
-            )
-            changed = True
         if ".value" in src and ("ErrorCode" in src or ".code.value" in src):
             # Nanopython has no Enum metaclass, so `class X(str, Enum)`
             # members stay as raw strings (see nanopython-lib/enum.py).

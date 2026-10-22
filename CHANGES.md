@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use 
 ### Changed
 
 - **Dicts keep insertion order on `full`**, as in CPython 3.7+: printing, `json.dumps`, `**kwargs`, and class and instance namespaces follow the order keys were added, a key deleted and re-added moves to the end, and `popitem()` takes the last item. Maps use a compact layout: entries in insertion order followed by a hash index of 1, 2 or 4-byte slots. Speed is unchanged on the benchmarks; small dicts and 3-attribute instances use the same memory as before, while a large dict takes 40 to 75% more, depending on where its size falls between growth steps. `nano` and the browser build keep MicroPython's hash order, so nano stays byte-exact.
+- **Built-in methods and constructors take keyword arguments on `full`** where CPython does: `str.split(sep=, maxsplit=)`, `rsplit`, `encode`/`decode(encoding=, errors=)`, `replace(count=)`, `str()`, `bytes()` and `bytearray()` with `encoding=`, `sum(start=)`, `round(ndigits=)`, `pow(mod=)`, `os.getenv(default=)`, and `print(flush=)`, which calls the file's `flush()`. `round(x, None)` now works. The `int` methods are vendor MicroPython's and still take positional arguments only.
 
 ## [0.8.0] - 2026-10-21
 

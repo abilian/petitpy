@@ -22,6 +22,7 @@ const mp = @cImport({
 });
 
 const mirrors = @import("../../mp_mirrors.zig");
+const argcheck = @import("../../runtime/argcheck.zig");
 const pyerr = @import("../../pyerr.zig");
 const PyError = pyerr.PyError;
 
@@ -1220,6 +1221,10 @@ export fn str_zfill(self_in: Obj, width_obj: Obj) callconv(.c) Obj {
 // MP_QSTR_capitalize
 // MP_QSTR_zfill
 // MP_QSTR_title
+// MP_QSTR_maxsplit
+// MP_QSTR_encoding
+// MP_QSTR_errors
+// MP_QSTR_source
 // __qstr_shadow_end__
 
 fn strUniIstype(f: PredFn, self_in: Obj) Obj {
@@ -1843,8 +1848,15 @@ fn strMakeNewImpl(type_ptr: TypePtr, n_args: usize, n_kw: usize, args: [*c]const
 }
 
 export fn mp_obj_str_make_new(type_ptr: TypePtr, n_args: usize, n_kw: usize, args: [*c]const Obj) callconv(.c) Obj {
+    if (build_options.is_full and n_kw != 0) {
+        var a = argcheck.kwMakeNew(&.{ mq.MP_QSTR_object, mq.MP_QSTR_encoding, mq.MP_QSTR_errors }, codec_ctor_defaults, n_args, n_kw, args) catch return mirrors.OBJ_NULL;
+        return strMakeNewImpl(type_ptr, a.n, 0, &a.args);
+    }
     return strMakeNewImpl(type_ptr, n_args, n_kw, args);
 }
+
+/// `str(object, encoding, errors)` and `bytes(source, encoding, errors)`.
+pub const codec_ctor_defaults = [_]Obj{ mirrors.OBJ_NULL, mirrors.objFromQstr(mq.MP_QSTR_utf_hyphen_8), mirrors.OBJ_NULL };
 
 fn bytesMakeNewImpl(n_args: usize, args: [*c]const Obj) PyError!Obj {
     if (n_args == 0) return constEmptyBytes();
@@ -1915,7 +1927,10 @@ fn bytesMakeNewImpl(n_args: usize, args: [*c]const Obj) PyError!Obj {
 
 export fn bytes_make_new(type_in: TypePtr, n_args: usize, n_kw: usize, args: [*c]const Obj) callconv(.c) Obj {
     _ = type_in;
-    _ = n_kw;
+    if (build_options.is_full and n_kw != 0) {
+        var a = argcheck.kwMakeNew(&.{ mq.MP_QSTR_source, mq.MP_QSTR_encoding, mq.MP_QSTR_errors }, codec_ctor_defaults, n_args, n_kw, args) catch return mirrors.OBJ_NULL;
+        return pyerr.bridge(Obj, bytesMakeNewImpl(a.n, &a.args));
+    }
     return pyerr.bridge(Obj, bytesMakeNewImpl(n_args, args));
 }
 
@@ -3316,16 +3331,10 @@ pub export const str_join_obj: mirrors.MpObjFunBuiltinFixed = .{
     .base = .{ .type = &mp_type_fun_builtin_2 },
     .fun = @ptrCast(&str_join),
 };
-pub export const str_split_obj: mirrors.MpObjFunBuiltinVar = .{
-    .base = .{ .type = &mp_type_fun_builtin_var },
-    .sig = mirrors.makeFunSig(1, 3, false),
-    .fun = @ptrCast(&mp_obj_str_split),
-};
-pub export const str_rsplit_obj: mirrors.MpObjFunBuiltinVar = .{
-    .base = .{ .type = &mp_type_fun_builtin_var },
-    .sig = mirrors.makeFunSig(1, 3, false),
-    .fun = @ptrCast(&str_rsplit),
-};
+const split_kw = [_]usize{ 0, mq.MP_QSTR_sep, mq.MP_QSTR_maxsplit };
+const split_defaults = [_]Obj{ mirrors.OBJ_NULL, mirrors.OBJ_NONE, mirrors.newSmallInt(-1) };
+pub export const str_split_obj = argcheck.kwVar(1, &split_kw, split_defaults, &mp_obj_str_split);
+pub export const str_rsplit_obj = argcheck.kwVar(1, &split_kw, split_defaults, &str_rsplit);
 pub export const str_find_obj: mirrors.MpObjFunBuiltinVar = .{
     .base = .{ .type = &mp_type_fun_builtin_var },
     .sig = mirrors.makeFunSig(2, 4, false),
@@ -3391,11 +3400,7 @@ pub export const str_format_obj: mirrors.MpObjFunBuiltinVar = .{
     .sig = mirrors.makeFunSig(1, 0xffff, true), // KW
     .fun = @ptrCast(&mp_obj_str_format),
 };
-pub export const str_replace_obj: mirrors.MpObjFunBuiltinVar = .{
-    .base = .{ .type = &mp_type_fun_builtin_var },
-    .sig = mirrors.makeFunSig(3, 4, false),
-    .fun = @ptrCast(&str_replace),
-};
+pub export const str_replace_obj = argcheck.kwVar(3, &.{ 0, 0, 0, mq.MP_QSTR_count }, .{ mirrors.OBJ_NULL, mirrors.OBJ_NULL, mirrors.OBJ_NULL, mirrors.newSmallInt(-1) }, &str_replace);
 pub export const str_count_obj: mirrors.MpObjFunBuiltinVar = .{
     .base = .{ .type = &mp_type_fun_builtin_var },
     .sig = mirrors.makeFunSig(2, 4, false),
@@ -3453,16 +3458,10 @@ pub export const str_isalnum_obj: mirrors.MpObjFunBuiltinFixed = .{
     .base = .{ .type = &mp_type_fun_builtin_1 },
     .fun = @ptrCast(&str_isalnum),
 };
-pub export const bytes_decode_obj: mirrors.MpObjFunBuiltinVar = .{
-    .base = .{ .type = &mp_type_fun_builtin_var },
-    .sig = mirrors.makeFunSig(1, 3, false),
-    .fun = @ptrCast(&bytes_decode),
-};
-pub export const str_encode_obj: mirrors.MpObjFunBuiltinVar = .{
-    .base = .{ .type = &mp_type_fun_builtin_var },
-    .sig = mirrors.makeFunSig(1, 3, false),
-    .fun = @ptrCast(&str_encode),
-};
+const codec_kw = [_]usize{ 0, mq.MP_QSTR_encoding, mq.MP_QSTR_errors };
+const codec_defaults = [_]Obj{ mirrors.OBJ_NULL, mirrors.objFromQstr(mq.MP_QSTR_utf_hyphen_8), mirrors.OBJ_NULL };
+pub export const bytes_decode_obj = argcheck.kwVar(1, &codec_kw, codec_defaults, &bytes_decode);
+pub export const str_encode_obj = argcheck.kwVar(1, &codec_kw, codec_defaults, &str_encode);
 pub export const str_splitlines_obj: mirrors.MpObjFunBuiltinVar = .{
     .base = .{ .type = &mp_type_fun_builtin_var },
     .sig = mirrors.makeFunSig(1, 0xffff, true), // KW

@@ -154,6 +154,77 @@ export fn mp_arg_error_terse_mismatch_polled() callconv(.c) void {
     pyerr.pending_exc = makeTerseExc();
 }
 
+const build_options = @import("build_options");
+extern const mp_type_fun_builtin_var: anyopaque;
+const PosFn = *const fn (usize, [*c]const Obj) callconv(.c) Obj;
+
+/// Positional arguments, with keyword ones moved into their slots.
+/// `names[i]` is the keyword for slot `i` (0 for a positional-only slot
+/// such as `self`). A slot left empty below one given by keyword takes
+/// `defaults[i]`, or is an error when that is OBJ_NULL. `n` counts up to
+/// the highest slot given, so the callee sees what a positional call of
+/// the same arguments would pass.
+pub fn KwPos(comptime names: []const usize) type {
+    return struct {
+        args: [names.len]Obj,
+        n: usize,
+
+        pub fn init(comptime defaults: [names.len]Obj, n_pos: usize, pos: [*c]const Obj, kws: []const mirrors.MpMap.Elem) PyError!@This() {
+            var r: @This() = .{ .args = @splat(mirrors.OBJ_NULL), .n = n_pos };
+            if (n_pos > names.len) try terse();
+            @memcpy(r.args[0..n_pos], pos[0..n_pos]);
+            for (kws) |e| {
+                const i = slot(e.key) orelse {
+                    try terse();
+                    unreachable;
+                };
+                if (r.args[i] != mirrors.OBJ_NULL) try terse();
+                r.args[i] = e.value;
+                r.n = @max(r.n, i + 1);
+            }
+            for (r.args[n_pos..r.n], defaults[n_pos..r.n]) |*a, d| {
+                if (a.* != mirrors.OBJ_NULL) continue;
+                if (d == mirrors.OBJ_NULL) try terse();
+                a.* = d;
+            }
+            return r;
+        }
+
+        fn slot(key: Obj) ?usize {
+            inline for (names, 0..) |q, i| {
+                if (q != 0 and key == mirrors.objFromQstr(q)) return i;
+            }
+            return null;
+        }
+    };
+}
+
+/// `KwPos` for a constructor's `make_new`, whose keyword pairs follow
+/// the positional arguments in `args`.
+pub fn kwMakeNew(comptime names: []const usize, comptime defaults: [names.len]Obj, n_args: usize, n_kw: usize, args: [*c]const Obj) PyError!KwPos(names) {
+    const kws: [*]const mirrors.MpMap.Elem = @ptrCast(@alignCast(args + n_args));
+    return KwPos(names).init(defaults, n_args, args, kws[0..n_kw]);
+}
+
+/// A builtin over the positional function `f` that, on full, also takes
+/// its arguments by keyword, as CPython does (see `KwPos`). Nano keeps
+/// MicroPython's positional-only builtin.
+pub fn kwVar(comptime min: u32, comptime names: []const usize, comptime defaults: [names.len]Obj, comptime f: PosFn) mirrors.MpObjFunBuiltinVar {
+    const max: u32 = names.len;
+    if (!build_options.is_full) return .{ .base = .{ .type = &mp_type_fun_builtin_var }, .sig = mirrors.makeFunSig(min, max, false), .fun = f };
+    const W = struct {
+        fn call(n_pos: usize, pos: [*c]const Obj, kw_args: ?*anyopaque) callconv(.c) Obj {
+            return pyerr.bridge(Obj, impl(n_pos, pos, mirrors.MpMap.fromPtr(kw_args)));
+        }
+        fn impl(n_pos: usize, pos: [*c]const Obj, kw: *mirrors.MpMap) PyError!Obj {
+            // A fixed table: the keyword pairs, contiguous.
+            var a = try KwPos(names).init(defaults, n_pos, pos, kw.tablePtr()[0..kw.alloc]);
+            return f(a.n, &a.args);
+        }
+    };
+    return .{ .base = .{ .type = &mp_type_fun_builtin_var }, .sig = mirrors.makeFunSig(min, max, true), .fun = &W.call };
+}
+
 comptime {
     _ = &mp_arg_check_num_sig;
     _ = &mp_arg_parse_all;
