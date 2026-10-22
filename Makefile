@@ -235,7 +235,7 @@ check-release: freeze-modules
 	zig build -Dconfig=full -Dfrozen-tiny=true -Doptimize=ReleaseFast
 	python3 tools/full_gate.py
 	zig build -Dconfig=nano -Dfrozen-tiny=true -Doptimize=ReleaseFast
-	python3 tests/integration.py
+	python3 tests/integration.py --config nano
 
 ## check-all: aggregate native gate — both arms strict. After ADR 012
 ##            Phase 4b lands, this becomes the canonical pre-commit
@@ -513,7 +513,7 @@ test-unit-vm: build
 ##                   the browser (so a test of `from collections import
 ##                   deque` etc. behaves the same on both arms).
 test-integration: build-frozen
-	python3 tests/integration.py $(BIN)
+	python3 tests/integration.py --config $(CONFIG) $(BIN)
 
 ## test-integration-wasm: the same suite against the wasm binary,
 ##                        invoked via wasmtime. The independent gate
@@ -522,7 +522,7 @@ test-integration: build-frozen
 ##                        wasm-only regressions in paths the corpus
 ##                        has already flagged.
 test-integration-wasm: wasm-small
-	python3 tests/integration.py --runner "tools/run_wasm.sh zig-out/bin/nanopython.wasm"
+	python3 tests/integration.py --config nano --runner "tools/run_wasm.sh zig-out/bin/nanopython.wasm"
 
 ## test-e2e: corpus (byte-identical vs frozen .out files) + compile-exec
 ##           (Zig frontend → vendor VM → diff stdout). The corpus is the

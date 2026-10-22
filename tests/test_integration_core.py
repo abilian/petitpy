@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 123. Coverage for `os` lives in test_integration_os.py.
+Cases: 124. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -852,6 +852,46 @@ CASES = [
             "print(Node.__annotations__['label'], Node.next, hasattr(Node, 'value'))\n"
         ),
         "['value', 'next', 'tags', 'label'] Node list[str]\n'str | None' None False\n",
+    ),
+    # Dicts keep insertion order on full, as in CPython 3.7+: printing,
+    # `**kwargs`, class and instance namespaces, `json.dumps`, a key
+    # deleted and re-added moving to the end, `popitem` taking the last
+    # item. nano keeps MicroPython's hash order, which the corpus pins,
+    # and has no class `__dict__`, so its output is not checked here.
+    (
+        "dict_insertion_order",
+        (
+            "import json\n"
+            "d = {'zeta': 1, 'alpha': 2, 3: 3, (1, 2): 4}\n"
+            "d['m'] = 5\n"
+            "del d['alpha']\n"
+            "d['alpha'] = 6\n"
+            "print(d, d.popitem())\n"
+            "def f(**kw):\n"
+            "    return list(kw)\n"
+            "class C:\n"
+            "    z = 1\n"
+            "    a = 2\n"
+            "c = C()\n"
+            "c.q = 1\n"
+            "c.b = 2\n"
+            "print(f(z=1, a=2), [k for k in C.__dict__ if k in 'za'], list(c.__dict__))\n"
+            "print(json.dumps({'z': [1, {'y': 2, 'b': 3}], 'a': None}))\n"
+            "e = {i: i for i in range(100)}\n"
+            "for i in range(0, 100, 2):\n"
+            "    del e[i]\n"
+            "e[0] = 0\n"
+            "print(len(e), list(e)[:3], list(e)[-2:], list(e.copy()) == list(e))\n"
+        ),
+        {
+            "full": (
+                "{'zeta': 1, 3: 3, (1, 2): 4, 'm': 5} ('alpha', 6)\n"
+                "['z', 'a'] ['z', 'a'] ['q', 'b']\n"
+                '{"z": [1, {"y": 2, "b": 3}], "a": null}\n'
+                "51 [1, 3, 5] [99, 0] True\n"
+            ),
+            "nano": None,
+        },
     ),
     # collections.abc as a frozen submodule of the collections package.
     # Enabled by (a) converting nanopython-lib/collections.py to a

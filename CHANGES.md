@@ -3,6 +3,12 @@
 All notable changes to petitpy (development name nanopython) are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use [Conventional Commits](https://www.conventionalcommits.org/) types (feat, fix, perf, docs, build, test).
 
+## [Unreleased]
+
+### Changed
+
+- **Dicts keep insertion order on `full`**, as in CPython 3.7+: printing, `json.dumps`, `**kwargs`, and class and instance namespaces follow the order keys were added, a key deleted and re-added moves to the end, and `popitem()` takes the last item. Maps use a compact layout: entries in insertion order followed by a hash index of 1, 2 or 4-byte slots. Speed is unchanged on the benchmarks; small dicts and 3-attribute instances use the same memory as before, while a large dict takes 40 to 75% more, depending on where its size falls between growth steps. `nano` and the browser build keep MicroPython's hash order, so nano stays byte-exact.
+
 ## [0.8.0] - 2026-10-21
 
 This was a reach cycle. `match` statements land: with them, nanopython runs Python that vendor MicroPython cannot parse at all, for the first time. The **full-unix profile** grows POSIX modules and enough of `json`, `pathlib`, `dataclasses`, `re`, `logging`, `unittest.mock` and `pytest` to run a real third-party test suite. The compiler/VM split becomes a supported, gated configuration; a second front-end (`pyfront`, pure Python) exists to exercise the bytecode boundary from the outside; and a capability matrix measures both front-ends against both back-ends, construct by construct. The browser playground now shows the bytecode it compiled.

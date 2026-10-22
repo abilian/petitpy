@@ -15,8 +15,13 @@
 //!
 //! Under nano: MICROPY_PY_COLLECTIONS_ORDEREDDICT=1, MICROPY_PY_BUILTINS_SET=1,
 //! MICROPY_OPT_MAP_LOOKUP_CACHE=1: see `lookup_cache` below.
+//!
+//! Under full, hash maps keep insertion order, as CPython's dicts do (the
+//! "compact" layout below). nano keeps vendor's open addressing, so it stays
+//! byte-exact with MicroPython.
 
 const std = @import("std");
+const build_options = @import("build_options");
 const mirrors = @import("../../mp_mirrors.zig");
 
 const Obj = mirrors.Obj;
@@ -94,17 +99,140 @@ fn getHashAllocGeq(x: usize) usize {
 }
 
 // ===========================================================================
+// Compact layout (full): insertion-ordered hash maps
+// ===========================================================================
+//
+// One allocation holds `alloc` entries in insertion order, then `fill` (the
+// number of entries appended since the last rehash), then an open-addressing
+// index (0 = empty, i + 1 = entry i) of u8, u16 or u32 slots, the smallest
+// that holds `alloc`, as CPython does. Iterating table[0..alloc] and skipping
+// NULL/SENTINEL keys, as vendor code does, yields insertion order. A removed
+// entry keeps its key slot as SENTINEL, and its index slot keeps pointing at
+// it, so probes step over it like a tombstone.
+
+pub const compact = build_options.is_full;
+
+inline fn indexCap(alloc: usize) usize {
+    return std.math.ceilPowerOfTwoAssert(usize, alloc + alloc / 2 + 1);
+}
+
+inline fn indexWidth(alloc: usize) usize {
+    return if (alloc < 0xff) 1 else if (alloc < 0xffff) 2 else 4;
+}
+
+pub fn compactBytes(alloc: usize) usize {
+    return alloc * @sizeOf(Elem) + @sizeOf(usize) + indexCap(alloc) * indexWidth(alloc);
+}
+
+inline fn compactFill(map: *MpMap) *usize {
+    const base: [*]u8 = @ptrCast(map.table.?);
+    return @ptrCast(@alignCast(base + map.alloc * @sizeOf(Elem)));
+}
+
+const Index = struct {
+    base: [*]u8,
+    width: usize,
+
+    fn of(map: *MpMap) Index {
+        const base: [*]u8 = @ptrCast(map.table.?);
+        return .{ .base = base + map.alloc * @sizeOf(Elem) + @sizeOf(usize), .width = indexWidth(map.alloc) };
+    }
+    inline fn get(self: Index, pos: usize) usize {
+        return switch (self.width) {
+            1 => self.base[pos],
+            2 => @as([*]u16, @ptrCast(@alignCast(self.base)))[pos],
+            else => @as([*]u32, @ptrCast(@alignCast(self.base)))[pos],
+        };
+    }
+    inline fn set(self: Index, pos: usize, v: usize) void {
+        switch (self.width) {
+            1 => self.base[pos] = @intCast(v),
+            2 => @as([*]u16, @ptrCast(@alignCast(self.base)))[pos] = @intCast(v),
+            else => @as([*]u32, @ptrCast(@alignCast(self.base)))[pos] = @intCast(v),
+        }
+    }
+};
+
+inline fn newTable(n: usize) ?*anyopaque {
+    if (n == 0) return null;
+    if (compact) return m_malloc0(compactBytes(n));
+    return @ptrCast(newElemTable(n));
+}
+
+// Grow (or just compact away removed entries) to 1.5x the live entries, so a
+// dict that deletes and re-adds does not rehash each time. No prime sizes:
+// the index is a power of two. Small steps keep a 3-attribute instance in
+// two GC blocks (3 entries + fill + 8 index bytes = 64 on 64-bit).
+fn compactRehash(map: *MpMap) void {
+    const used: usize = @intCast(map.bits.used);
+    const old_table: ?[*]Elem = if (map.table) |p| @ptrCast(@alignCast(p)) else null;
+    const old_fill = if (old_table != null) compactFill(map).* else 0;
+
+    map.alloc = @max(used + 1, (3 * used + 1) / 2);
+    map.table = m_malloc0(compactBytes(map.alloc));
+    map.bits.used = 0;
+    map.bits.all_keys_are_qstrs = 1;
+
+    if (old_table) |old| {
+        for (old[0..old_fill]) |e| {
+            if (e.key != OBJ_NULL and e.key != OBJ_SENTINEL) {
+                compactLookup(map, e.key, MP_MAP_LOOKUP_ADD_IF_NOT_FOUND, false).?.value = e.value;
+            }
+        }
+        delElemTable(old);
+    }
+}
+
+fn compactLookup(map: *MpMap, index: Obj, lookup_kind: c_int, compare_only_ptrs: bool) ?*Elem {
+    if (map.alloc == 0) {
+        if (lookup_kind != MP_MAP_LOOKUP_ADD_IF_NOT_FOUND) return null;
+        compactRehash(map);
+    }
+    const hash = hashOf(index);
+    while (true) {
+        const tbl = map.tablePtr();
+        const idx = Index.of(map);
+        const mask = indexCap(map.alloc) - 1;
+        var pos = hash & mask;
+        while (idx.get(pos) != 0) : (pos = (pos + 1) & mask) {
+            const i = idx.get(pos) - 1;
+            const slot = &tbl[i];
+            const k = slot.key;
+            if (k == OBJ_SENTINEL) continue;
+            if (k == index or (!compare_only_ptrs and mp_obj_equal(k, index))) {
+                if (lookup_kind == MP_MAP_LOOKUP_REMOVE_IF_FOUND) {
+                    map.bits.used = @intCast(@as(usize, @intCast(map.bits.used)) - 1);
+                    slot.key = OBJ_SENTINEL; // value kept so caller can read it
+                } else {
+                    cacheEntry(index).* = @truncate(i);
+                }
+                return slot;
+            }
+        }
+        // Not found; `pos` is the empty index slot that ends the probe.
+        if (lookup_kind != MP_MAP_LOOKUP_ADD_IF_NOT_FOUND) return null;
+        const fill = compactFill(map);
+        if (fill.* == map.alloc) {
+            compactRehash(map);
+            continue;
+        }
+        const i = fill.*;
+        fill.* = i + 1;
+        idx.set(pos, i + 1);
+        map.bits.used = @intCast(@as(usize, @intCast(map.bits.used)) + 1);
+        tbl[i] = .{ .key = index, .value = OBJ_NULL };
+        if (!mirrors.isQstr(index)) map.bits.all_keys_are_qstrs = 0;
+        return &tbl[i];
+    }
+}
+
+// ===========================================================================
 // mp_map_* (dict / locals_dict hash table)
 // ===========================================================================
 
 export fn mp_map_init(map: *MpMap, n: usize) callconv(.c) void {
-    if (n == 0) {
-        map.alloc = 0;
-        map.table = null;
-    } else {
-        map.alloc = n;
-        map.table = @ptrCast(newElemTable(n));
-    }
+    map.alloc = n;
+    map.table = newTable(n);
     map.bits = .{
         .all_keys_are_qstrs = 1,
         .is_fixed = 0,
@@ -216,6 +344,14 @@ inline fn cacheEntry(index: Obj) *u8 {
     return &lookup_cache[(index >> 2) % lookup_cache.len];
 }
 
+// qstr fast path, else mp_unary_op HASH (raise-path!).
+inline fn hashOf(index: Obj) usize {
+    if (mirrors.isQstr(index)) return qstr_hash(mirrors.qstrValue(index));
+    const h_obj = mp_unary_op(MP_UNARY_OP_HASH, index);
+    // h_obj is a small int; extract value (MP_OBJ_SMALL_INT_VALUE = signed >> 1 in REPR_A).
+    return @as(usize, @bitCast(@as(isize, @bitCast(h_obj)) >> 1));
+}
+
 export fn mp_map_lookup(map: *MpMap, index: Obj, lookup_kind: c_int) callconv(.c) ?*Elem {
     if (lookup_kind != MP_MAP_LOOKUP_REMOVE_IF_FOUND and map.alloc != 0) {
         const slot = &map.tablePtr()[cacheEntry(index).* % map.alloc];
@@ -279,6 +415,8 @@ export fn mp_map_lookup(map: *MpMap, index: Obj, lookup_kind: c_int) callconv(.c
         return slot;
     }
 
+    if (compact) return compactLookup(map, index, lookup_kind, compare_only_ptrs);
+
     // Hash-table path.
     if (map.alloc == 0) {
         if (lookup_kind == MP_MAP_LOOKUP_ADD_IF_NOT_FOUND) {
@@ -288,16 +426,7 @@ export fn mp_map_lookup(map: *MpMap, index: Obj, lookup_kind: c_int) callconv(.c
         }
     }
 
-    // Compute hash (qstr fast path, else mp_unary_op HASH — raise-path!).
-    var hash: usize = undefined;
-    if (mirrors.isQstr(index)) {
-        hash = qstr_hash(mirrors.qstrValue(index));
-    } else {
-        const h_obj = mp_unary_op(MP_UNARY_OP_HASH, index);
-        // h_obj is a small int; extract value (MP_OBJ_SMALL_INT_VALUE = signed >> 1 in REPR_A).
-        hash = @as(usize, @bitCast(@as(isize, @bitCast(h_obj)) >> 1));
-    }
-
+    const hash = hashOf(index);
     var pos: usize = hash % map.alloc;
     var start_pos: usize = pos;
     var avail_slot: ?*Elem = null;

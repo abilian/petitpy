@@ -24,6 +24,7 @@ const mp = @cImport({
     @cInclude("py/qstr.h");
 });
 const mirrors = @import("../../mp_mirrors.zig");
+const map_zig = @import("map.zig");
 const types = @import("../../mp_type_roms.zig");
 const pyerr = @import("../../pyerr.zig");
 const PyError = pyerr.PyError;
@@ -325,7 +326,13 @@ export fn mp_obj_dict_copy(self_in: Obj) callconv(.c) Obj {
     };
     // Guard: alloc=0 ⇒ both tables are NULL (C memcpy(NULL,NULL,0) is fine,
     // but Zig @ptrCast(null) panics). Skip the copy loop entirely.
-    if (self.map.alloc != 0) {
+    if (map_zig.compact and self.map.alloc != 0 and self.map.bits.is_ordered == 0) {
+        // The compact layout: entries, fill and index in one block.
+        const n = map_zig.compactBytes(self.map.alloc);
+        const dst: [*]u8 = @ptrCast(other.map.table.?);
+        const src: [*]const u8 = @ptrCast(self.map.table.?);
+        @memcpy(dst[0..n], src[0..n]);
+    } else if (self.map.alloc != 0) {
         const dst_table = other.map.tablePtr();
         const src_table = self.map.tablePtr();
         var i: usize = 0;
@@ -381,11 +388,13 @@ fn dictPopitemImpl(self_in: Obj) PyError!Obj {
     const used = self_map.bits.used;
     if (used == 0) try raiseKeyErrorPopitemEmpty();
     var cur: usize = 0;
-    // OrderedDict: start at last slot (LIFO).
-    if (build_options.is_full and self_map.bits.is_ordered != 0) {
-        cur = used - 1;
-    }
-    const idx = dictIterNext(self_in, &cur) orelse unreachable;
+    // Under full, dicts keep insertion order: pop the last item (LIFO), as
+    // CPython does. nano takes the first slot, as vendor does.
+    const idx = if (build_options.is_full) blk: {
+        var i = self_map.alloc;
+        while (!self_map.slotFilled(i - 1)) i -= 1;
+        break :blk i - 1;
+    } else dictIterNext(self_in, &cur) orelse unreachable;
     self_map.bits.used = used - 1;
     const table = self_map.tablePtr();
     var items: [2]Obj = .{ table[idx].key, table[idx].value };

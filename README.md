@@ -131,7 +131,7 @@ The full list, by build, is [Differences from CPython](docs/src/differences.md).
 - **Float literals in the browser build** can parse one ulp off with 17 significant digits (vendor's parser, kept for size); native parses them correctly rounded.
 - **Complex literals**: `2j` fails to compile, although `full` has the complex type.
 - **`open()` and file I/O on `nano`**: no HAL; wasm sees stdout/stderr via WASI.
-- **Insertion-ordered dicts**: a `dict` iterates in hash order, as in MicroPython (`list({"b": 1, "a": 2})` is `['a', 'b']`); class `__annotations__` is an `OrderedDict`.
+- **Insertion-ordered dicts on `nano` and wasm**: a `dict` iterates in hash order, as in MicroPython (`list({"b": 1, "a": 2})` is `['a', 'b']`). `full` keeps insertion order.
 - Implicit exception chaining (`__context__`; `raise ... from` works).
 - **Unicode case mapping**: `upper()`/`lower()` change ASCII letters only, as in MicroPython.
 - Threading.

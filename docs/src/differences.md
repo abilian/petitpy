@@ -11,7 +11,7 @@ There are two builds:
 
 | Area | petitpy | CPython |
 |---|---|---|
-| **dict order** | Iteration follows hash order: `list({"b": 1, "a": 2})` is `['a', 'b']`. Affects printing, `json.dumps`, `**kwargs`. Insertion order is planned after 0.8. | Insertion order. |
+| dict order (browser) | Iteration follows hash order: `list({"b": 1, "a": 2})` is `['a', 'b']`. Affects printing, `json.dumps`, `**kwargs`. Native keeps insertion order. | Insertion order. |
 | `str.upper()` / `lower()` | ASCII letters only; no `unicodedata`. | Full Unicode case mapping. |
 | Integers (browser) | 64-bit: `2**100` raises `OverflowError`. Native has arbitrary precision. | Arbitrary precision. |
 | Float literals (browser) | A literal with 17 significant digits can parse one ulp off. Native parses correctly rounded; `repr` is the shortest round-trip form on both. | Correctly rounded. |
