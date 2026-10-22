@@ -121,7 +121,6 @@ comptime {
     // Cross-cutting shared
     _ = @import("mp_type_roms.zig");
     _ = @import("vendor_stubs.zig");
-    _ = @import("mp_layout_check.zig");
 }
 
 // ── Compiler-bridge stubs ────────────────────────────────────────────

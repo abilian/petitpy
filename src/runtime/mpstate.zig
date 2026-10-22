@@ -15,7 +15,7 @@
 //   layout matches the C definition for the *nano* config (the only one
 //   relevant to the Phase 2 smoke test). Bitfields are replaced with plain
 //   unsigned fields of equivalent total width — the runtime never reads them
-//   in zigonly mode (those code paths land in mp_layout_check.zig as @panic).
+//   in zigonly mode.
 //
 // CONFIG ASSUMED (port/mpconfigport.h default arm, NANOPYTHON_CONFIG_FULL undefined):
 //   MICROPY_PY_THREAD                       = 0
@@ -227,9 +227,8 @@ pub export var mp_state_ctx: StateCtx = std.mem.zeroes(StateCtx);
 // If any field offset or struct size drifts (e.g. someone flips a config
 // bit without revisiting this file), the build fails here — not at
 // runtime when an MP_STATE_VM read hits the wrong byte. There are no
-// shim-exported `sizeof_` constants to cross-check against in zigonly
-// mode (those land in mp_layout_check.zig as @panic functions); these
-// asserts are the only guard.
+// C-side `sizeof` constants to cross-check against; these asserts are
+// the only guard.
 
 comptime {
     if (USIZE_BYTES == 8) {

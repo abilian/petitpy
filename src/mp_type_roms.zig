@@ -6,14 +6,6 @@
 // @panic functions (link-time fake) or left them as undefined symbols.
 // This file emits the real ROM data, wired to the existing Zig slot impls.
 //
-// IMPORTANT — fix Phase-1 landmine: mp_layout_check.zig wrongly declared
-//   mp_type_str, mp_type_dict, mp_type_fun_bc, … as noreturn FUNCTIONS.
-// These MUST be CONST DATA exports. Callers do `&mp_type_str`, then
-// read flags / name / slots through the struct. Once this file is
-// integrated, the matching `pub export fn mp_type_*() noreturn …`
-// lines must be DELETED from src/mp_layout_check.zig — duplicate-symbol
-// link errors will otherwise break the build (see `stubs_to_delete`).
-//
 // Layout note: vendor `mp_obj_type_t` ends in `const void *slots[]`
 // (flexible array). We mirror the *fixed-size* form `mp_obj_full_type_t`
 // (slots[11]); the C side reads it through a `mp_obj_type_t *` and
@@ -43,8 +35,7 @@ const mirrors = @import("mp_mirrors.zig");
 // ── layout mirror of mp_obj_full_type_t (py/obj.h) ──────────────────
 // Stage 5a: `MpObjTypeFull` now composes `mirrors.MpObjType` (the
 // canonical 24B prefix mirror) + a fixed `slots[11]` array, eliminating
-// a duplicate definition of the same vendor struct. Layout asserts for
-// the prefix + slots-offset live in `mp_mirrors.zig::assertLayout`.
+// a duplicate definition of the same vendor struct.
 // mp_type_type is now provided by src/objects/objtype/objtype.zig (Zig).
 // Declare it extern so this file's refs to &mp_type_type resolve via linker.
 extern const mp_type_type: opaque {};

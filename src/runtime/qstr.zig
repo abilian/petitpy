@@ -28,8 +28,7 @@
 //     lives in the low 16 bits of RAX and current qstr IDs all fit.
 //   * `npy_*_qstr_*` — thin shim wrappers that the C-shim layer used to
 //     provide (memory/qstr_shim.c, frontend/compile_shim.c, etc.). They
-//     forward straight to the plain qstr_* functions. Kept here so we can
-//     delete the corresponding stubs in mp_layout_check.zig.
+//     forward straight to the plain qstr_* functions.
 
 const std = @import("std");
 

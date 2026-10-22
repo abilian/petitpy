@@ -125,8 +125,6 @@ comptime {
     // Cross-cutting shared
     _ = @import("mp_type_roms.zig");
     _ = @import("vendor_stubs.zig");
-    // Layout asserts LAST so any new real export takes precedence at link time.
-    _ = @import("mp_layout_check.zig");
 
     // Force-analyze the bridge that exports npy_zig_compile_to_mpy.
     // src/runtime/zig_compile_bridge.c calls into it from
@@ -135,7 +133,6 @@ comptime {
     _ = @import("compiler/bridge.zig");
 }
 
-extern fn npy_mirror_layout_check() callconv(.c) void;
 extern fn mp_embed_init(heap: ?*anyopaque, heap_size: usize, stack_top: ?*anyopaque) void;
 extern fn npy_file_io_init() void;
 extern fn npy_embed_exec_str_zig(src: [*:0]const u8) c_int;
@@ -295,10 +292,6 @@ fn printUsage(io: std.Io) void {
 }
 
 pub fn main(init: std.process.Init) !void {
-    // zigonly Phase 1: layout check disabled — it compares against C constants
-    // that are now stubbed. The mirrors infrastructure goes away in Phase 4.
-    // npy_mirror_layout_check();
-
     const io = init.io;
     const gpa = init.gpa;
 
