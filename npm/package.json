@@ -17,5 +17,5 @@
   "keywords": ["python", "micropython", "wasm", "webassembly", "interpreter", "browser"],
   "license": "MIT AND PSF-2.0",
   "homepage": "https://petitpy.lab.abilian.com/",
-  "repository": { "type": "git", "url": "https://git.sr.ht/~sfermigier/petitpy" }
+  "repository": { "type": "git", "url": "https://github.com/abilian/petitpy" }
 }

@@ -1,97 +1,35 @@
 # FAQ
 
-_Common questions, grouped by audience. **Q1–Q4** are for web developers and embedded/systems developers (the "should I use this?" questions). **Q5–Q9** are technical context. **Q10–Q13** are about the project itself (mostly for contributors)._
+## Why "petitpy", and why "nanopython"?
 
+The project started from MicroPython's **nano** configuration, and the codename nanopython stuck. PyPI refused that name as too close to an existing project, so releases are published as **petitpy** ("small Python"), with `ppy` as the short command. The repository and its internals still say nanopython.
 
-## Q1: Why "petitpy", and why "nanopython"?
+## How does it relate to CPython and MicroPython?
 
-The project started from MicroPython's **nano** config preset, its minimal feature set, and the codename nanopython stuck. PyPI refused it as too close to an existing project, so releases are published as **petitpy** ("small Python"), with `ppy` as the short command. The repository and its internals still use nanopython. Both names read "small," though the size positioning has shifted: the wasm shipping artifact is 346 KB today. The binding constraint is the cold-load budget more than bytes on disk.
+petitpy does not build on CPython. It builds on [MicroPython](https://micropython.org/), a much smaller Python by Damien P. George and contributors. petitpy shares MicroPython's `.mpy` bytecode and much of its design, and MicroPython's test suite checks it on every commit.
 
-## Q2: How does this differ from porting CPython to Zig?
+On top of that, petitpy adds a runtime that compiles to plain wasm, a DOM bridge, and more of CPython's language and stdlib: `match`, Unicode strings, exception chaining, dataclasses, `pathlib`, `subprocess`. [vs MicroPython](comparison-micropython.md) lists where the two differ, and [Differences from CPython](differences.md) what still behaves differently from CPython.
 
-petitpy does not build on CPython. It builds on **MicroPython**, a much smaller Python implementation written by Damien P. George and contributors over the past decade: CPython is about 600,000 lines of C, MicroPython about 53,000. petitpy shares MicroPython's `.mpy` v6 bytecode, its opcode set and much of its design, and on the nano build it matches MicroPython's output byte for byte on all 541 tests of MicroPython's basic suite.
+## Is it a competitor to MicroPython?
 
-petitpy adds its own work on top: a runtime that compiles to plain wasm, a DOM bridge, a garbage collector that is safe between JavaScript callbacks, and more of CPython's language and stdlib (`match`, Unicode strings, exception chaining, dataclasses, `pathlib`, `subprocess`). The [home page](index.md#what-petitpy-adds) lists what petitpy adds, and [vs MicroPython](comparison-micropython.md) where the two differ.
+No. MicroPython targets microcontrollers; petitpy targets the browser and Linux or macOS daemons and scripts. For STM32, ESP32, RP2040 and other boards, use MicroPython. petitpy has no plans for microcontroller ports.
 
-## Q3: Why Zig and not Rust?
+## Why Zig?
 
-Three reasons:
+Zig ships a C compiler, so MicroPython's C could be built with the same toolchain and replaced by Zig one module at a time, under one build system. Zig's explicit allocators fit MicroPython's memory model, and its error unions replace MicroPython's `setjmp`/`longjmp` exceptions, which plain wasm cannot express. Rust would also have worked; the choice was pragmatic.
 
-1. **`zig cc`**: Zig ships a C compiler. We could compile MicroPython's C package with Zig's toolchain, drop in Zig modules one at a time, and have a single build system. Rust would have required separate cargo + a C build system.
+## Is it fast?
 
-2. **Manual memory management.** MicroPython is GC'd at the Python layer but the C layer is `malloc`/`free` plus a custom bump allocator. Zig's allocator-aware std lib matches that shape closely; Rust's ownership model would have required wrapping every `mp_obj_t` in `unsafe`.
+It is somewhat faster than MicroPython and somewhat slower than CPython on the benchmark programs, with a wide spread between programs. [Benchmarks](benchmarks.md) has the measurements. Size still takes priority over speed.
 
-3. **Smaller binary.** Zig's `ReleaseSmall` produces smaller code than Rust's `opt-level=z` in our experience.
+## Does it work in a browser?
 
-Rust would also work. The choice was pragmatic.
+Yes. The browser build is a wasm module of about 350 KB that loads in well under a second, and drives the DOM through the `js` module. Install it with `npm install petitpy`, or try the [playground](/play/demos/playground/). [Getting Started](getting-started.md#python-in-the-browser) shows how to use it.
 
-## Q4: Is it faster than MicroPython?
+## Can I use it in production?
 
-Slightly, on these programs. The latest benchmark snapshot ([`benchmarks.md`](benchmarks.md), Linux x86_64) puts petitpy at **0.79× geomean** vs MicroPython unix-standard, i.e. about 20% faster, and **1.41× geomean** vs CPython 3.14 across 6 perf_bench programs. Per-benchmark spread is wide: fib is the clearest win over MicroPython (0.63×), listops the closest (0.92×); against CPython, petitpy is faster on dictops (0.84×) and 4× slower on strops. MicroPython's default build optimizes for size (`-Os`), petitpy's release build for speed.
+petitpy is an alpha, maintained by one person. It runs real programs on both native and wasm, and a privileged Linux daemon runs on it ([case study](case-study-daemon.md)). Check [Differences from CPython](differences.md) and the [Compatibility matrix](COMPATIBILITY.md) against your code before you depend on it.
 
-The interpreter keeps MicroPython's bytecode and much of its overall design, so the gap reflects implementation details and compiler code generation more than different algorithms. The speed work so far (inline small-int paths, threaded dispatch, a map lookup cache) is in [ADR 020](adrs/020-quickening.md); size still takes priority.
+## How do I report a bug?
 
-## Q5: Can I use this in production?
-
-For browser use cases, you increasingly can. The wasm artifact ships at 346 KB, the integration suite + corpus harness both run green on wasm, and the JS bridge ([ADR 006](adrs/006-js-interop.md)) handles DOM access. The remaining gaps are documented in [`COMPATIBILITY.md`](COMPATIBILITY.md); the headline blocker is the eval/exec longjmp wall on wasm, closing in v0.6.
-
-For native/embedded systems use cases, you increasingly can too. The build cross-compiles to x86_64 / arm64 macOS + Linux and to wasm32-wasi. The production caveats sit around process maturity: no CI yet, no formal release process, solo-maintained. On 541/541 of MicroPython's basic test suite, native petitpy is byte-identical to MicroPython unix-standard.
-
-## Q6: Does it work in a browser?
-
-Yes: wasm is one of two co-primary distributions (64-bit native is the other). `make web` produces `web/nanopython.wasm` (346 KB) and the bundled demos under `web/` show it driving the DOM via the `js` module. The cold-load story is "load and start running in well under a second on a typical connection"; longitudinal measurements are recorded via `make metrics-record`. wasm32-wasi is the current wasm target; wasm64 (memory64) is the strategic wasm target, gated on Zig toolchain support.
-
-What opened the path was replacing MicroPython's `setjmp`/`longjmp` exception machinery, which plain wasm lacks, with Zig's `error{PyRaise}!T` error union. Once that landed, wasm targeting became straightforward.
-
-## Q7: Why is the native Debug binary 3.9 MB?
-
-Zig's Debug mode keeps every function alive (no DCE) and emits full DWARF debug symbols. That's the right tradeoff for development: you want stack traces when things crash. For shipping, use `make build-small`:
-
-```sh
-make build-small      # ReleaseSmall — ~541 KB (full) / ~475 KB (nano)
-make build-release    # ReleaseFast — ~1150 KB
-```
-
-The DWARF symbols are stripped automatically in Release modes.
-
-## Q8: Why does the corpus say 541/541 and not "all 541"?
-
-It is "all 541" now. The denominator (541) is the in-scope test count; the numerator (541) counts tests that pass byte-identical to the frozen reference. The three pre-existing gaps that were listed for years (`builtin_help`, `gc1`, `string_strip`) closed in the 2026-06-11 session, so the nano build now matches on every test. See the v0.5 retrospective in [ADR 009 §11](adrs/009-roadmap-v05.md).
-
-The wasm arm reports **490/541 raw** with a 51-entry documented baseline (`corpus/wasm-known-fails.txt`). The wasm-known-fails entries are explicit deferrals (bignum tests blocked on MPZ, eval/exec tests blocked on the longjmp wall, two `deque_*` tests blocked by a chosen CPython-compat API divergence). The wasm gate is **strict in both directions**: a new fail not on the list and a now-passing test still on the list both fail the gate.
-
-## Q9: How was the Zig runtime built?
-
-Module by module, with a byte-exact test oracle checking every commit, so the runtime kept working at every step (see [How it was built](strangler-journey.md)). That phase ended in mid-2026.
-
-## Q10: What about microcontroller ports (STM32, ESP32, RP2040, etc.)?
-
-Out of scope. MicroPython's home turf is bare-metal embedded; petitpy's distinguishing value is the wasm story. We're optimized for a different cold-load constraint, a different sandbox, a different user. If you need Python on a microcontroller, use MicroPython: it has dozens of mature ports + a community + ecosystem.
-
-The native binary's scope is "Linux/macOS scripting target + development companion." Microcontroller targeting is a separate (large) arc that the project hasn't taken on.
-
-## Q11: How do I report a bug?
-
-If `make` drops below the documented gates on your machine, that's a bug. Steps:
-
-1. Run `make verify` to identify which corpus test regressed.
-2. Open the failing `.py` file under `corpus/basics/` and the corresponding `.out` golden in `corpus/nano/basics/`.
-3. Diff the binary's output against the golden:
-   ```sh
-   ./zig-out/bin/nanopython corpus/basics/foo.py | diff - corpus/nano/basics/foo.out
-   ```
-4. The diff names what changed.
-
-For wasm-specific bugs, `make wasm-check` produces the same kind of pass/fail list (filtered against `corpus/wasm-known-fails.txt`). For "the binary started but crashed" type issues, the integration suite (`tests/integration.py`) is the right place to add a regression pin.
-
-## Q12: Is this trying to compete with MicroPython?
-
-No. The two aim at different places: MicroPython at microcontrollers, petitpy at the browser and at Linux and macOS daemons and scripts, with more of CPython's language and stdlib.
-
-If you want a production-grade small Python implementation for embedded work, use MicroPython. If you want Python in a browser without 30 MB of Pyodide, petitpy is a credible option.
-
-## Q13: Why so many docs?
-
-Because the project is a *journey* more than a *product*. The interpreter at the end is small; the discipline that produced it is the interesting part. Future readers benefit from understanding the discipline alongside the artifact.
-
-For a quick answer: the README is the short version, and [`COMPATIBILITY.md`](COMPATIBILITY.md) is the "does my code work?" answer.
+Open an issue on [GitHub](https://github.com/abilian/petitpy/issues) with the smallest program that shows the problem, what it printed, and what CPython prints. Say whether you ran the native build (`petitpy --version`) or the browser one.

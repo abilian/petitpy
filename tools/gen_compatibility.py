@@ -37,30 +37,17 @@ BUCKET_ORDER = [
 ]
 
 BUCKET_BLURB = {
-    "works": "Runs correctly on **both** native petitpy AND wasm. "
-    "These programs work right now; they pass on `make check` "
-    "and `make wasm-check` and have been verified to match MicroPython "
-    "or CPython output.",
-    "works-native-only": "Runs on native petitpy but not wasm. The blocker is usually the "
-    "vendor `nlr_jump` longjmp wall: `eval()`, `exec()`, `compile()` "
-    "from user code can't unwind on wasmtime. See "
-    "[ADR 009 Lane A1](adrs/009-roadmap-v05.md).",
-    "needs-stdlib": "Needs one or more stdlib modules we don't yet ship. The header "
-    "comment on each program names the specific module. The frozen-tiny "
-    "stdlib expansion ([ADR 003](adrs/003-library-and-module-loading.md) + "
-    "[ADR 009 Lane A3a](adrs/009-roadmap-v05.md)) is closing this gap.",
-    "needs-grammar": "Uses syntax we don't yet parse. The walrus and match "
-    "statements have both closed since this bucket was named. The next "
-    "`make golden` re-buckets the remainder.",
-    "needs-async": "Uses `async`/`await`/`async for`/`async with`. This work is deferred "
-    "([ADR 002 Path B](adrs/002-feature-selection.md)).",
-    "needs-fs": "Uses `open()` / file I/O. Native nano ships no HAL, and wasm uses "
-    "WASI, which the demos haven't wired up. Bucketed separately so the "
-    "feature can land independently.",
-    "needs-mpz": "Hits the LONGLONG ceiling (2**63 on wasm32). Needs `MICROPY_LONGINT_IMPL_MPZ`. "
-    "Has a size cost we're tracking ([ADR 009 Lane A3c](adrs/009-roadmap-v05.md)).",
-    "disagreement": "MicroPython and CPython produce **different** output for these "
-    "programs. Bucketed for human review.",
+    "works": "Runs on **both** native and wasm, with the same output as MicroPython or CPython.",
+    "works-native-only": "Runs on native but not wasm, usually because wasm has 64-bit integers only.",
+    "needs-stdlib": "Needs a stdlib module petitpy does not ship yet. The header of each "
+    "program names it. See [ADR 003](adrs/003-library-and-module-loading.md).",
+    "needs-grammar": "Uses syntax petitpy does not parse.",
+    "needs-async": "Needs more `async` support than petitpy has "
+    "([ADR 002](adrs/002-feature-selection.md)).",
+    "needs-fs": "Uses `open()`, `sys.stdin` or other file system access.",
+    "needs-mpz": "Needs integers beyond 64 bits on wasm.",
+    "disagreement": "MicroPython and CPython print **different** output for these "
+    "programs, so there is no single expected result.",
 }
 
 HEADER_RE = re.compile(r"^#\s*golden:\s*(.+)$")
@@ -170,10 +157,9 @@ def render(buckets: dict[str, list[dict]]) -> str:
         ),
         "",
         (
-            'This document answers **"does my Python program work in petitpy today?"** '
-            f"across {total} curated real-world programs sourced from MicroPython's tests, "
-            "CPython's tests, PEP examples, and project-specific demos. The bucketing "
-            "rationale is in [ADR 008](adrs/008-golden-programs.md)."
+            'This page answers **"does my program work on petitpy?"** for a collection of '
+            "real programs taken from MicroPython's tests, CPython's tests, PEP examples "
+            "and project demos. [ADR 008](adrs/008-golden-programs.md) explains the buckets."
         ),
         "",
         "## Headline",
@@ -185,10 +171,8 @@ def render(buckets: dict[str, list[dict]]) -> str:
         "## How to read this",
         "",
         (
-            "Each bucket below names what's missing: `needs-stdlib` means we don't yet ship the "
-            "needed module, `needs-async` means `async`/`await` work is deferred, etc. Programs in "
-            "`works/` are tested every build by `make check` (native, byte-exact) and "
-            "`make wasm-check` (wasm, baseline-subtracted)."
+            "Each bucket names what its programs need. `make check` and `make wasm-check` "
+            "run the programs in `works/` on every build."
         ),
         "",
         "## The buckets",

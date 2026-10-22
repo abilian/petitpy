@@ -1,6 +1,6 @@
 # Differences from CPython
 
-petitpy (developed as nanopython) runs most everyday Python unchanged, but it builds on MicroPython, and 0.8 is an alpha. This page lists what behaves differently from CPython 3.12+, so you can tell a bug from a known limit. Each entry was checked against CPython and the build it names (2026-10).
+petitpy runs most everyday Python unchanged, but it builds on MicroPython and is still alpha software. This page lists what behaves differently from CPython 3.12+, so you can tell a bug from a known limit.
 
 There are two builds:
 
@@ -33,8 +33,8 @@ There are two builds:
 | Files (native) | A write is visible to a reread only after `close()` or `flush()`. | Same rule, but CPython closes a dropped file at once (reference counting). |
 | Files and `os` (browser) | No `open()` or `os`; programs see the files the page passes in. | Full file system and `os` module. |
 | Threads | `_thread` is a stub. | Available. |
-| `import os.nope` | Raises `AttributeError`. | Raises `ModuleNotFoundError`. |
+| Missing module | `import nope` and `import os.nope` raise `ImportError`; there is no `ModuleNotFoundError`. | Raises `ModuleNotFoundError`. |
 
 ## Reporting a difference
 
-If something else behaves differently from CPython, it is a bug or an unknown gap: please report it with the smallest program that shows it.
+Anything else that behaves differently from CPython is a bug or an unknown gap. Please report it with the smallest program that shows it.

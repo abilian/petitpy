@@ -1,213 +1,136 @@
 # Contributing
 
-_For developers modifying the runtime or adding features. If you just want to use petitpy, [Getting Started](getting-started.md) is shorter. If you want to understand the architecture before reading this, start with [Architecture](architecture.md)._
+_For developers changing the runtime. To use petitpy, [Getting Started](getting-started.md) is shorter. For the structure of the code, read [Architecture](architecture.md) first._
 
 ## The one rule
 
-**`make` must end with exit 0.** This is the strangler invariant + the four-gate test harness combined. Any commit that breaks it is broken; either fix it or revert.
-
-If your change passes `make`, it's compatible with the project.
+**`make` must exit 0.** It builds, runs the tests, both corpus gates, the wasm gates and lint. A commit that breaks it is broken: fix it or revert it.
 
 ## Workflow
 
 1. Make your change.
 2. Run `make`.
-3. If green, commit. If red, debug or revert.
+3. If it is green, commit. If not, debug or revert.
 
-For larger changes:
+`make rebuild` cleans the caches and rebuilds, when you suspect a stale build. When a gate fails and you need to know which test, `make verify` lists PASS/FAIL per test on native, and `make wasm-check` does the same on wasm.
 
-```sh
-make rebuild         # clean rebuild (in case caches misled you)
-make                 # the full aggregate gate, ~37s
-```
+## Rules
 
-If a gate regresses but you're not sure which test:
+### Change only what you need
 
-```sh
-make verify          # per-test PASS/FAIL list — names each native miss
-make wasm-check      # same idea for the wasm arm
-```
+Touch only what your change requires. Don't reformat or refactor adjacent code, and match the existing style. If you notice unrelated dead code, mention it rather than deleting it.
 
-Diff the output against a known-good run to localize the regression.
+### One change per commit
 
-## Project conventions
+Each commit holds one change and passes `make` on its own, so the history can be bisected. Split a large change into a sequence of green commits, for example the new helper first and then the code that uses it. If it cannot be split that way, it is probably too coupled.
 
-### Surgical changes
-
-Touch only what your change requires.
-
-- No "improving" adjacent code, comments, or formatting.
-- No refactoring of things that aren't broken.
-- Match existing style even if you'd do it differently.
-- If you notice unrelated dead code, mention it; don't delete it as part of an unrelated change.
-
-The test: every changed line should trace directly to the request.
-
-### Surgical commits
-
-Make one conceptual change per commit. The commit history is the project's actual journal; commits like `fix(strings): str.splitlines(False) now strips line endings — flag value bug` are easy to bisect against. Don't bundle unrelated changes.
-
-Commit-with-hooks-disabled is the project convention (hooks have corrupted byte-exact `corpus/nano/basics/*.out` fixtures in the past):
+Commit with hooks disabled, since hooks have corrupted the byte-exact fixtures in the past:
 
 ```sh
 git -c core.hooksPath=/dev/null commit --no-verify -m "msg"
 ```
 
-Do not add `Co-Authored-By` trailers unless explicitly asked.
+Don't add `Co-Authored-By` trailers unless asked.
 
-### The `_ = &func;` rule
+### Use `_ = &func;` to force analysis
 
-When you write a comptime force-analyze block, use the address-of variant:
+In a comptime force-analyze block, take the address:
 
 ```zig
-// CORRECT — forces full Zig body analysis
-comptime { _ = &myFn; }
-
-// WRONG — silently fake-green
-comptime { _ = myFn; }
+comptime { _ = &myFn; }  // analyzes the body
+comptime { _ = myFn; }   // compiles without checking the body
 ```
 
-The wrong form silently passes the compile without checking the body. This has caused undetected regressions.
+The second form passes silently and has hidden regressions.
 
-### Corpus golden files are sacred
+### Corpus fixtures are byte-exact
 
-`corpus/nano/basics/*.out` and `corpus/full/basics/*.out` are **byte-exact binary fixtures**. Never run formatters, trailing-whitespace tools, or line-ending normalizers over them. `make lint` and `make fmt` exclude them by design.
+`corpus/basics/*.py` are verbatim copies of upstream MicroPython tests, and `corpus/nano/basics/*.out` and `corpus/full/basics/*.out` are the expected outputs, byte for byte. Never run formatters, whitespace or line-ending tools over them; `make lint` leaves them alone. Regenerate the outputs with `make freeze` only after a deliberate change in behaviour, in the same commit. Freezing from a broken binary destroys the oracle.
 
-Regenerating goldens is the `make freeze` target, **only** after an intended config change. Re-freezing from a broken binary destroys the oracle.
+### Leave `vendor/` and `sandbox/` alone
 
-### Don't touch `sandbox/` or `vendor/`
+- `vendor/micropython` is the upstream clone pinned by `MICROPY_REV`, created by `make bootstrap` or a symlink to an external checkout.
+- `vendor/micropython_embed` is generated from it by `make port`.
+- `sandbox/` is local scratch. Nothing a build or a gate needs may live there.
 
-- `vendor/micropython` is the upstream MicroPython clone pinned by `MICROPY_REV`, made by `make bootstrap` or a **symlink** to an external checkout. Gitignored.
-- `vendor/micropython_embed` is **generated** by `make port`. Gitignored. Regenerable from `vendor/micropython` + `port/mpconfigport.h`.
-- `sandbox/` is local scratch space. Gitignored. Nothing a build or a gate needs may live there.
+All three are gitignored. To change MicroPython's configuration, edit `port/mpconfigport.h` and run `make port`.
 
-If you need to change MicroPython config behavior, edit `port/mpconfigport.h` and regenerate via `make port`.
+### Make deferred work visible
 
-### Don't push problems under the rug
+When a failure is intentional (an unimplemented feature, a design choice), list it in the matching `corpus/*-known-fails.txt` with a reason, and record it in the relevant ADR. Never hide it behind a skip or an unexplained `// TODO`. The full and wasm gates are strict both ways: a new failure fails the gate, and so does a test that now passes but is still listed. Remove it from the list in the same commit.
 
-The project surfaces work-in-progress explicitly. If you discover a real failure that's deferred work:
+### Markdown is soft-wrapped
 
-- List it in the matching `corpus/*-known-fails.txt` with a reason AND in the relevant ADR.
-- Reference where the work is tracked.
-- Don't add a SKIP-style guard or an unexplained `// TODO` to keep the suite green.
+One paragraph is one line.
 
-The rule of thumb: would a future maintainer be surprised by this? If yes, surface it.
+## Common tasks
 
-### Markdown soft-wrap
+### Add a builtin or a method
 
-All markdown in this project uses soft-wrap, so one paragraph is one long line. Your editor's word-wrap handles the display.
-
-## Common patterns
-
-### Adding a new builtin or builtin method
-
-The shortest path:
-
-1. Add the implementation in the appropriate `src/objects/*.zig` or `src/modules/*.zig`.
-2. Wire any new qstrs through the `__qstr_shadow_begin__` / `__qstr_shadow_end__` block convention so `tools/zig_qstr_shadow.py` registers them.
-3. Add at least one regression pin in `tests/integration.py`.
+1. Implement it in the matching `src/objects/` or `src/modules/` file.
+2. Declare any new qstr in a shadow block (below).
+3. Add a regression case to the integration tests.
 4. Run `make`.
 
-Working examples to copy from: `str.ljust`/`str.rjust`/`str.isalnum` (added in v0.5), `chr()` Unicode range (also v0.5), `collections.deque`'s CPython-friendly `(iterable)` signature.
+### Raise a Python exception
 
-### The PyError convention
-
-If your fn can raise a Python exception, return `PyError!T`, and avoid `T` with a polled side-channel:
+A function that can raise returns `PyError!T`. Set the pending exception, then return `error.PyRaise`; the C-ABI export converts the result with `pyerr.bridge`:
 
 ```zig
 const pyerr = @import("../pyerr.zig");
 const PyError = pyerr.PyError;
 
-// Per distinct exception+message, a small raise helper at file top:
 fn raiseValueErrorBadX() PyError!void {
     pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_ValueError, "bad x");
     return error.PyRaise;
 }
 
-// Internal fn returns PyError!T:
 fn xImpl(arg: Obj) PyError!Obj {
     if (bad(arg)) try raiseValueErrorBadX();
     return compute(arg);
 }
 
-// C-ABI export wraps with pyerr.bridge:
 pub export fn npy_x(arg: Obj) callconv(.c) Obj {
     return pyerr.bridge(Obj, xImpl(arg));
 }
 ```
 
-For void exports: `pyerr.bridge(void, xImpl(...))`.
+A void export uses `pyerr.bridge(void, ...)`. A function referenced through `@ptrCast` in a ROM table is split into the `Impl` and a thin C-ABI shim. See [Internals: PyError](internals/pyerror.md).
 
-For exports referenced via `@ptrCast` in ROM tables: split into `Impl` + thin C-ABI shim.
+### Register qstrs and a module from Zig
 
-### Adding a new module-registered Zig module
-
-Use the `__qstr_shadow_*` block convention so `tools/zig_qstr_shadow.py` registers the qstrs + module:
+MicroPython's qstr scanner reads only C, so a Zig file declares its qstrs, and a module its registration, in a comment block that `tools/zig_qstr_shadow.py` turns into C at `make port` time:
 
 ```zig
-//! my module ...
-//!
-//! __qstr_shadow_begin__
-//! #if MICROPY_PY_MYMODULE
-//! MP_QSTR_mymodule
-//! MP_QSTR_myfunc
-//! MP_REGISTER_MODULE(MP_QSTR_mymodule, mp_module_mymodule);
-//! #endif
-//! __qstr_shadow_end__
+// __qstr_shadow_begin__
+// #if MICROPY_PY_MYMODULE
+// MP_QSTR_mymodule
+// MP_QSTR_myfunc
+// MP_REGISTER_MODULE(MP_QSTR_mymodule, mp_module_mymodule);
+// #endif
+// __qstr_shadow_end__
 ```
 
-The shadow generator picks this up at `make port` time. See `src/modules/modgc.zig` and `src/modules/modmath.zig` for working examples.
+`src/modules/modmath.zig` has an example. See [qstr Generation](internals/qstr-gen.md).
 
-### Adding a unit test
+### Add a unit test
 
-Append a `test "..." { ... }` block in-line in any module under `src/`:
+Put a `test "..." { ... }` block next to the code in any file under `src/`. `build.zig` discovers it. Run `make test-unit`, or `make test-unit-vm` / `make test-unit-compiler` for one side.
 
-```zig
-test "vstr_init produces a usable buffer" {
-    const std = @import("std");
-    const testing = std.testing;
-    var v: VstrLocal = undefined;
-    vstr_init_len(&v, 10);
-    try testing.expect(v.alloc >= 10);
-}
-```
+### Add an integration test
 
-Test discovery is automatic via `build.zig`'s `addTest` step. Run with `make test-unit-vm` or `make test-unit-compiler`.
-
-### Adding an integration smoke test
-
-Edit `tests/integration.py`:
+Add a case to `CASES` in `tests/test_integration_core.py`, or `tests/test_integration_os.py` for OS features:
 
 ```python
-("my_test_case",
- "x = 5\nprint(x * 2)",
- "10\n"),
+("my_test_case", "x = 5\nprint(x * 2)", "10\n"),
+("my_test_exits_7", "import sys; sys.exit(7)", "", 7),  # checks the exit code
 ```
 
-If the exit code matters, use the 4-tuple form:
-
-```python
-("my_test_exits_7",
- "import sys; sys.exit(7)",
- "",
- 7),
-```
-
-Run with `make test-integration` (native) or `make test-integration-wasm` (wasm). Every bug fix should ship with a regression pin here.
-
-## What if I want to land a big change?
-
-Bigger changes often need to land in multiple commits, each individually green. The pattern:
-
-1. **Split** the change into commits that each pass `make` independently.
-2. **Order** them so the green sequence makes sense (e.g., add the new helper first, then the migration that uses it).
-3. **Verify** at each commit.
-
-If you can't split a change into green intermediates, it's probably too coupled and needs a design rethink.
+Run `make test-integration` (native) or `make test-integration-wasm`. Every bug fix comes with a case here.
 
 ## Where to ask
 
-The project is built mostly via solo + AI-assisted development. There's no formal community forum yet. Issues and discussion are welcome at the upstream repo.
+There is no forum yet. Issues and discussion are welcome on the repository.
 
 ## License
 

@@ -1,178 +1,86 @@
 # Build & Test
 
-_For contributors and embedded/systems developers. The Makefile drives the build, the test pyramid, the metrics tool, and the docs site. Embedded/systems developers wanting to ship a feature-tailored binary will care about the [Build](#build) section + the per-feature flags ([Getting Started: Embedded](getting-started.md#for-embedded-and-systems-developers)). Contributors will care about everything._
+_For contributors, and for embedded or systems developers who want a binary tailored to their needs. The Makefile drives the build, the test gates and the docs site. `make help` lists the everyday targets; `make help ALL=1` lists all of them._
 
-## Makefile reference
+## Build
 
-`make help` produces this listing dynamically. The targets, by category:
+| Target | What it builds |
+|---|---|
+| `make build` | Debug build of `zig-out/bin/nanopython` and `zigpy-compile` |
+| `make build-release` | ReleaseFast: use it for benchmarks |
+| `make build-small` | ReleaseSmall: the native shipping size |
+| `make build-frozen` | Bakes the frozen stdlib modules (`json`, `random`, ...) into the binary |
+| `make wasm` | Debug wasm32-wasi binary, for wasmtime |
+| `make wasm-small` | ReleaseSmall wasm with the frozen modules |
+| `make web` | The browser artifact `web/nanopython.wasm`, shrunk with `wasm-opt -Oz` when binaryen is installed |
+| `make port` | Regenerates `vendor/micropython_embed/` from `vendor/micropython`. Runs automatically before a build |
+| `make rebuild` | `clean` then `build`, after a config change |
 
-### Build
+`CONFIG` selects the configuration and defaults to `full`; use `CONFIG=nano` for the minimal arm. The wasm targets always build nano. Per-feature `-Dfeature-*` flags ([ADR 002](adrs/002-feature-selection.md)) combine with either config when you call `zig build` directly.
+
+## The gates
+
+Each gate answers a different question, and passing one says nothing about the others. Run the aggregate `make` before every commit: it builds, runs `make test`, `check-all`, `wasm-check`, `test-integration-wasm` and `lint`.
+
+| Target | Question |
+|---|---|
+| `make check` | Does the full build match the corpus, apart from the failures listed in `corpus/full-known-fails.txt`? |
+| `make check CONFIG=nano` | Does the nano build match the frozen MicroPython reference byte for byte? |
+| `make check-all` | Both of the above, plus the split check: `nanopython-vm` running bytecode from `zigpy-compile` and from MicroPython's `mpy-cross` |
+| `make wasm-check` | Does the wasm build match the corpus, apart from `corpus/wasm-known-fails.txt`? |
+| `make test-integration` | Does the native binary start and run real Python correctly? |
+| `make test-integration-wasm` | The same suite, run under wasmtime |
+| `make test-wheel-layout` | Does every stdlib module import from the layout `pip install` ships? |
+| `make check-capability` | Do both front ends and both back ends agree, construct by construct? |
+| `make check-release` | Do the corpus and integration gates hold on ReleaseFast builds? Debug fills undefined memory with a fixed pattern that can hide bugs |
+| `make wasm-gc-check` | Does wasm collect garbage between JS callbacks without losing live state? Needs Node |
+
+The nano gate must always pass in full: a regression there is fixed before the commit. The full and wasm gates are strict in both directions. A new failure that is not on the known-fails list fails the gate, and so does a listed test that now passes: when you fix one, remove its entry in the same commit. Every entry on a known-fails list carries a comment explaining why it is there.
+
+`make verify` prints the per-test PASS/FAIL list for the selected config, which helps find what broke.
+
+### Other tests
 
 | Target | What |
 |---|---|
-| `make build` | Debug build (`zig build -Dconfig=$(CONFIG)`, and `CONFIG` defaults to `full`). ~3.9 MB binary, full DWARF, no inlining. |
-| `make build-release` | ReleaseFast (`-Doptimize=ReleaseFast`). ~1150 KB, full inlining + optimization. |
-| `make build-small` | ReleaseSmall (`-Doptimize=ReleaseSmall`). ~541 KB on `full`, ~475 KB on `nano`. The native shipping size. |
-| `make build-frozen` | ReleaseFast + frozen-tiny stdlib bundled: what `make web` builds against. |
-| `make build-release-frozen` | Same, but ReleaseSmall. Used by the metrics tool. |
-| `make rebuild` | `clean` + `build`. Use after a config change. |
-| `make port` | Regenerate `vendor/micropython_embed/` from `vendor/micropython` via the upstream `embed.mk`. Automatic prerequisite of `build`. |
-| `make wasm` | `zig build -Dtarget=wasm32-wasi -Dconfig=nano`. The raw wasm artifact. |
-| `make web` | `make wasm` + `wasm-opt -Oz` (when binaryen is installed). Produces `web/nanopython.wasm`, the shipping artifact, **346 KB**. |
+| `make test` | Unit tests, native integration, the corpus, the stdlib tests and the wheel-layout check |
+| `make test-unit` | Zig unit tests; `test-unit-compiler` and `test-unit-vm` run one side |
+| `make test-e2e` | The corpus for the selected config. Under `CONFIG=nano` it also runs `tools/compile-exec-test.py`, which compiles each corpus program with `zigpy-compile`, runs the bytecode on upstream MicroPython and compares the output |
+| `make test-stdlib` | The tests under `tests/stdlib/` for the bundled Python library |
+| `make smoke` | Loads every web demo and game in headless Chromium and fails on any console error. Run `make smoke-setup` once first |
 
-Set `CONFIG=full` on any of these to select the everything-on config arm. Per-feature `-Dfeature-*=on/off` flags ([ADR 002](adrs/002-feature-selection.md)) compose freely with `-Dconfig`.
-
-### Test
-
-The pyramid runs fast-first: unit → integration → e2e.
-
-| Target | What | Result expected |
-|---|---|---|
-| `make test` | Native-only test pyramid (unit + integration + e2e) | All pass |
-| `make test-unit` | Zig unit tests for the compiler + VM tracks | pass |
-| `make test-unit-compiler` | Compiler-track tests only | pass |
-| `make test-unit-vm` | VM-track tests only | pass |
-| `make test-integration` | `tests/integration.py` smoke suite, native | **37/37** |
-| `make test-integration-wasm` | Same suite, run via wasmtime | **37/37** |
-| `make test-e2e` | Corpus + compile-exec-test | 541/541 + 540/542 |
-| `make check` | Strict invariant gate (native corpus) | **541/541** byte-identical |
-| `make verify` | Detailed per-test PASS/FAIL list | exits 0 |
-| `make wasm-check` | Wasm gate against the 51-entry baseline | **GREEN** at 490/541 raw |
-| `make` (the aggregate) | All four gates, both arms, plus lint | exit 0 in ~37s |
-
-### Metrics
-
-Longitudinal recording of size + coverage + (opt-in) perf.
+## Other targets
 
 | Target | What |
 |---|---|
-| `make metrics-record` | Append a row to `metrics/history.ndjson` capturing the current binary sizes + corpus pass counts + golden-bucket sizes |
-| `make metrics-record-perf` | Same, plus run the perf benchmarks (p2w subset) and append geomean ratios |
-| `make metrics-report` | Print recent rows as a trend table |
-| `make metrics-latest` | Just print the most-recent row |
+| `make lint` | `zig fmt --check`, plus Python and JS checks when ruff and prettier are installed |
+| `make format` | Applies `zig fmt` (and prettier) to project sources; never touches `vendor/` or `corpus/` |
+| `make clean` | Removes build outputs; `make clean ALL=1` also removes the generated embed package and the web wasm |
+| `make freeze` | Re-freezes the corpus reference output from the current binary. Only after a deliberate change that justifies it |
+| `make compatibility` | Regenerates [`COMPATIBILITY.md`](COMPATIBILITY.md) from `golden-programs/` |
+| `make test-coverage`, `make test-coverage-e2e` | Line coverage of the unit tests or of the corpus, with kcov |
+| `make metrics-record`, `make metrics-report` | Records binary sizes and pass counts to `metrics/history.ndjson` and prints the trend |
 
-### Coverage
+## CI
 
-Requires `kcov` (`brew install kcov` on macOS, `apt-get install kcov` on Linux):
+CI runs on SourceHut from the manifests in `.builds/`: the nano gates, the full gates including `check-release`, and cross-compilation for other targets. CI starts from a clean clone with no `vendor/` directory, so a change must build from a fresh checkout.
 
-| Target | What | Report at |
-|---|---|---|
-| `make test-coverage` | Unit-test coverage, merged | `coverage/unit/merged/index.html` |
-| `make test-coverage-compiler` | Compiler-track only | `coverage/unit/compiler/merged/index.html` |
-| `make test-coverage-vm` | VM-track only | `coverage/unit/vm/merged/index.html` |
-| `make test-coverage-e2e` | Corpus coverage (the meaningful number) | `coverage/e2e/merged/index.html` |
-
-### Compatibility surface
-
-| Target | What |
-|---|---|
-| `make compatibility` | Regenerate [`docs/COMPATIBILITY.md`](COMPATIBILITY.md) from the current `golden-programs/` bucket assignments |
-| `make golden` | Rebootstrap the `golden-programs/` buckets (slow: runs every program through three oracles) |
-
-### Browser smoke
-
-The `tools/browser-smoke.py` harness drives the web demos under headless Chromium. Use it for catching DOM-side regressions that the corpus + integration suite can't see.
-
-| Target | What |
-|---|---|
-| `make smoke` | Drive the standard demo set, checking key text + no errors |
-| `make smoke-setup` | One-time: `pip install playwright` + download chromium (~150 MB) |
-
-See `tools/browser-smoke.py` for the full step primitives (click, type, select, eval, assert-text, screenshot, etc.).
-
-### Quality
-
-| Target | What |
-|---|---|
-| `make lint` | `zig fmt --check` over our Zig + `py_compile` over `tools/*.py` |
-| `make format` | Apply `zig fmt` to our sources (never touches `vendor/` or `corpus/`) |
-| `make clean` | Drop `.zig-cache`, `zig-out`, `coverage/`. `vendor/` stays. |
-| `make freeze` | **DANGER.** Refreeze corpus goldens from current binary. Only after an intended config change. |
-
-## The strict invariant: `make check`
-
-```sh
-$ make check
-zig build -Dconfig=nano
-python3 tools/progress.py --config nano ./zig-out/bin/nanopython
-nanopython progress:  100.0%  [########################################]
-  passing 541/541 corpus tests (byte-identical to the frozen reference)
-  command: ./zig-out/bin/nanopython
-```
-
-This is the gate every commit must pass.
-
-- **Numerator**: tests whose stdout+stderr+exit-status matches the frozen oracle byte-for-byte.
-- **Denominator**: tests in `corpus/nano/basics/` minus those in `EXCLUDED.txt`.
-- **Exit status**: `make check` reports the count but always exits 0. `make verify` is the strict variant that exits non-zero on any miss.
-
-If `make verify` reports any miss, **you broke something**. Identify the failing test and either fix it or revert. The 541/541 baseline is the long-standing strangler invariant; it's been at this level since the 2026-06-11 session closed `builtin_help` + `gc1` + `string_strip`.
-
-## The wasm gate: `make wasm-check`
-
-```sh
-$ make wasm-check
-nanopython wasm progress:  87.2% [###################################]
-  passing 490/541 corpus tests
-  GREEN — baseline holds: 68 known fails matched exactly
-```
-
-This gate is **strict in both directions**:
-- A new fail not on `corpus/wasm-known-fails.txt` → exits non-zero (you regressed something on wasm).
-- A test on the known-fails list that now passes → exits non-zero (you fixed something; remove the entry).
-
-The list is documented in-place: each entry has a comment explaining why it's there (bignum needing MPZ, eval/exec hitting the longjmp wall, the two chosen `deque_*` divergences).
-
-## The secondary differential gate: `compile-exec-test`
-
-```sh
-$ python3 tools/compile-exec-test.py
-compile-exec-test: 540/542 pass, 2 fail, 0 compile-fail, 0 timeout, 0 runner-err
-```
-
-For each `.py` source, this compiles with our `zigpy-compile` (Zig frontend), then runs the resulting `.mpy` through the upstream MicroPython unix binary, and diffs stdout/stderr/exit-status against the frozen `corpus/full/basics/*.out`. Tests execution equivalence; catches cases where our compiler emits subtly-wrong bytecode that the byte-exact gate misses.
-
-The "2 fail" are harness artifacts (mixed-sign bit-or constant folding), documented in the test runner's source.
-
-## Optimization mode comparison
-
-| Mode | Make target | Size (arm64) | Use case |
-|---|---|---|---|
-| `Debug` | `make build` | 3.9 MB | Development. Full DWARF, no DCE, runtime panics with stack traces. |
-| `ReleaseFast` | `make build-release` | 1150 KB | Performance. Full inlining, all optimizations. Use for benchmarks. |
-| `ReleaseSmall` | `make build-small` | 541 KB | Shipping. Size-optimized. |
-| `ReleaseSafe` | (none) | ~1.2 MB | Same optimization as Fast, keeps runtime safety checks. |
-
-For comparison, upstream MicroPython unix-standard (arm64, their `-Os` default) is 652 KB.
-
-The wasm artifact: 346 KB raw post-`wasm-opt -Oz` (166 KB gzipped) (see [ADR 007](adrs/007-wasm-fat-loss.md) for the size arc and remaining targets).
-
-## CI strategy
-
-No CI is wired into the public-facing pipeline yet. The local-only quality gates are:
-
-1. Before commit: `make`.
-2. Before a tagged release: `make` on a fresh checkout (`make clean && make`) + a manual `make smoke` against the bundled web demos.
-
-A future CI would run `make` on every PR. `make verify` and `make wasm-check` produce clean signals: diff the pass/fail list against `main` to localize any regression.
-
-## Adding your own tests
+## Adding tests
 
 ### A Zig unit test
 
-Add a `test "..." { ... }` block inline in any module under `src/`. Re-run `make test-unit-compiler` (for compiler-track files) or `make test-unit-vm` (for runtime-side files).
+Add a `test "..." { ... }` block in any module under `src/`, then run `make test-unit-compiler` or `make test-unit-vm`.
 
 ```zig
 test "my_helper returns the right thing" {
     const std = @import("std");
-    const testing = std.testing;
-    try testing.expectEqual(@as(usize, 42), myHelper());
+    try std.testing.expectEqual(@as(usize, 42), myHelper());
 }
 ```
 
-### An integration smoke test
+### An integration test
 
-Edit `tests/integration.py`. Each entry is `(name, py_source, expected_stdout)` or `(name, py_source, expected_stdout, expected_exit)`:
+Add a case to the `CASES` list in `tests/test_integration_core.py` (or `tests/test_integration_os.py` for `os`). A case is `(name, source, expected_stdout)` or `(name, source, expected_stdout, expected_exit)`:
 
 ```python
 ("my_test_case",
@@ -185,17 +93,15 @@ Edit `tests/integration.py`. Each entry is `(name, py_source, expected_stdout)` 
  7),
 ```
 
-Run with `make test-integration` (native) or `make test-integration-wasm` (wasm). The output of running `py_source` via the chosen binary is compared to `expected_stdout`.
-
-Every bug fix lands with at least one regression pin here. If a wasm-only bug slipped past the corpus, that's the right place to plug the gap.
+Run it with `make test-integration` or `make test-integration-wasm`. Every bug fix should come with a case here, especially a bug the corpus missed.
 
 ### A corpus test
 
-Corpus tests live in `corpus/basics/*.py`, verbatim copies of upstream MicroPython's `tests/basics/` at the `MICROPY_REV` the Makefile pins. Bumping that revision means re-copying them and re-freezing the goldens in the same commit. Adding one is non-trivial: the goldens have to come from a known-good reference. See `tools/corpus.py` for the freeze logic; in practice, new corpus tests follow upstream MicroPython's test additions.
+`corpus/basics/*.py` are verbatim copies of upstream MicroPython's `tests/basics/` at the revision the Makefile pins (`MICROPY_REV`). New corpus tests come from upstream; bumping the revision means copying the files again and re-freezing the reference output in the same commit.
 
 ### A golden program
 
-Drop a `.py` file into the appropriate `golden-programs/<bucket>/` directory with the per-program header comment:
+Put a `.py` file in the right `golden-programs/<bucket>/` directory with a header:
 
 ```python
 # golden: source=mysource; needs=heapq,recursion
@@ -203,4 +109,4 @@ Drop a `.py` file into the appropriate `golden-programs/<bucket>/` directory wit
 """What this program demonstrates."""
 ```
 
-Then `make golden` rebootstraps the buckets and re-verifies the annotations against three oracles (MicroPython, petitpy native, petitpy wasm). See [ADR 008](adrs/008-golden-programs.md) for the bucket semantics.
+[ADR 008](adrs/008-golden-programs.md) explains the buckets.

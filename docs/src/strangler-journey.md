@@ -1,45 +1,32 @@
 # How it was built
 
-_How petitpy's interpreter moved from MicroPython's C to Zig, one module at a time, without ever breaking, using the "strangler" pattern. This is the short version._
+_How petitpy's interpreter moved from MicroPython's C to Zig, one subsystem at a time, without breaking, using the "strangler" pattern._
 
-## The setup
+## The oracle
 
-MicroPython is a self-contained Python implementation in C. Its `unix/standard` port compiles to ~652 KB and runs a corpus of ~550 small Python programs whose outputs are known. Deviations are real bugs.
+MicroPython ships a corpus of small Python programs with known output. The project started by freezing that output. From then on every build was checked against the frozen bytes, and any drift failed the build. That one byte-exact check kept a rewrite of the whole runtime, in a different language, correct from start to finish, and it let a large mechanical port proceed without a separate design phase.
 
-The strangler starts by freezing that corpus's output. From then on, every petitpy build is checked against those frozen bytes. Any drift fails the build. That single byte-exact oracle kept a full-runtime rewrite in a different language correct for the whole arc.
+## The port
 
-## The arc
+Subsystems were replaced one at a time: lexer, parser, compiler, emitter, `.mpy` loader, VM, object model, allocator, GC. Each got a Zig module with the same link surface as the vendor C file. The C file was then dropped from the build and the Zig module linked in its place. If the binary still linked and the corpus still passed, the port stayed.
 
-The rewrite replaced the C runtime one subsystem at a time (lexer, parser, compiler, emitter, `.mpy` loader, VM dispatch, object model, allocator, GC). Each subsystem got a Zig module matching the vendor C file's link surface, then the vendor `.c` file was dropped from the compile graph and the Zig module linked in its place. If the binary still linked and the corpus stayed green, the port shipped.
+Two techniques made this possible. Type mirrors (`src/mp_mirrors.zig`) declare Zig `extern struct` copies of the vendor C structs, with layout checks that fail the build on any mismatch, so Zig code reads and writes vendor structs directly. And every function that can raise returns a `PyError!T` error union; at a C boundary the error becomes a zero return plus a pending exception that the caller checks, so C and Zig callers follow the same rule.
 
-Three later arcs finished the extraction:
+## What was hard
 
-- **The `.mpy` loader** (~940 LOC). Ported field-for-field against the vendor loader's binary format, then the C file was removed, leaving no vendor C behind the core interpreter.
-- **The qstr / module registration tooling.** MicroPython's build tools scan `.c` files for `MP_QSTR_*` markers to build the qstr table. A small tooling extension (`tools/zig_qstr_shadow.py`) lifts markers out of `.zig` files into a generated shim that the upstream scanner can see. Nine tombstone C files disappeared; one remained after that arc, `src/objects/objtype/objmodule_shim.c` (86 LOC), which holds `MICROPY_REGISTERED_MODULES` (a preprocessor macro expanding to a C struct initializer).
-- **Non-local return.** MicroPython uses `setjmp`/`longjmp` for exception propagation. Zig has no `setjmp`; it has `error{PyRaise}!T`. Every raise site converted to `return error.PyRaise`; every catch site converted to `try` or `catch`. When the last vendor NLR file was deleted, the runtime was exception-propagating end-to-end without `setjmp`. That change made the wasm target possible: wasm lacks native `setjmp` and the NLR-elimination sidestepped a wall the project would have hit later.
+Three pieces resisted the module-by-module approach.
 
-## The result
+- **The `.mpy` loader** reads a binary format, and a small mistake in it corrupts code silently. It was ported field for field against the vendor loader before the C file went away.
+- **qstr registration.** MicroPython's build tools find interned strings and module registrations by scanning C files, so each Zig module needed a small "tombstone" C file just to be seen. A script that lifts those markers out of Zig comments into one generated C file removed them ([qstr Generation](internals/qstr-gen.md)). The built-in module table itself still lives in one C file, because the macro that fills it only expands inside C.
+- **Exceptions.** MicroPython unwinds exceptions with `setjmp`/`longjmp`. Zig has no `setjmp`, so every raise site became `return error.PyRaise` and every handler became `try` or `catch`. Once the last vendor NLR file was deleted, exceptions propagated with no `setjmp` at all. That decision is what later made the wasm target practical, since wasm has no native `setjmp` either.
 
-| | Before | After |
-|---|---|---|
-| Vendor C, core interpreter | ~53,000 LOC | 0 |
-| Vendor C, default-on feature carveouts (`float`, `re`) | 0 | ~1,900 LOC |
-| Project-local C | 0 | 616 LOC in 3 files |
-| Corpus byte-identical (nano) | 534/541 at the start | **541/541** |
+## The end state
 
-The strangler's own residue is the 86-LOC qstr-gen tombstone; removing it needs either upstream tooling changes or a Zig-native module-table generator, and it's not in current scope. The other two files arrived later and for unrelated reasons: a `va_list` surface that Zig 0.16 cannot compile on `aarch64-linux`, and ADR 013's NLR trampoline, which is dead under nano. [Architecture](architecture.md#the-residual-c) breaks them down.
+The core interpreter contains no vendor C. Vendor C still compiles for features that were never ported, such as floats and the `re` module, because reusing well-tuned upstream code costs less than rewriting it. A few project-local C files remain for unrelated reasons; [Architecture](architecture.md#the-residual-c) lists them. Since the port finished, work has moved to features, size and distribution.
 
-## The methodology, in three primitives
+## Lessons
 
-- **A byte-exact differential oracle.** The corpus lives frozen; every build checks against it; drift fails. A large mechanical rewrite can then proceed without a design phase.
-- **The type-mirror pattern** (`src/mp_mirrors.zig`). Zig `extern struct` declarations mirror vendor MicroPython C structs field-for-field, with `@sizeOf` / `@offsetOf` checks so a layout drift fails the build at the right place. Zig code reads and writes vendor structs directly, no shim layer.
-- **Polled-sentinel error propagation.** Every function that can raise returns a `PyError!T` union; every caller polls or propagates via `try`. Across the C↔Zig boundary the sentinel is a status word, which lets both sides participate in the same discipline without one having to speak the other's exception convention.
-
-## What the strangler taught
-
-A handful of rules held across the whole arc:
-
-- Corpus goldens are binary fixtures. Never run formatters over them. A trailing-newline tool silently broke the invariant once.
-- `_ = &func;` forces Zig to analyze a function's body; `_ = func;` does not. Using the wrong form gave "fake green" builds that shipped uncompiled code.
-- When fanning out N mechanical conversions in parallel, do one first as a pattern-locker. The remaining N-1 copy the pattern exactly. Independent adversarial verification on each conversion caught issues the porting agents missed.
-- Bail early; never ship a broken tree. Two attempts at the allocator-NLR removal bailed on architectural couplings the audit missed. The third succeeded because the earlier bails localized the coupling exactly.
+- Corpus goldens are binary fixtures. A trailing-newline tool run over them once broke the build's reference output without anyone noticing.
+- In Zig, `_ = &func;` forces the compiler to analyze a function's body and `_ = func;` does not. The wrong form produced green builds that contained code nobody had compiled.
+- For a batch of similar conversions, do one first and use it as the pattern for the rest.
+- Stop early rather than commit a broken tree. Abandoned attempts were still useful, because each one showed exactly where the coupling was.

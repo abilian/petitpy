@@ -2,7 +2,7 @@
 
 _Auto-generated from `golden-programs/` by `tools/gen_compatibility.py`. Don't edit by hand; re-run `make compatibility` after changing the bucket assignments._
 
-This document answers **"does my Python program work in petitpy today?"** across 756 curated real-world programs sourced from MicroPython's tests, CPython's tests, PEP examples, and project-specific demos. The bucketing rationale is in [ADR 008](adrs/008-golden-programs.md).
+This page answers **"does my program work on petitpy?"** for a collection of real programs taken from MicroPython's tests, CPython's tests, PEP examples and project demos. [ADR 008](adrs/008-golden-programs.md) explains the buckets.
 
 ## Headline
 
@@ -12,13 +12,13 @@ This document answers **"does my Python program work in petitpy today?"** across
 
 ## How to read this
 
-Each bucket below names what's missing: `needs-stdlib` means we don't yet ship the needed module, `needs-async` means `async`/`await` work is deferred, etc. Programs in `works/` are tested every build by `make check` (native, byte-exact) and `make wasm-check` (wasm, baseline-subtracted).
+Each bucket names what its programs need. `make check` and `make wasm-check` run the programs in `works/` on every build.
 
 ## The buckets
 
 ### `works/`: 580 programs
 
-Runs correctly on **both** native petitpy AND wasm. These programs work right now; they pass on `make check` and `make wasm-check` and have been verified to match MicroPython or CPython output.
+Runs on **both** native and wasm, with the same output as MicroPython or CPython.
 
 By source corpus: `prescrypt-micropython`=418, `prescrypt-tryalgo`=79, `prescrypt-internal`=54, `p2w-internal`=29
 
@@ -32,7 +32,7 @@ _…and 550 more; see `golden-programs/works/`._
 
 ### `works-native-only/`: 5 programs
 
-Runs on native petitpy but not wasm. The blocker is usually the vendor `nlr_jump` longjmp wall: `eval()`, `exec()`, `compile()` from user code can't unwind on wasmtime. See [ADR 009 Lane A1](adrs/009-roadmap-v05.md).
+Runs on native but not wasm, usually because wasm has 64-bit integers only.
 
 By source corpus: `prescrypt-micropython`=4, `p2w-internal`=1
 
@@ -42,7 +42,7 @@ Programs (first 5):
 
 ### `needs-stdlib/`: 123 programs
 
-Needs one or more stdlib modules we don't yet ship. The header comment on each program names the specific module. The frozen-tiny stdlib expansion ([ADR 003](adrs/003-library-and-module-loading.md) + [ADR 009 Lane A3a](adrs/009-roadmap-v05.md)) is closing this gap.
+Needs a stdlib module petitpy does not ship yet. The header of each program names it. See [ADR 003](adrs/003-library-and-module-loading.md).
 
 By source corpus: `prescrypt-micropython`=88, `prescrypt-tryalgo`=17, `p2w-internal`=10, `prescrypt-internal`=8
 
@@ -56,7 +56,7 @@ _…and 93 more; see `golden-programs/needs-stdlib/`._
 
 ### `needs-grammar/`: 1 program
 
-Uses syntax we don't yet parse. The walrus and match statements have both closed since this bucket was named. The next `make golden` re-buckets the remainder.
+Uses syntax petitpy does not parse.
 
 By source corpus: `prescrypt-micropython`=1
 
@@ -68,7 +68,7 @@ Programs (first 1):
 
 ### `needs-async/`: 3 programs
 
-Uses `async`/`await`/`async for`/`async with`. This work is deferred ([ADR 002 Path B](adrs/002-feature-selection.md)).
+Needs more `async` support than petitpy has ([ADR 002](adrs/002-feature-selection.md)).
 
 By source corpus: `prescrypt-micropython`=3
 
@@ -80,7 +80,7 @@ Programs (first 3):
 
 ### `needs-fs/`: 8 programs
 
-Uses `open()` / file I/O. Native nano ships no HAL, and wasm uses WASI, which the demos haven't wired up. Bucketed separately so the feature can land independently.
+Uses `open()`, `sys.stdin` or other file system access.
 
 By source corpus: `prescrypt-tryalgo`=7, `prescrypt-micropython`=1
 
@@ -92,13 +92,13 @@ Programs (first 8):
 
 ### `needs-mpz/`: 0 programs
 
-Hits the LONGLONG ceiling (2**63 on wasm32). Needs `MICROPY_LONGINT_IMPL_MPZ`. Has a size cost we're tracking ([ADR 009 Lane A3c](adrs/009-roadmap-v05.md)).
+Needs integers beyond 64 bits on wasm.
 
 _No programs in this bucket._
 
 ### `disagreement/`: 36 programs
 
-MicroPython and CPython produce **different** output for these programs. Bucketed for human review.
+MicroPython and CPython print **different** output for these programs, so there is no single expected result.
 
 By source corpus: `prescrypt-micropython`=36
 

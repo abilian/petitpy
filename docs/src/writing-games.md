@@ -1,32 +1,26 @@
 # Writing games with nanopy
 
-A small browser game in petitpy looks the way it would in Pygame: a `screen` to draw on, an `update` to move things, a `draw` to repaint, an `on_press` for keys. The hosting (WebAssembly load, canvas wiring, key listener, audio context, `localStorage`) lives in a sibling JS loader and a small Python library called `nanopy`. Your `main.py` never says "canvas context" or "setInterval" or "localStorage". It says `screen.rect(...)`, `score.add(1)`, `nanopy.run(...)`.
+A small browser game in petitpy looks the way it would in Pygame: a `screen` to draw on, an `update` to move things, a `draw` to repaint, an `on_press` for keys. A small Python library called `nanopy` and a JS loader handle the wasm, the canvas, the keyboard, audio and `localStorage`, so your `main.py` calls `screen.rect(...)`, `score.add(1)` and `nanopy.run(...)`.
 
-This tutorial walks through building **Catch** (a paddle catching falling fruit) from an empty directory to a playable browser game. It then shows the same game written the "pro" way (classes + decorators) so you can pick whichever style you find more readable. The companion gallery (Snake, Breakout, 2048, Tetris, Space Invaders, Memory Match, each in kid / pro / JS variants) lives under `web/games/`; they all use the same `nanopy.py` and are a good reference once you've finished here.
+This tutorial builds **Catch** (a paddle catching falling fruit), then shows the same game written with classes and decorators. The gallery under `web/games/` (Snake, Breakout, 2048, Tetris, Space Invaders, Memory Match, most in kid, pro and JS variants) uses the same library and is a good reference afterwards.
 
-## What you'll need
+## Setup
 
-- A petitpy build with the `nanopython.wasm` shipping artifact (`make wasm` in the repo root produces `web/nanopython.wasm`).
-- The `web/lib/` directory next to your demo (it holds the JS host shim, the JS bridge, and `nanopy.py` itself).
-- A local web server to serve the page. `python3 -m http.server 8000` from the repo root works; opening `index.html` via `file://` does **not** because the browser refuses to fetch `.wasm` from a file URL.
-
-## The four files per game
-
-Every game in `web/games/` is exactly four files:
+Work in a checkout of the repository. `make web` builds `web/nanopython.wasm`. Copy an existing game directory, such as `web/games/catch-kid/`, to `web/games/my-game/`. It holds four files:
 
 ```
 my-game/
-├── index.html      ← page scaffold + canvas element + score widgets
-├── app.js          ← generic loader: fetches the wasm, mounts main.py, installs keydown
-├── nanopy.py       ← symlink to ../../lib/nanopy.py (the library)
-└── main.py         ← your game logic — what this tutorial is about
+├── index.html      ← page with the canvas and score widgets
+├── app.js          ← generic loader: fetches the wasm, mounts main.py, forwards key presses
+├── nanopy.py       ← symlink to ../../lib/nanopy.py
+└── main.py         ← your game
 ```
 
-`app.js` and `index.html` are boilerplate you copy from any existing game. **The game lives in `main.py`.**
+`app.js` stays as it is. You adapt `index.html` and write the game in `main.py`. Serve the pages with `python3 -m http.server -d web 8000` and open `http://localhost:8000/games/my-game/`. Opening `index.html` as a `file://` URL does not work, because browsers refuse to fetch `.wasm` from a file URL.
 
 ## Step 1: the empty page
 
-Start with an `index.html` that has a `<canvas id="board">` plus three text spans (score, misses, high) and a `<p id="status">` for the welcome / game-over message.
+The page needs a `<canvas id="board">`, three text spans (score, misses, high) and a `<p id="status">` for messages.
 
 ```html
 <!DOCTYPE html>
@@ -55,7 +49,7 @@ Start with an `index.html` that has a `<canvas id="board">` plus three text span
 </html>
 ```
 
-`main.py` reaches for four IDs by name: `board`, `score`, `misses`, `high`, `status`. Change them in HTML, you change them in Python; same as any other DOM-driven app.
+`main.py` refers to the elements by ID: `board`, `score`, `misses`, `high` and `status`. If you rename one in the HTML, rename it in Python too.
 
 ## Step 2: the canvas, with one line
 
@@ -66,7 +60,7 @@ W = screen.width
 H = screen.height
 ```
 
-`screen` is a wrapper around the `<canvas>`'s 2D context. You don't have to know that; you call methods on it:
+`screen` wraps the canvas's 2D context:
 
 ```python
 screen.fill("dark")                              # paint the whole thing
@@ -74,14 +68,14 @@ screen.rect(x, y, w, h, "red")                   # filled rectangle
 screen.stroke_rect(x, y, w, h, "white", width=2) # outlined rectangle
 screen.line(x1, y1, x2, y2, "blue")
 screen.text("Hello", 200, 100, "white", size=24, align="center", bold=True)
-screen.rounded_rect(x, y, w, h, radius=6, c="green")
+screen.rounded_rect(x, y, w, h, 6, "green")     # corner radius 6
 ```
 
-Colors are either friendly names (`"red"`, `"blue"`, `"dark"`, `"pink"`, …), hex strings (`"#ff5252"`), CSS expressions (`"rgba(0, 0, 0, 0.78)"`), or `(r, g, b)` tuples. Anything CSS accepts, the library accepts.
+A color is a name (`"red"`, `"blue"`, `"dark"`, `"pink"`, …), a hex string (`"#ff5252"`), any CSS color (`"rgba(0, 0, 0, 0.78)"`), or an `(r, g, b)` tuple.
 
 ## Step 3: game state
 
-The game uses pure module-level globals, with no `Game` class or setup function: the simplest readable shape.
+The game keeps its state in module-level globals.
 
 ```python
 PADDLE_W = 80
@@ -105,17 +99,15 @@ left_held = False
 right_held = False
 ```
 
-`nanopy.storage` is a thin wrapper around `localStorage`. `get_int(key, default)` returns the saved high score or zero on first run; `set_int(key, value)` saves it. Quota errors and disabled-storage errors are swallowed silently; the game keeps working, the high just doesn't persist.
+`nanopy.storage` wraps `localStorage`. `get_int(key, default)` returns the saved value, or `default` on first run or when storage is unavailable; `set_int(key, value)` saves it.
 
 ## Step 4: update, draw, on_press
 
-The shape of every frame-driven game is three functions that nanopy calls for you:
+nanopy calls three functions for you:
 
-- **`update()`:** runs every tick. Moves things. Checks for collisions. Updates the score. **No drawing here.**
-- **`draw()`:** runs every tick after `update`. Repaints the canvas. **No state changes here.**
-- **`on_press(key)`:** runs once per keydown event. `key` is the JavaScript `KeyboardEvent.key` string (`"ArrowLeft"`, `"a"`, `" "`, `"Enter"`, …).
-
-Split this way, the code reads top-to-bottom: physics, then rendering, then input.
+- **`update()`** runs every tick: it moves things, checks collisions and updates the score.
+- **`draw()`** runs after each `update` and repaints the canvas.
+- **`on_press(key)`** runs on each key press. `key` is the JavaScript `KeyboardEvent.key` string (`"ArrowLeft"`, `"a"`, `" "`, `"Enter"`, …).
 
 ```python
 def reset_fruit():
@@ -198,7 +190,7 @@ def on_press(key):
         right_held = False
 ```
 
-This handler treats arrow keys as toggles (press left → start moving left, press right → switch direction, space → stop); it does not react to keydown/keyup pairs. The browser fires keydown only; no keyup signal reaches Python. So "holding a key" really means "the most recent direction key pressed". This simplification is intended; in practice it feels close to keyup-driven control because you press a direction once and let it ride.
+Only key presses reach Python, not key releases, so this handler treats the direction keys as toggles: left starts moving left, right switches direction, space stops.
 
 ## Step 5: wire it up
 
@@ -221,21 +213,9 @@ reset_game()
 nanopy.run(update=update, draw=draw, on_press=on_press, fps=30)
 ```
 
-`nanopy.run(...)` is the one line that turns your three functions into a running game. It starts a `setInterval` at the requested fps and installs key listeners for everything in the kid-key set (arrow keys, WASD, space, Enter, R, ZXC). For turn-based games (2048, memory match), pass only `on_press`: without `update` / `draw`, no timer starts and the game advances from inside the keypress handler.
+`nanopy.run(...)` starts a timer at the requested fps and routes the arrow keys, WASD, space, Enter, Escape, P, R, Z, X and C to `on_press`. For a turn-based game (2048, memory match), pass only `on_press`: no timer starts, and the game advances from inside the handler.
 
-Open the page in your browser. Catch should run.
-
-## What you got for free
-
-Every line of the host plumbing you didn't write:
-
-- The browser-side WASI shim that lets the wasm binary read your `main.py` from a virtual filesystem.
-- The JS bridge that lets `import js` give you `js.window.localStorage.getItem(...)`.
-- A `setInterval` at the right ms cadence for your fps.
-- A `keydown` listener that routes through a dispatch table so each Python handler gets called.
-- The audio context (used by `nanopy.beep` / `nanopy.tone`) and its gesture-gate.
-
-You can see all of it under `web/lib/` (`nanopy-host.js` for sound, `js-bridge.js` for the bridge, plus the per-game `app.js` loader which is genuinely generic).
+Reload the page in your browser. Catch should run.
 
 ## Adding sound
 
@@ -245,12 +225,9 @@ nanopy.beep(880, 50, kind="square")     # square wave for a chiptune feel
 nanopy.tone([523, 659, 784], ms_per=90) # C–E–G arpeggio for "won the level"
 ```
 
-Two practical notes:
+Browsers keep audio silent until the user has clicked or pressed a key, so a sound on page load plays nothing. `beep` returns at once and the sound plays in the background.
 
-1. **Browsers gate audio behind a user gesture.** Calling `beep` before the user has clicked or pressed a key produces silence and no error. Once they've pressed any key (which any keyboard-driven game requires anyway), audio starts working.
-2. **`beep` is async.** The call returns immediately, the sound plays via the Web Audio scheduler. Don't `sleep` after it.
-
-In Catch, a satisfying tweak is a rising tone on every catch and a low blat on every miss:
+In Catch, try a rising tone on every catch and a low buzz on every miss:
 
 ```python
 # in the "caught it" branch
@@ -262,7 +239,7 @@ nanopy.beep(180, 120, kind="sawtooth")
 
 ## Score and Lives as widgets
 
-Catch tracks `score` / `misses` / `high` as module-level integers, calls `nanopy.set_text(...)` after each change, and persists `high` by hand. For a small game that's fine. For anything bigger, nanopy ships two reactive widgets that fold the bookkeeping into property setters:
+Catch updates the score elements and saves the high score by hand. The `Score` and `Lives` widgets do that bookkeeping for you:
 
 ```python
 from nanopy import Score, Lives
@@ -278,11 +255,11 @@ if lives.empty:
     game_over = True
 ```
 
-Setting `.value` updates the DOM element, updates the high-score element, and persists to localStorage, all in one assignment.
+Setting `.value` updates the page and, when the score beats the best, the high-score element and `localStorage`.
 
 ## The pro variant: classes and decorators
 
-Same game, different shape. Globals become attributes on a `Game` instance, the timer becomes a `Ticker` you own, key dispatch becomes individual decorated functions. Pick whichever you find more readable; both compile to the same wasm.
+The same game with its state on a `Game` instance, a `Ticker` that it owns, and one decorated function per key. Use whichever style you find easier to read.
 
 ```python
 from nanopy import Canvas, Ticker, on_key, Score, Lives, storage, randint, choice, status
@@ -353,7 +330,7 @@ def restart():
     game.reset()
 ```
 
-The pro variant pays a small cost in vertical space (the class body + `self.` everywhere) and gets back: scoped state, no `global` declarations, easy multi-instance (multiplayer or "play again" without re-importing), and a `Ticker` you can pause / change interval on without touching `nanopy.run`. Every game in `web/games/<name>-pro/` follows this pattern.
+This style needs no `global` declarations, and the `Ticker` can be stopped, restarted or given a new interval (`set_interval(ms)`). The `web/games/<name>-pro/` games follow it.
 
 ## What's in nanopy: the quick reference
 
@@ -401,17 +378,13 @@ from nanopy import Canvas, Ticker, Score, Lives, on_key, on_click, storage
 
 `kind` for the sound functions is `"sine"` / `"square"` / `"triangle"` / `"sawtooth"`.
 
-`on_press(key)` and `on_click(x, y)` receive their argument as a string and as a pair of canvas-relative integers respectively. The pro decorators `@on_key("ArrowLeft", "a")` fire on any of the listed keys; `@on_click` decorates a `def click(x, y):` for canvas-relative pointer clicks.
+`on_click(x, y)` receives canvas-relative integer coordinates; the loader in `web/games/memory-kid/app.js` shows how to forward clicks. `@on_key("ArrowLeft", "a")` fires on any of the listed keys, and `@on_click` decorates a `def click(x, y):`.
 
-## A couple of things to know
-
-- **Audio needs a user gesture.** The browser silences `beep` / `tone` until the user has clicked or pressed a key on the page. For a keyboard game this is invisible: by the time anything interesting happens, they've already pressed something. But it means a "play a welcome chime on load" trick won't work; the first sound has to follow the first input.
-- **`nanopy.run` starts a timer; `nanopy.stop()` stops it.** Key handlers stay installed afterwards, which is the usual behavior for most games (e.g. so R can restart). For a clean restart, calling `reset_game()` from inside `on_press` is the usual shape, as Catch does.
+`nanopy.stop()` stops the timer but leaves the key handlers installed, so R can still restart the game.
 
 ## What to read next
 
-- **`web/lib/nanopy.py`:** the library itself, ~530 lines, fully readable. The implementation is short enough that reading it end-to-end is the fastest way to understand what's happening under each method.
-- **`web/games/<game>-kid/main.py`** for any of the six gallery games: concrete patterns for grid games (Snake, Tetris), bounce games (Breakout), shooters (Invaders), and turn-based games (2048, memory match).
-- **`web/games/<game>-pro/main.py`:** same six, class-shaped.
-- **`web/games/<game>-js/main.js`:** what the JS version of the same game looks like, for side-by-side comparison.
-- **[ADR 006: JS interop](adrs/006-js-interop.md)** if you want to go below `nanopy` and write to the DOM directly via `import js`.
+- **`web/lib/nanopy.py`:** the library itself, short enough to read end to end.
+- **`web/games/<game>-kid/main.py`:** grid games (Snake, Tetris), a bounce game (Breakout), a shooter (Invaders) and turn-based games (2048, memory match).
+- **`web/games/<game>-pro/main.py`:** the same games with classes, and `<game>-js/` the same games in JavaScript.
+- **[ADR 006: JS interop](adrs/006-js-interop.md)** to go below `nanopy` and use the DOM directly through `import js`.

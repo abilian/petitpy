@@ -1,77 +1,40 @@
 # Architecture
 
-_For contributors and anyone who wants to understand how the runtime is structured. If you just want to run Python in a browser tab, the [Getting Started](getting-started.md#for-web-developers) page is shorter. If you want to embed the native binary in a Linux/macOS scripting context, [vs MicroPython](comparison-micropython.md) covers the compatibility surface._
+_For contributors and anyone who wants to understand how the runtime is structured. To run Python in a browser tab, [Getting Started](getting-started.md#python-in-the-browser) is shorter. For compatibility with MicroPython, see [vs MicroPython](comparison-micropython.md)._
 
 ## Overview
 
-petitpy is a Python interpreter assembled from two cooperating Zig executables sharing one source tree:
+petitpy has two halves that share one source tree:
 
-- **The compiler** (`src/compiler/`): pure Zig. Lexes Python source, parses to a grammar tree, runs scope analysis, emits MicroPython `.mpy` bytecode. The parser is a Zig port of MicroPython's `parse.c`; the grammar it consumes is upstream's `grammar.h` patched at `make port` time (see `port/grammar-patched/`) to accept PEP 448 dict/list unpack in more positions and PEP 570 positional-only `/` markers. Ships as the standalone `zigpy-compile` binary AND links into the main interpreter.
-- **The VM** (`src/runtime/`, `src/objects/`, `src/modules/`, `src/memory/`): Zig with 616 LOC of residual C in three files (§ The residual C). Loads bytecode, dispatches the bytecode interpreter, manages the object model, handles allocator + GC.
+- **The compiler** (`src/compiler/`) is pure Zig. It lexes and parses Python source, runs scope analysis and emits MicroPython `.mpy` bytecode. The parser is a Zig port of MicroPython's `parse.c`. Its grammar is upstream's `grammar.h`, patched at `make port` time (`port/grammar-patched/`) to accept `{**d}` dict unpacking and PEP 570 positional-only `/` markers. It ships as the standalone `zigpy-compile` binary and is linked into the interpreter.
+- **The VM** (`src/runtime/`, `src/objects/`, `src/modules/`, `src/memory/`) loads bytecode, runs the bytecode interpreter, and implements the object model, the allocator and the garbage collector. It is Zig apart from the residual C described below.
 
-The main `petitpy` binary contains both the compiler and the runtime; the runtime calls into the compiler at exec time to compile and run a string. The split matters because the compiler is fully testable in isolation (~93 unit tests across `lexer.zig`, `parser.zig`, `scope.zig`, `emit.zig`, `compile.zig`, `qstr.zig`, `bigint.zig`).
+The main binary (`zig-out/bin/nanopython`) contains both and calls the compiler at run time to compile source. A VM-only binary, `nanopython-vm`, loads `.mpy` files. Keeping the compiler separate means it can be tested on its own, and the VM can be checked against bytecode from MicroPython's own `mpy-cross`.
 
-This page covers the central patterns; the [ADR series](adrs/index.md) records the decisions.
+The [ADR series](adrs/index.md) records the decisions behind this page.
 
-## The methodology in one paragraph
+## How it was built
 
-The codebase is the result of an incremental C→Zig strangler of MicroPython under a byte-exact differential test corpus. For each MicroPython subsystem, a Zig module was written matching the vendor C file's link surface (function signatures and struct layouts), so the C file could be dropped from the compile graph and the Zig module linked in its place. This is an internal link contract, used during the port and still relied on for the `full` config's residual vendor-C carveouts; it is not a public ABI that downstream code should link against. After every change, all 541 corpus tests ran against a frozen oracle (`corpus/nano/basics/*.out`); any byte drift failed the build. The strangler converged at the long-standing 541/541 invariant. Active work is now on user experience, feature reach, and size; see [ADR 010](adrs/010-roadmap-v06.md).
+The codebase is the result of an incremental C-to-Zig strangler of MicroPython, checked against a byte-exact differential test corpus. For each MicroPython subsystem, a Zig module was written with the same link surface as the vendor C file (function signatures and struct layouts), so the C file could be dropped from the build and the Zig module linked in its place. After every change the corpus ran against frozen reference output, and any byte of drift failed the build. This link contract is internal: downstream code should not link against it. [How it was built](strangler-journey.md) tells the story.
 
 ## The two configurations
 
-`port/mpconfigport.h` has two arms selected via `-Dconfig=...`:
+`port/mpconfigport.h` has two arms, selected with `-Dconfig=...`:
 
-| `nano` (default) | `full` |
-|---|---|
-| `MICROPY_CONFIG_ROM_LEVEL_MINIMUM` baseline | Everything-on superset |
-| Subset of features | Matches CPython more closely |
-| The frozen invariant (541/541 byte-identical) | Soft target against upstream MicroPython unix-standard |
-| `make check` | `CONFIG=full make check` |
+- **`full`** (the default) turns on everything available and tracks upstream MicroPython's unix port. Features that have not been ported to Zig, such as bignums (MPZ), `io` and warnings, come from vendor C files that `build.zig` adds only under this config.
+- **`nano`** is the minimal arm. Its output must stay byte-identical to the frozen MicroPython reference, which keeps the surface that has to match small. The wasm targets are always built as nano.
 
-### Why two configs
+### Per-feature build flags
 
-**`nano`** is the forcing function. It's minimal so the surface that has to stay byte-identical is small. The strangler froze nano-as-baseline early and uses byte-equality against those goldens as the unbreakable invariant.
+`-Dfeature-*` flags ([ADR 002](adrs/002-feature-selection.md)) turn individual modules on or off on top of the preset: `math`, `collections`, `struct`, `array`, `errno`, `micropython`, `gc-module`, `re`, `warning`, the JS bridge (`js`, wasm only) and the POSIX modules of the full native build (`os`, `time`, `socket`, `select`, `signal`, `pwd-grp`, `subprocess`). `zig build --help` lists them with their defaults. Moving a flag away from its preset default prints a warning that the corpus gate does not cover the resulting build.
 
-**`full`** is the parity ceiling. Features like float (under nano too via the FLOAT carveout), complex, io, longint (MPZ), threading all live under `full` via vendor C carveouts that `build.zig` pulls in conditionally. The nano arm uses Zig replacements for almost everything; under full, the appropriate vendor C gets re-added so we match upstream MicroPython where the Zig port hasn't shipped yet.
+## Targets
 
-### Status
-
-| Config | Native | Wasm |
-|---|---|---|
-| `nano` (default) | **541/541** byte-identical (the strangler invariant) | **490/541** raw, 51-entry baseline green |
-| `full` | builds + runs | builds + runs |
-
-## Per-feature build flags
-
-Beyond `-Dconfig`, the build accepts orthogonal `-Dfeature-*` flags ([ADR 002](adrs/002-feature-selection.md)) so a downstream user can pick exactly the surface they need.
-
-| Flag | Module(s) | Default (nano) |
-|---|---|---|
-| `-Dfeature-math` | `math` | on |
-| `-Dfeature-warning` | the warning subsystem | off |
-| `-Dfeature-collections` | `collections` (namedtuple, OrderedDict, deque) | on |
-| `-Dfeature-struct` | `struct` (binary pack/unpack) | on |
-| `-Dfeature-array` | `array.array` | on |
-| `-Dfeature-errno` | `errno` constants | on |
-| `-Dfeature-micropython` | `micropython` (heap_lock, opt_level) | on |
-| `-Dfeature-gc-module` | `gc` module surface | on |
-| `-Dfeature-js` | JS interop bridge | wasm only |
-
-Flipping a flag away from its preset default emits a warning that the corpus invariant is not enforced for the resulting build. `nano` (all defaults) is the only frozen-output configuration.
-
-## Target architectures
-
-| Target | Status |
-|---|---|
-| **arm64-macos** | Tier 1: primary dev platform; 541/541 byte-identical |
-| **x86_64-macos** | Tier 1: builds + smoke tested |
-| **x86_64-linux** | Tier 1: builds + smoke tested |
-| **wasm32-wasi** | Tier 1: the **shipping target**; 346 KB post-`wasm-opt -Oz` |
-| **aarch64-linux** | Tier 2: builds via cross-compile; runtime smoke pending a Zig 0.16 toolchain fix |
+Native builds run on macOS and Linux, on arm64 and x86_64; CI also cross-compiles for aarch64-linux. The wasm target is wasm32-wasi, run under wasmtime or in the browser through the JS bridge.
 
 ## The PyError convention
 
-Every error in the runtime propagates via Zig's error union (replacing MicroPython's `setjmp`/`longjmp`-based NLR machinery):
+Errors propagate through Zig error unions, replacing MicroPython's `setjmp`/`longjmp` non-local return (NLR):
 
 ```zig
 pub const PyError = error{PyRaise};
@@ -88,13 +51,11 @@ pub export fn npy_compute(...) callconv(.c) Obj {
 }
 ```
 
-`pyerr.bridge(T, r)` catches `error.PyRaise` and returns `std.mem.zeroes(T)` (which is `MP_OBJ_NULL` for `Obj`); the raised exception is stashed in `pyerr.pending_exc`, a polled sentinel that vendor C callers (where any remain, primarily in the float and longint carveouts) check after the call.
-
-Dropping the NLR machinery made wasm targeting straightforward. Wasm lacks a native setjmp, and the previous code path traded setjmp tricks for a runtime trap. See [Internals: PyError Convention](internals/pyerror.md) for the detailed walkthrough.
+The raised exception is stored in `pyerr.pending_exc`. At a C boundary, `pyerr.bridge(T, r)` turns `error.PyRaise` into a zero value (`MP_OBJ_NULL` for `Obj`), and the C caller checks `pending_exc`. Dropping `setjmp` is what made the wasm target practical, since wasm has no native `setjmp`. See [Internals: PyError Convention](internals/pyerror.md).
 
 ## Type mirrors
 
-`src/mp_mirrors.zig` holds ~1,200 lines and ~40 `extern struct` definitions that mirror vendor MicroPython C structs field-for-field. Each mirror has `@sizeOf` / `@offsetOf` checks in a comptime block, so a vendor `git pull` that shifts a struct layout fails the build at the right place, where it would otherwise corrupt memory silently.
+`src/mp_mirrors.zig` declares Zig `extern struct` types that mirror vendor MicroPython C structs field for field, so Zig reads and writes the same memory as the C code, by name:
 
 ```zig
 pub const MpRawCode = extern struct {
@@ -106,131 +67,29 @@ pub const MpRawCode = extern struct {
 };
 ```
 
-This lets Zig read/write the same memory the vendor C code did, by name (the type-mirror pattern).
-
-See [Internals → Type Mirrors](internals/mirrors.md).
+Comptime `@sizeOf` and `@offsetOf` checks make a layout mismatch fail the build instead of corrupting memory at run time. See [Internals: Type Mirrors](internals/mirrors.md).
 
 ## The residual C
 
-The strangler removed vendor C from the core interpreter: lexer, parser, compiler, emitter, `.mpy` loader, VM dispatch, object model, allocator and GC are all Zig. Vendor C did not reach zero, though, because per-feature carveouts are default-on under nano: `float` and `re` on both arms, longint additionally on wasm. Counting what a default `-Dconfig=nano` build actually compiles:
+The core interpreter is Zig: lexer, parser, compiler, emitter, `.mpy` loader, VM, object model, allocator and GC. Some C remains.
 
-| Layer | Native nano | Wasm nano |
-|---|---|---|
-| Project-local C (qstr tombstone, `va_list` surface, NLR trampoline) | 616 | 616 |
-| Vendor C, `float` carveout (`py/objfloat.c`, `py/formatfloat.c`) | 908 | 908 |
-| Vendor C, `re` carveout (`extmod/modre.c` + the re1.5 sources it `#include`s) | 1,009 | 1,009 |
-| Vendor C, longint (`py/objint.c`, `py/objint_longlong.c`) | 0 | 861 |
-| **Total compiled C** | **2,533** | **3,394** |
+Vendor C still compiles for features that were never ported. On both configs this is `float` (`py/objfloat.c`, `py/formatfloat.c`) and the `re` module (`extmod/modre.c`). Nano on wasm adds the long-long integer files. Full adds MPZ bignums, `io`, `help()` and warnings. These are well-tuned upstream code, and reusing them costs less than rewriting them. The lists live in `build.zig`.
 
-The three project-local files are:
+Three project-local C files also compile into every build:
 
-| File | LOC | Why it is C |
-|---|---|---|
-| `src/objects/objtype/objmodule_shim.c` | 86 | The qstr-gen tombstone. Holds `MICROPY_REGISTERED_MODULES`, the macro table listing every available module. `tools/makeqstrdefs.py` (vendor tooling) scans `.c` at build time, never `.zig`. Eliminating it needs a qstr-gen port. |
-| `src/objects/strings/va_ops.c` | 406 | The `va_list` surface (`mp_vprintf`, `mp_printf`, `vstr_printf`/`_vprintf`, `mp_obj_new_exception_msg_varg`/`_vlist`). Zig 0.16's `std.builtin.VaList` emits `error: disabled due to miscompilations` on `aarch64-linux` under the LLVM backend. Reverts to Zig when that guard lifts. |
-| `src/runtime/nlr_trampoline.c` | 124 | [ADR 013](adrs/013-exception-unwind-vendor-c.md)'s `setjmp`/`longjmp` trampoline, restoring exception unwinding across the `full` profile's vendor-C carveouts. Compiled unconditionally because the Zig side declares its symbols `extern`; never called under nano, where the linker strips it. |
+- `src/objects/objtype/objmodule_shim.c` holds the built-in module table. It expands `MICROPY_REGISTERED_MODULES`, a macro that MicroPython's build tooling generates and that only resolves inside a C file (see [qstr Generation](internals/qstr-gen.md)).
+- `src/objects/strings/va_ops.c` holds the functions that take a `va_list` (`mp_printf`, `mp_vprintf`, `vstr_printf` and the formatted exception constructors), because Zig 0.16 refuses `va_list` on aarch64-linux.
+- `src/runtime/nlr_trampoline.c` is the `setjmp` pad from [ADR 013](adrs/013-exception-unwind-vendor-c.md). It lets exceptions raised inside the full config's vendor C reach Python `try`/`except`. The pad is active only on full native builds; elsewhere the wrappers forward the call.
 
-Under `-Dconfig=full` the build pulls in additional vendor C carveouts (MPZ, IO, builtin_help, warning, complex) that we have intentionally not ported. They're well-tuned vendor code, and the parity target benefits more from re-using them than from re-implementing them. The carveout list lives in `build.zig`; toggling between nano and full is a single `-Dconfig=` flip.
+## Testing
 
-## Test infrastructure
-
-The harness has four independent gates plus an aggregate. Each answers a different question. [Build & Test](build-and-test.md) has the full breakdown.
-
-| Gate | Target | Question | Result |
-|---|---|---|---|
-| Native byte-exact corpus | `make check` | Does the strangled binary match the frozen reference? | **541/541** |
-| Same, strict | `make verify` | List each failing test | exits 0 |
-| Wasm corpus | `make wasm-check` | Does the wasm binary still match its documented baseline? | **green** at 490/541 raw |
-| Integration smoke (native) | `make test-integration` | Does the binary actually run real Python? | 189/189 |
-| Integration smoke (wasm) | `make test-integration-wasm` | Same, via wasmtime | 189/189 |
-| All of the above + lint | `make` | The "I'm about to commit" gate | exit 0 |
-
-The project also has these checks:
-
-- **Unit tests**: `make test-unit` runs ~100 Zig unit tests across the compiler + VM tracks.
-- **`tools/compile-exec-test.py`**: secondary differential gate. Compiles each `.py` with `zigpy-compile`, runs the `.mpy` through vendor MicroPython, diffs the output. Catches "the Zig compiler produced subtly wrong bytecode" cases the byte-exact gate misses.
-- **`golden-programs/`**: 823 real Python programs sourced from MicroPython tests, CPython tests, PEP examples, and curated demos, bucketed by what they need ([ADR 008](adrs/008-golden-programs.md)). Drives the per-program coverage view in [`COMPATIBILITY.md`](COMPATIBILITY.md).
-- **`tools/metrics.py`**: longitudinal recording of binary size + coverage + (opt-in) perf to `metrics/history.ndjson`. Each session records baseline at start and post-change at end.
-
-See [Build & Test](build-and-test.md) for the full Makefile reference.
-
-## Layout reference
-
-```
-src/
-├── main.zig                 — entry point + comptime force-analyze block
-├── main_vm.zig              — VM-only entry point (for the slim build)
-├── mp_mirrors.zig           — Zig mirrors of vendor MicroPython C structs (~40 extern structs)
-├── mp_type_roms.zig         — ROM-resident type singletons
-├── pyerr.zig                — PyError error union + polled-sentinel bridge
-├── vendor_stubs.zig         — small C-ABI stubs for vendor symbols whose full implementation is deferred
-├── compiler/                — pure-Zig compiler track
-│   ├── lexer.zig            (with unit tests)
-│   ├── parser.zig
-│   ├── grammar_data.zig     (generated from the patched upstream grammar; see port/grammar-patched/)
-│   ├── bigint.zig
-│   ├── scope.zig
-│   ├── emit.zig
-│   ├── compile.zig
-│   ├── qstr.zig
-│   ├── mpy.zig              — .mpy v6 format
-│   └── mpy_roundtrip.zig    — standalone roundtrip tool
-├── runtime/                 — VM track
-│   ├── runtime.zig          — binary_op, unary_op, call dispatch
-│   ├── vm.zig               — bytecode interpreter
-│   ├── mpstate.zig          — mp_state_ctx mirror
-│   ├── persistentcode.zig   — .mpy loader
-│   ├── zig_compile_bridge.zig — compile + load entry point
-│   ├── raise.zig            — exception raise helpers
-│   ├── argcheck.zig         — arg-checking helpers
-│   ├── full_stubs.zig       — is_full-gated stubs for unported full features
-│   └── ...
-├── objects/                 — type implementations
-│   ├── obj.zig              — base type dispatch
-│   ├── objtype/             — type system (objtype, objmodule, objobject) + the qstr-gen tombstone
-│   ├── primitives/          — int, cell
-│   ├── strings/             — str, bytes, objstr, vstr, mpprint
-│   ├── containers/          — list, dict, tuple, set, range, slice, array
-│   ├── iters/               — filter, map, zip, deque, namedtuple, reversed, enumerate
-│   └── callables/           — fun, generator, boundmeth, closure
-├── modules/                 — builtin modules
-│   ├── modbuiltins.zig      — print, len, range, etc.
-│   ├── modsys.zig           — sys.path, sys.argv, etc.
-│   ├── modmath.zig          — math.sqrt, math.pi, etc.
-│   ├── modgc.zig            — gc.collect, gc.mem_free
-│   ├── modstruct.zig        — struct.pack/unpack
-│   ├── modarray.zig         — array.array
-│   ├── modcollections.zig   — collections (namedtuple, OrderedDict, deque)
-│   ├── moderrno.zig         — errno constants
-│   ├── modmain.zig          — __main__ module ROM
-│   ├── modmicropython.zig   — micropython builtin
-│   └── file_io.zig          — file IO (is_full-gated)
-├── memory/                  — allocator + GC
-│   ├── alloc.zig            — m_malloc / m_realloc / m_new
-│   ├── gc.zig               — minimal bump GC
-│   └── ...
-├── frontend/                — compiler-to-runtime bridge
-│   ├── emitglue.zig
-│   ├── parsenum.zig
-│   ├── parsenumbase.zig
-│   └── reader.zig
-├── entry/
-│   └── embed_exec.zig       — top-level script execution + REPL entry
-├── support/
-│   ├── smallint.zig         — Python-semantic divmod / floordiv
-│   ├── unicode.zig          — unichar classification
-│   ├── readline.zig         — REPL line editing (is_full-gated)
-│   ├── mpprint.zig          — formatted printing
-│   └── stream.zig           — stream protocol (is_full-gated)
-└── tests.zig                — unit tests for shimless utility modules
-```
+Each gate answers a different question: does nano still match the frozen reference byte for byte, does full match its documented baseline, does wasm, does the binary actually start and run real programs, and do the compiler and VM agree with MicroPython's own when mixed. [Build & Test](build-and-test.md) lists the commands. The [golden programs](adrs/008-golden-programs.md) are a separate collection of real Python programs; [`COMPATIBILITY.md`](COMPATIBILITY.md) is generated from them.
 
 ## See also
 
-- [ADR series](adrs/index.md): architecture decisions
 - [Internals: PyError Convention](internals/pyerror.md)
 - [Internals: Type Mirrors](internals/mirrors.md)
 - [Internals: qstr Generation](internals/qstr-gen.md)
 - [Internals: Persistentcode Loader](internals/persistentcode.md)
 - [Internals: Wasm Composition](internals/wasm-composition.md)
-- [Strangler Journey](strangler-journey.md): the narrative (historical)
+- [How it was built](strangler-journey.md)
