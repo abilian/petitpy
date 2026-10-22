@@ -1,6 +1,6 @@
 # ADR 007. WASM fat loss: post-link size reduction beyond Theme F
 
-- **Status**: In Progress. Phase 1 partial: `wasm-opt -Oz` post-link pass wired into `make web`. Shipping artifact at 304 KB (from 354 KB baseline). Remaining Phase 1 items (2-4) and Phases 2-3 open.
+- **Status**: In Progress. Phase 1 partly landed: `wasm-opt -Oz` runs in `make web` (P1, P6) and the Export section is stripped (P2); P3 and P4 are not started. The 228 KB target was not reached: the features added since (Unicode strings, `match`, the GC, more stdlib) grew the shipped binary to about 350 KB. Phases 2-3 are open; a VM-only binary (item 5) already builds as `nanopython-vm`.
 - **Decider**: project maintainers
 - **Supersedes**: nothing
 - **Branches from**: [ADR 005 §3](005-future-optimization-proto.md) (WASM-specific size row). ADR 005's hypothetical "wasm-tiny-2 ADR" was preempted by [ADR 006](006-js-interop.md); this ADR is that deferred decision.
@@ -17,7 +17,7 @@
 Two artifacts landed before this ADR was written and inform the decision:
 
 - **`scripts/wasm_composition.py`**: parses a `.wasm` binary and reports section sizes, per-function distribution, code-by-subsystem classification, data and imports. Reusable for any size-tracking work.
-- **[`docs/internals/wasm-composition.md`](../internals/wasm-composition.md)**: snapshot + interpretation. Its "Opportunities for fat loss" section enumerates 11 techniques by cost tier (Easy 1-4, Medium 5-8, Hard 9-11), each with an estimated saving and trade-off note. This ADR references those items by number.
+- **[WASM composition](../internals/wasm-composition.md)**: what the binary is made of. Its "Ways to make it smaller" section lists 11 techniques by cost (easy 1-4, medium 5-8, hard 9-11). This ADR refers to those items by number; the saving estimates below were measured when the ADR was written.
 
 The composition doc also documents what *won't* help (ReleaseFast, newer Zig versions, hand-coded wasm, in-transit compression), heading off recurring "have you tried..." suggestions.
 
@@ -52,10 +52,10 @@ Six concrete tasks. Each independently revertible; each produces a measurable si
 | # | Item | Status | Estimated saving |
 |---|---|---|---|
 | P1 | `make wasm-opt` target (binaryen post-link) | Landed | −14.3% raw / −5% gzipped |
-| P2 | Strip Export section (audit `pub export fn`) | Not started | ~10 KB Export + downstream DCE |
+| P2 | Strip Export section (audit `pub export fn`) | Landed | ~10 KB Export + downstream DCE |
 | P3 | Cull unused WASI imports | Not started | ~1 KB Import + a few hundred bytes Code |
 | P4 | `-Dterse-errors` build flag (opt-in, verbose default) | Not started | 5-8 KB Data |
-| P5 | Verify the 228 KB target after P1-P4 | Blocked on P2-P4 | n/a |
+| P5 | Verify the 228 KB target after P1-P4 | Blocked on P3-P4 | n/a |
 | P6 | Wire `wasm-opt` into `make web` (release artifact) | Landed | −14% download for every user |
 
 ### 3.1 Acceptance criteria
@@ -74,7 +74,7 @@ Six concrete tasks. Each independently revertible; each produces a measurable si
 **Risks:**
 - binaryen is a third-party tool. Mitigation: `make wasm-opt` is opt-in; the un-opt binary still works.
 - Terse errors would regress DX if the default flipped. Mitigation: the default stays verbose; only release pipelines opt in.
-- Export strip + Import cull risk removing something the runtime needs on a less-exercised path. Mitigation: gated by `make check` (byte-exact corpus) and `make compat` (real-program tracker).
+- Export strip + Import cull risk removing something the runtime needs on a less-exercised path. Mitigation: gated by `make check` (byte-exact corpus) and `make wasm-check`.
 
 **What this ADR preserves:**
 - The strangler discipline (byte-exact corpus remains the invariant).
@@ -85,11 +85,11 @@ Six concrete tasks. Each independently revertible; each produces a measurable si
 
 1. **Phase 2 trigger.** Commit to Phase 2 before or after Phase 1 measurement closes? Pre-committing risks architectural mistakes; post-committing risks the next session's priority displacing it. Default: post-commit. Revisit if Phase 1 lands strictly below 228 KB with demand for further reduction.
 2. **The `nanopython-vm.wasm` carveout boundary.** ADR 003 placed the frozen-tiny boundary based on demo imports. The carveout (item 5) wants a different boundary: what does the VM need at runtime, never at compile time. The two boundaries diverge. Reconciliation deferred to a Phase 2 ADR.
-3. **Size-regression gate in CI.** `make check` catches functional regressions; `make compat` catches user-visible ones. Neither catches size regressions. A `--regress` mode on the composition tool, comparing against a tracked baseline (mirroring `corpus/wasm-known-fails.txt`), would close the gap. Deferred to Phase 1 P5.
+3. **Size-regression gate in CI.** `make check` and `make wasm-check` catch functional regressions. Neither catches size regressions. A `--regress` mode on the composition tool, comparing against a tracked baseline (mirroring `corpus/wasm-known-fails.txt`), would close the gap. Deferred to Phase 1 P5.
 
 ## 6. See also
 
-- [`docs/internals/wasm-composition.md`](../internals/wasm-composition.md): technical plan + measurements snapshot.
+- [WASM composition](../internals/wasm-composition.md): what the binary contains, and the numbered techniques.
 - `scripts/wasm_composition.py`: the analysis tool. Reproducible measurements.
 - [ADR 001](001-roadmap-v04.md): the 20% size goal this ADR is the path to closing.
 - [ADR 002](002-feature-selection.md): Theme F per-feature flags, the 8.95% that landed.

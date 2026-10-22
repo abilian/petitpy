@@ -1,6 +1,6 @@
 # ADR 013. Restoring exception unwinding across vendor-C frames (the try/except-over-MPZ wall)
 
-- **Status**: Implemented in v0.7.0 as B' (§4): native `full` only; wasm keeps `exit(1)` for vendor-C raises (drafted 2026-06-13)
+- **Status**: Implemented in v0.7.0 as B' (§4): native `full` only; wasm keeps `exit(1)` for vendor-C raises (drafted 2026-06-13). The runtime layout check this ADR planned to re-enable (§4 step 4) was deleted instead: its constants came from the same Zig types it checked. The comptime assertions in `src/runtime/mpstate.zig` guard the state layout.
 - **Decider**: project maintainers
 - **Supersedes**: nothing
 - **Branches from**: ADR 012 §3 D2 (per-feature flags as the only durable gate; this ADR introduces `build_options.exception_unwind` following that discipline). Phase 3.5 step 4 + 6 retrospectives documented the limitation that this ADR resolves.

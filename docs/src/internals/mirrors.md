@@ -33,7 +33,7 @@ The `mp_state_ctx` singleton is defined in Zig, in `src/runtime/mpstate.zig`, wi
 
 ## Limits
 
-- **The layout checks are weak.** `assertLayout()` compares each mirror's `@sizeOf` and `@offsetOf` against `npy_mirror_*` constants, but `src/mp_layout_check.zig` computes those constants from the same Zig types, so the comparison cannot fail, and the call in `main.zig` is commented out. The comptime assertions in `mpstate.zig` use hard-coded numbers for 64-bit targets and do catch drift there.
+- **Only the interpreter state is checked.** The comptime assertions in `mpstate.zig` pin its offsets and sizes with hard-coded numbers on 64-bit targets. The other mirrors have no layout check: vendor C exports no `sizeof` values to compare against.
 - **Mirrors follow one config.** Some vendor structs grow fields under config macros (`MICROPY_PERSISTENT_CODE_SAVE` for `MpRawCode`, for example). The mirror matches the current `port/mpconfigport.h`; flipping such a macro means updating the mirror by hand. Comments marked `CONFIG-COUPLED` flag these cases.
 - **Vendor upgrades need a manual check.** Nothing compares the mirrors against vendor headers, so a new `MICROPY_REV` that moves a field requires rechecking the affected mirrors against upstream.
 
