@@ -276,6 +276,8 @@ const DynamicEntry = struct {
 var dynamic_entries: std.ArrayListUnmanaged(DynamicEntry) = .empty;
 var dynamic_chunks: std.ArrayListUnmanaged([]u8) = .empty;
 var chunk_used: usize = 0; // bytes used in the last chunk
+/// Saved and loaded by the embedding API: each interpreter interns its own.
+pub const interp_state = .{ &dynamic_entries, &dynamic_chunks, &chunk_used };
 const CHUNK_INIT: usize = 128; // matches MICROPY_ALLOC_QSTR_CHUNK_INIT
 
 fn dynAlloc(n: usize) [*]u8 {

@@ -135,6 +135,17 @@ var collect_wanted = false; // wasm: a collection waiting for a safe point
 var allocated_blocks: usize = 0; // since the last collection
 var finalising = false; // finalisers running: new blocks are created marked
 
+/// The variables above that make up one heap, which the embedding API
+/// saves and loads when it switches interpreters (`stress_every` is
+/// configuration, shared).
+pub const interp_state = .{ &areas, &n_areas, &heap_below, &heap_hi, &total_blocks, &cursor_area, &cursor_block, &lock_depth, &alloc_count, &python_depth, &collect_wanted, &allocated_blocks, &finalising };
+
+/// Returns the heap's areas to the system, for an interpreter that is
+/// destroyed; the caller then resets the variables above.
+pub fn freeAreas() void {
+    for (areas[0..n_areas]) |a| c.free(a.atb);
+}
+
 fn addArea(min_bytes: usize) bool {
     if (n_areas == MAX_AREAS) return false;
     const bytes = std.mem.alignForward(usize, @max(min_bytes, INITIAL_AREA, total_blocks * BYTES_PER_BLOCK), BYTES_PER_BLOCK);

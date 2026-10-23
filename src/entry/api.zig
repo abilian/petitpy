@@ -7,11 +7,15 @@
 //! and turns a pending exception into the returned status.
 //!
 //! The host holds handles: indexes into `slots`, a GC block reached from
-//! the global `the_interp`, so the collector's data-segment scan keeps
+//! the global table `interps`, so the collector's data-segment scan keeps
 //! every held object alive. A free slot holds MP_OBJ_NULL.
 //!
-//! The interpreter state is still process-wide (ADR 022's first step), so
-//! there is one interpreter, `the_interp`.
+//! The interpreter state is still a set of process-wide variables, listed
+//! in `globals`. Each interpreter keeps a saved copy of them, and `run`
+//! loads it when a call enters an interpreter other than the current one;
+//! the copies are outside the data segment, and need no scan, because the
+//! collector only ever collects the current interpreter's own heap. Calls
+//! take turns behind one lock for the process.
 
 const std = @import("std");
 const builtin = @import("builtin");
@@ -23,6 +27,10 @@ const state = @import("../runtime/mpstate.zig");
 const nlr = @import("../runtime/nlr_trampoline.zig");
 const systemexit = @import("systemexit.zig");
 const output = @import("../support/output.zig");
+const qstr_pool = @import("../runtime/qstr.zig");
+const scheduler = @import("../runtime/scheduler.zig");
+const objmodule = @import("../objects/objtype/objmodule.zig");
+const modsignal = @import("../modules/modsignal.zig");
 
 const Obj = mirrors.Obj;
 const Handle = u32;
@@ -62,11 +70,73 @@ const Interp = struct {
     fetched: Obj = 0, // ppy_fetch_error's exception, between py.err and its handle
     exit_code: c_int = 0,
     depth: u32 = 0, // nesting of API calls on the stack
+    saved: ?*State = null, // its globals while another interpreter is current
 };
 
 const Host = struct { fun: HostFn, userdata: ?*anyopaque };
 
-var the_interp: Interp = .{};
+// ponytail: a fixed table, since the collector finds `slots` through the
+// data segment; grow it if a host needs more interpreters. wasm keeps one
+// per module instance: the `js` module's callbacks enter Python without
+// naming an interpreter.
+const MAX_INTERPS = if (is_wasm) 1 else 64;
+var interps: [MAX_INTERPS]Interp = @splat(.{});
+var current: ?*Interp = null; // the interpreter whose state the globals hold
+
+// ── interpreter state ───────────────────────────────────────────────────
+
+/// Every process-wide variable that belongs to one interpreter. A new
+/// global that holds interpreter state belongs in this list.
+const globals = .{ &state.mp_state_ctx, &scheduler.pending_exception, &objmodule.mp_module_builtins_override_dict, &output.sink } ++
+    gc.interp_state ++ qstr_pool.interp_state ++ modsignal.interp_state;
+
+const State = [
+    blk: {
+        var n: usize = 0;
+        for (globals) |p| n += @sizeOf(@TypeOf(p.*));
+        break :blk n;
+    }
+]u8;
+
+/// The globals as the process starts, which a new interpreter starts from.
+var pristine: ?*State = null;
+
+fn save(s: *State) void {
+    var off: usize = 0;
+    inline for (globals) |p| {
+        const b = std.mem.asBytes(p);
+        @memcpy(s[off..][0..b.len], b);
+        off += b.len;
+    }
+}
+
+fn load(s: *const State) void {
+    var off: usize = 0;
+    inline for (globals) |p| {
+        const b = std.mem.asBytes(p);
+        @memcpy(b, s[off..][0..b.len]);
+        off += b.len;
+    }
+}
+
+fn switchTo(py: *Interp) void {
+    if (current == py) return;
+    if (current) |cur| save(cur.saved.?);
+    load(py.saved.?);
+    current = py;
+}
+
+/// Makes `py` current, and returns the interpreter to switch back to
+/// afterwards: the previous one, when a call into it is still running.
+fn enter(py: *Interp) ?*Interp {
+    const prev = current;
+    switchTo(py);
+    return if (prev != null and prev != py and prev.?.depth > 0) prev else null;
+}
+
+fn leave(back: ?*Interp) void {
+    if (back) |p| switchTo(p);
+}
 
 // ── lock ────────────────────────────────────────────────────────────────
 
@@ -98,6 +168,7 @@ fn unlock() void {
 
 extern fn mp_embed_init(heap: ?*anyopaque, heap_size: usize, stack_top: ?*anyopaque) void;
 extern fn mp_embed_deinit() void;
+extern fn qstr_init() void;
 extern fn npy_file_io_init() void;
 extern fn fflush(stream: ?*anyopaque) c_int;
 extern fn m_realloc(ptr: ?*anyopaque, n: usize) ?*anyopaque;
@@ -165,6 +236,8 @@ fn bodyOf(comptime Ctx: type) Body {
 noinline fn run(py: *Interp, body: Body, ctx: *anyopaque) c_int {
     lock();
     defer unlock();
+    const back = enter(py);
+    defer leave(back);
     var anchor: usize = 0;
     const outer = py.depth == 0;
     if (outer) state.threadState().stack_top = @ptrCast(&anchor);
@@ -210,11 +283,31 @@ fn raise(t: *const anyopaque, msg: [*:0]const u8) Obj {
 
 // ── handles ─────────────────────────────────────────────────────────────
 
+// A handle holds the interpreter's index in `interps` above its slot
+// number, so that a handle passed to another interpreter is an error.
+const SLOT_BITS = 26;
+const SLOT_MASK: Handle = (1 << SLOT_BITS) - 1;
+comptime {
+    std.debug.assert(MAX_INTERPS <= 1 << (32 - SLOT_BITS));
+}
+
+fn tag(py: *const Interp) Handle {
+    return @intCast((@intFromPtr(py) - @intFromPtr(&interps)) / @sizeOf(Interp) << SLOT_BITS);
+}
+
+/// The slot `h` names, if it is `py`'s and holds a value.
+fn slotOf(py: *Interp, h: Handle) ?u32 {
+    const slot = h & SLOT_MASK;
+    if (h & ~SLOT_MASK != tag(py) or slot == 0 or slot >= py.n_slots or py.slots.?[slot] == mirrors.OBJ_NULL) return null;
+    return slot;
+}
+
 fn newHandle(py: *Interp, o: Obj) Handle {
-    if (py.free.pop()) |h| {
-        py.slots.?[h] = o;
-        return h;
+    if (py.free.pop()) |slot| {
+        py.slots.?[slot] = o;
+        return tag(py) | slot;
     }
+    if (py.n_slots == SLOT_MASK) return 0;
     if (py.n_slots == py.cap) {
         const cap = @max(16, py.cap * 2);
         const p = m_realloc(py.slots, cap * @sizeOf(Obj)) orelse return 0;
@@ -225,16 +318,16 @@ fn newHandle(py: *Interp, o: Obj) Handle {
             py.n_slots = 1;
         }
     }
-    const h = py.n_slots;
-    py.slots.?[h] = o;
+    const slot = py.n_slots;
+    py.slots.?[slot] = o;
     py.n_slots += 1;
-    return h;
+    return tag(py) | slot;
 }
 
 /// The object `h` names, or MP_OBJ_NULL (and a pending ValueError).
 fn obj(py: *Interp, h: Handle) Obj {
-    if (h != 0 and h < py.n_slots and py.slots.?[h] != mirrors.OBJ_NULL) return py.slots.?[h];
-    return raise(&mp_type_ValueError, "invalid handle");
+    const slot = slotOf(py, h) orelse return raise(&mp_type_ValueError, "invalid handle");
+    return py.slots.?[slot];
 }
 
 fn qstr(name: [*:0]const u8) Qstr {
@@ -266,9 +359,19 @@ export fn ppy_new(config: ?*const Config) ?*Interp {
     initLock();
     lock();
     defer unlock();
-    const py = &the_interp;
-    if (py.live) return null;
-    py.* = .{ .live = true };
+    const py = for (&interps) |*p| {
+        if (!p.live) break p;
+    } else return null;
+    const saved = std.heap.c_allocator.create(State) catch return null;
+    if (pristine == null) {
+        pristine = std.heap.c_allocator.create(State) catch {
+            std.heap.c_allocator.destroy(saved);
+            return null;
+        };
+        save(pristine.?); // no interpreter yet: the globals are untouched
+    }
+    saved.* = pristine.?.*;
+    py.* = .{ .live = true, .saved = saved };
     var ctx: struct {
         config: ?*const Config,
         fn body(c: *@This()) void {
@@ -286,8 +389,7 @@ export fn ppy_new(config: ?*const Config) ?*Interp {
         }
     } = .{ .config = config };
     if (run(py, bodyOf(@TypeOf(ctx)), &ctx) != OK) {
-        py.live = false;
-        output.sink = null;
+        ppy_free(py);
         return null;
     }
     return py;
@@ -300,12 +402,18 @@ fn newStr(s: [*:0]const u8) Obj {
 export fn ppy_free(py: *Interp) void {
     lock();
     defer unlock();
+    const back = enter(py);
     _ = fflush(null);
     mp_embed_deinit();
-    output.sink = null;
+    qstr_init(); // frees the interned strings
+    gc.freeAreas(); // and the heap, slots included
+    load(pristine.?);
+    current = null;
+    std.heap.c_allocator.destroy(py.saved.?);
     py.free.deinit(std.heap.c_allocator);
     py.hosts.deinit(std.heap.c_allocator);
-    py.* = .{}; // drops the slots: the collector frees what they held
+    py.* = .{};
+    leave(back);
 }
 
 // ── running code ────────────────────────────────────────────────────────
@@ -468,8 +576,11 @@ export fn ppy_repr(py: *Interp, h: Handle, result: ?*Handle) c_int {
 export fn ppy_type_name(py: *Interp, h: Handle) ?[*:0]const u8 {
     lock();
     defer unlock();
-    if (h == 0 or h >= py.n_slots or py.slots.?[h] == mirrors.OBJ_NULL) return null;
-    return mp_obj_get_type_str(py.slots.?[h]);
+    // A class name may be one of the interpreter's own interned strings.
+    const back = enter(py);
+    defer leave(back);
+    const slot = slotOf(py, h) orelse return null;
+    return mp_obj_get_type_str(py.slots.?[slot]);
 }
 
 // ── containers ──────────────────────────────────────────────────────────
@@ -562,9 +673,9 @@ export fn ppy_dup(py: *Interp, h: Handle, copy: ?*Handle) c_int {
 export fn ppy_release(py: *Interp, h: Handle) void {
     lock();
     defer unlock();
-    if (h == 0 or h >= py.n_slots or py.slots.?[h] == mirrors.OBJ_NULL) return;
-    py.slots.?[h] = mirrors.OBJ_NULL;
-    py.free.append(std.heap.c_allocator, h) catch {}; // ken: a lost slot only leaks one word
+    const slot = slotOf(py, h) orelse return;
+    py.slots.?[slot] = mirrors.OBJ_NULL;
+    py.free.append(std.heap.c_allocator, slot) catch {}; // ken: a lost slot only leaks one word
 }
 
 // ── host functions ──────────────────────────────────────────────────────
@@ -572,7 +683,7 @@ export fn ppy_release(py: *Interp, h: Handle) void {
 /// The Python side of every host function: a bound method of this
 /// builtin, whose `self` is the host function's index in `hosts`.
 fn hostCall(n_args: usize, args: [*]const Obj) callconv(.c) Obj {
-    const py = &the_interp;
+    const py = current.?;
     const host = py.hosts.items[@intCast(mirrors.smallIntValue(args[0]))];
     const argc = n_args - 1;
     // The arguments are handles for the length of the call; the array that

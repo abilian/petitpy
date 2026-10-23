@@ -61,16 +61,26 @@ static void capture(void *userdata, int fd, const char *data, size_t len) {
     ++*(int *)userdata;
 }
 
-static ppy_interp *shared;
-
 static void *worker(void *arg) {
-    (void)arg;
+    ppy_interp *py = arg;
     for (int i = 0; i < 200; i++) {
         ppy_handle r = 0;
-        if (ppy_eval(shared, "len([str(i) for i in range(50)])", 32, &r) != PPY_OK) return "eval failed";
-        ppy_release(shared, r);
+        if (ppy_eval(py, "len([str(i) for i in range(50)])", 32, &r) != PPY_OK) return "eval failed";
+        ppy_release(py, r);
     }
     return NULL;
+}
+
+static ppy_interp *other;
+
+/* Calls into another interpreter: Python -> host -> other's Python. */
+static ppy_status ask_other(ppy_interp *py, void *userdata, size_t argc, const ppy_handle *argv, ppy_handle *result) {
+    (void)userdata, (void)argc, (void)argv;
+    ppy_handle r;
+    int64_t n;
+    if (ppy_eval(other, "x * 2", 5, &r) != PPY_OK || ppy_to_int(other, r, &n) != PPY_OK) return ppy_raise(py, "RuntimeError", "other failed");
+    ppy_release(other, r);
+    return ppy_new_int(py, n, result);
 }
 
 static ppy_status exec(ppy_interp *py, const char *src) {
@@ -85,7 +95,6 @@ int main(void) {
     ppy_config config = {.path = path, .path_len = 1, .argv = argv, .argc = 2};
     ppy_interp *py = ppy_new(&config);
     check("new", py != NULL);
-    check("one interpreter at a time", ppy_new(NULL) == NULL);
 
     ppy_handle r = 0, h = 0, a = 0, b = 0;
     int64_t n = 0;
@@ -149,6 +158,17 @@ int main(void) {
     check("raise_exception", exec(py, "try:\n    host.reraise()\nexcept KeyError as e:\n    assert e.args == ('kept',)\n") == PPY_OK);
     check("nested Python error", exec(py, "try:\n    host.apply(lambda v: 1 / v, 0)\nexcept ZeroDivisionError:\n    ok = 1\n") == PPY_OK);
 
+    /* A second interpreter has its own modules, globals and heap. */
+    other = ppy_new(NULL);
+    check("second interpreter", other != NULL && exec(other, "x = 100\nclass Zork: pass\nzork = Zork()") == PPY_OK);
+    check("separate globals", ppy_get_global(py, "x", &r) == PPY_OK && ppy_to_int(py, r, &n) == PPY_OK && n == 42 && ppy_get_global(other, "x", &h) == PPY_OK && ppy_to_int(other, h, &n) == PPY_OK && n == 100);
+    check("a handle belongs to its interpreter", ppy_get_global(py, "x", &r) == PPY_OK && ppy_to_int(other, r, &n) == PPY_ERROR && ppy_type_name(other, r) == NULL);
+    check("separate modules", exec(other, "import host") == PPY_ERROR && ppy_fetch_error(other, &h) == PPY_OK && h != 0);
+    check("type_name in another interpreter", ppy_get_global(other, "zork", &h) == PPY_OK && ppy_eval(py, "x", 1, &r) == PPY_OK && strcmp(ppy_type_name(other, h), "Zork") == 0);
+    check("host function calls another interpreter", ppy_define_function(py, "host", "ask_other", ask_other, NULL) == PPY_OK && ppy_eval(py, "host.ask_other() + 1", 20, &r) == PPY_OK && ppy_to_int(py, r, &n) == PPY_OK && n == 201);
+    ppy_handle kept;
+    check("other's handle", ppy_eval(other, "[7] * 3", 7, &kept) == PPY_OK);
+
     /* Values held only by handles survive many collections. */
     ppy_handle keep[100];
     for (int i = 0; i < 100; i++) {
@@ -157,6 +177,7 @@ int main(void) {
         ppy_eval(py, src, (size_t)k, &keep[i]);
     }
     check("garbage", exec(py, "for i in range(20000): s = str(i) * 3") == PPY_OK);
+    check("garbage in the other heap", exec(other, "for i in range(20000): s = str(i) * 3") == PPY_OK);
     int intact = 1;
     for (int i = 0; i < 100; i++) {
         ppy_handle first;
@@ -167,11 +188,11 @@ int main(void) {
         ppy_release(py, keep[i]);
     }
     check("handles keep values alive", intact);
+    check("its own handles too", ppy_len(other, kept, &len) == PPY_OK && len == 3);
 
-    /* Calls from several threads take turns. */
-    shared = py;
+    /* Calls from several threads, into one interpreter or two, take turns. */
     pthread_t threads[4];
-    for (int i = 0; i < 4; i++) pthread_create(&threads[i], NULL, worker, NULL);
+    for (int i = 0; i < 4; i++) pthread_create(&threads[i], NULL, worker, i % 2 ? other : py);
     int threads_ok = 1;
     for (int i = 0; i < 4; i++) {
         void *ret;
@@ -180,6 +201,8 @@ int main(void) {
     }
     check("threads", threads_ok);
 
+    ppy_free(other);
+    check("the first outlives the second", ppy_eval(py, "x", 1, &r) == PPY_OK && ppy_to_int(py, r, &n) == PPY_OK && n == 42);
     ppy_free(py);
     int writes = 0;
     ppy_config capturing = {.write = capture, .write_userdata = &writes};
@@ -188,6 +211,11 @@ int main(void) {
     check("fresh globals", ppy_get_global(py, "x", &r) == PPY_ERROR);
     check("output reaches write()", exec(py, "import sys\nprint('a', 1)\nsys.stdout.write('b')\nprint('c', file=sys.stderr)\nsys.stderr.write('d')") == PPY_OK);
     check("in order, by stream", strcmp(captured, "1:a|1: |1:1|1:\n|1:b|2:c|2:\n|2:d|") == 0 && writes == 8);
+    int other_writes = 0;
+    ppy_config capturing_other = {.write = capture, .write_userdata = &other_writes};
+    other = ppy_new(&capturing_other);
+    check("each interpreter its own write()", other != NULL && exec(other, "print('e')") == PPY_OK && other_writes == 2 && writes == 8 && exec(py, "print('f')") == PPY_OK && other_writes == 2 && writes == 10);
+    ppy_free(other);
     ppy_free(py);
 
     printf("%s\n", failed ? "FAILED" : "all passed");

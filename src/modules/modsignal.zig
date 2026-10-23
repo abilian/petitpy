@@ -51,6 +51,9 @@ const Qstr = usize;
 
 const enabled = build_options.feature_signal;
 
+/// Saved and loaded by the embedding API: each interpreter records its own.
+pub const interp_state = if (enabled) .{&Body.handlers} else .{};
+
 const Body = if (enabled) struct {
     const mp = @cImport({
         @cInclude("py/qstr.h");

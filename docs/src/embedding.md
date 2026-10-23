@@ -71,7 +71,7 @@ ppy_config config = {.path = dirs, .path_len = 1, .write = on_output, .write_use
 
 It receives every write, in order: `print()`, `input()`'s prompt, `sys.stdout`, `sys.stderr` and warnings. Without it, output goes to the process's stdout and stderr. Python code imports the standard modules from the library itself, and other modules only from the directories the host lists, never from the current directory.
 
-In this release, a process holds one interpreter at a time: `ppy_new()` returns `NULL` while another exists. After `ppy_free()`, the host can create a new one, which starts with fresh modules and globals.
+A process can hold several interpreters at once. Each has its own modules, globals and heap, and a handle names a value in one interpreter only. A host function can call into another interpreter, but values do not cross between them: to pass one along, read it out and create it again. An interpreter that `ppy_free()` destroys gives its memory back, and a new one starts with fresh modules and globals. Up to 64 interpreters can exist at once, and a wasm module holds one.
 
 `ppy_exec()` runs source code in the namespace of `__main__`, and `ppy_eval()` evaluates an expression. `ppy_get_global()` and `ppy_set_global()` read and write that namespace. `ppy_import()` imports a module, dotted names included, and returns it.
 
@@ -79,7 +79,7 @@ In this release, a process holds one interpreter at a time: `ppy_new()` returns 
 
 The host never holds a pointer to a Python object. Every value comes back as a `ppy_handle`, a small integer that names the value inside the interpreter, and 0 means no value. The interpreter keeps a value alive for as long as a handle names it: the garbage collector never frees it, even when nothing in Python refers to it any more. `ppy_release()` gives the handle back, and `ppy_dup()` makes a second handle to the same value, for code that keeps a value its caller will release. `ppy_free()` releases every handle the interpreter still holds, so a short-lived host can skip releasing.
 
-A handle belongs to its interpreter. Using a released handle, or a number that was never a handle, raises `ValueError`; it never reaches another object.
+A handle belongs to its interpreter. Using a released handle, a handle of another interpreter, or a number that was never a handle, raises `ValueError`; it never reaches another object.
 
 `ppy_new_*` create values (`None`, `bool`, `int`, `float`, `str`, `bytes`, `list`, `tuple`, `dict`). `ppy_to_*` read them. The pointer `ppy_to_str()` and `ppy_to_bytes()` return stays valid while the handle is held; use the length, since the data is not always NUL-terminated. `ppy_to_int()` raises `OverflowError` for an integer that does not fit a machine word. `ppy_len()`, `ppy_getitem()` and `ppy_setitem()` work on any container, `ppy_getattr()` and `ppy_setattr()` on any object, and `ppy_str()`, `ppy_repr()` and `ppy_type_name()` describe a value.
 
@@ -105,7 +105,7 @@ A host function can call back into the interpreter, as `ppy_call()` does when Py
 
 ## Threads
 
-The host may call the API from any thread. Calls into one interpreter take turns behind a lock that petitpy takes, and a host function that Python calls can call back into the API on the same thread. One pattern deadlocks: a host function that waits for another thread which itself calls the interpreter.
+The host may call the API from any thread. Calls take turns behind a lock that petitpy takes, and a host function that Python calls can call back into the API on the same thread. In this release the lock is one for the whole process, so calls into different interpreters also take turns: separate interpreters give separate state, not parallelism. One pattern deadlocks: a host function that waits for another thread which itself calls the API.
 
 Python code itself cannot start threads: `_thread` is a stub.
 
@@ -128,7 +128,7 @@ JavaScript cannot give wasm a C function pointer, so the wasm module adds one ex
 
 ## Limits of this release
 
-- One interpreter per process at a time.
+- Calls into different interpreters take turns; they do not run in parallel.
 - Tracebacks name the file and function of each frame, without line numbers, as the `petitpy` command prints them.
 - A static library and a wasm module; no shared library yet.
 - On wasm, `ppy_to_int` reads 32-bit integers; the JavaScript wrapper reads wider ones through their digits.

@@ -1,18 +1,17 @@
 /* petitpy embedding API (ADR 022). Experimental: may change before it is
  * declared stable.
  *
- * A host creates an interpreter and passes it to every call. Python values
- * cross the API as handles: small integers naming slots that the
- * interpreter keeps alive until ppy_release() or ppy_free(). Every
+ * A host creates interpreters and passes one to every call. Each has its
+ * own modules, globals and heap. Python values cross the API as handles:
+ * small integers naming slots that the interpreter keeps alive until
+ * ppy_release() or ppy_free(). A handle belongs to one interpreter. Every
  * function that can fail returns a status; results come back through
  * output arguments.
  *
- * Calls into one interpreter take turns behind a lock that petitpy takes,
- * so a host may call from any thread. Deadlock: a host function that
- * waits for another thread which itself calls the same interpreter.
- *
- * In this version a process holds one interpreter at a time: ppy_new()
- * returns NULL while another exists.
+ * Calls take turns behind a lock that petitpy takes, so a host may call
+ * from any thread. In this version the lock is one for the process: calls
+ * into different interpreters take turns too. Deadlock: a host function
+ * that waits for another thread which itself calls the API.
  */
 #ifndef PETITPY_H
 #define PETITPY_H
@@ -62,7 +61,8 @@ int ppy_api_version(void);
 /* Lifetime. config may be NULL: empty sys.path and sys.argv. Standard
  * modules are compiled in; Python code imports from disk only from the
  * directories in config->path. Output goes to config->write, or else to
- * the process's stdout and stderr. */
+ * the process's stdout and stderr. NULL when the interpreter cannot be
+ * created: up to 64 can exist at once, and one per wasm module. */
 ppy_interp *ppy_new(const ppy_config *config);
 void ppy_free(ppy_interp *py); /* releases every handle */
 

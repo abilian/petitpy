@@ -35,7 +35,7 @@ const MP_OBJ_NULL: Obj = 0;
 
 // Backing storage for MP_STATE_THREAD(mp_pending_exception) under nano
 // (PY_THREAD=0 collapses the per-thread slot to a single global).
-var pending_exception: Obj = MP_OBJ_NULL;
+pub var pending_exception: Obj = MP_OBJ_NULL;
 
 export fn npy_sch_get_pending() callconv(.c) Obj {
     return pending_exception;
