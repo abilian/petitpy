@@ -796,9 +796,17 @@ pub fn build(b: *std.Build) void {
         .strip = strip,
     });
     lib_mod.addImport("petitpy", mod);
-    const lib = b.addLibrary(.{ .name = "petitpy", .linkage = .static, .root_module = lib_mod });
-    const lib_step = b.step("lib", "Build libpetitpy.a and install include/petitpy.h");
-    lib_step.dependOn(&b.addInstallArtifact(lib, .{}).step);
+    const lib_step = b.step("lib", "Build libpetitpy.a (petitpy-embed.wasm on wasm) and install include/petitpy.h");
+    if (is_wasm_target) {
+        // A reactor: the host calls _initialize once, then the API.
+        const embed = b.addExecutable(.{ .name = "petitpy-embed", .root_module = lib_mod });
+        embed.wasi_exec_model = .reactor;
+        lib_mod.export_symbol_names = embedExports(b, features.js);
+        lib_step.dependOn(&b.addInstallArtifact(embed, .{}).step);
+    } else {
+        const lib = b.addLibrary(.{ .name = "petitpy", .linkage = .static, .root_module = lib_mod });
+        lib_step.dependOn(&b.addInstallArtifact(lib, .{}).step);
+    }
     lib_step.dependOn(&b.addInstallHeaderFile(b.path("include/petitpy.h"), "petitpy.h").step);
 
     // `zig build run -- script.py`
@@ -1209,4 +1217,25 @@ pub fn build(b: *std.Build) void {
     const unit_all = b.step("unit", "Run every Zig unit test (compiler + VM)");
     unit_all.dependOn(unit_compiler);
     unit_all.dependOn(unit_vm);
+}
+
+/// The exports of petitpy-embed.wasm: every `ppy_` function petitpy.h
+/// declares, the JavaScript host-function entry, libc's allocator for the
+/// host's strings and output arguments, and the JS bridge's entries.
+fn embedExports(b: *std.Build, js: bool) []const []const u8 {
+    var names = std.ArrayList([]const u8).empty;
+    const header = b.build_root.handle.readFileAlloc(b.graph.io, "include/petitpy.h", b.allocator, .unlimited) catch @panic("include/petitpy.h");
+    var lines = std.mem.splitScalar(u8, header, '\n');
+    while (lines.next()) |line| {
+        // A declaration starts its line with its return type; the name is
+        // the identifier before the parameter list.
+        if (line.len == 0 or !std.ascii.isAlphabetic(line[0]) or std.mem.startsWith(u8, line, "typedef")) continue;
+        const paren = std.mem.indexOfScalar(u8, line, '(') orelse continue;
+        var start = paren;
+        while (start > 0 and (std.ascii.isAlphanumeric(line[start - 1]) or line[start - 1] == '_')) start -= 1;
+        if (std.mem.startsWith(u8, line[start..paren], "ppy_")) names.append(b.allocator, line[start..paren]) catch @panic("OOM");
+    }
+    names.appendSlice(b.allocator, &.{ "ppy_define_js_function", "malloc", "free" }) catch @panic("OOM");
+    if (js) names.appendSlice(b.allocator, &.{ "npy_dispatch_callback", "m_malloc" }) catch @panic("OOM");
+    return names.items;
 }

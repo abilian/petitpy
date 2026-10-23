@@ -144,11 +144,22 @@ const Vstr = extern struct { alloc: usize, len: usize, buf: ?[*]u8, fixed_buf: b
 
 // ── the bracket ─────────────────────────────────────────────────────────
 
-/// Runs `ctx.body()` as one API call; see the file comment. `ctx` holds
+const Body = *const fn (?*anyopaque) callconv(.c) void;
+
+/// The C-callable form of `Ctx.body`, for `run`.
+fn bodyOf(comptime Ctx: type) Body {
+    return struct {
+        fn f(p: ?*anyopaque) callconv(.c) void {
+            Ctx.body(@ptrCast(@alignCast(p.?)));
+        }
+    }.f;
+}
+
+/// Runs `body(ctx)` as one API call; see the file comment. `ctx` holds
 /// handles and host pointers only: it lives in the caller's frame, above
-/// the recorded stack top, where the collector does not look.
-fn run(py: *Interp, ctx: anytype) c_int {
-    const Ctx = @TypeOf(ctx.*);
+/// the recorded stack top, where the collector does not look. Not generic,
+/// so its code exists once.
+noinline fn run(py: *Interp, body: Body, ctx: *anyopaque) c_int {
     lock();
     defer unlock();
     var anchor: usize = 0;
@@ -158,11 +169,7 @@ fn run(py: *Interp, ctx: anytype) c_int {
     gc.enterPython();
     py.err = 0;
     pyerr.pending_exc = 0;
-    nlr.callCtx(struct {
-        fn f(p: ?*anyopaque) callconv(.c) void {
-            Ctx.body(@ptrCast(@alignCast(p.?)));
-        }
-    }.f, ctx);
+    nlr.callCtx(body, ctx);
     py.err = pyerr.pending_exc; // a root before leavePython can collect
     pyerr.pending_exc = 0;
     gc.leavePython();
@@ -190,7 +197,7 @@ fn produce(py: *Interp, out: ?*Handle, comptime f: anytype, args: anytype) c_int
             if (c.out) |h| h.* = newHandle(c.py, o);
         }
     } = .{ .py = py, .out = out, .args = args };
-    return run(py, &ctx);
+    return run(py, bodyOf(@TypeOf(ctx)), &ctx);
 }
 
 fn raise(t: *const anyopaque, msg: [*:0]const u8) Obj {
@@ -274,7 +281,7 @@ export fn ppy_new(config: ?*const Config) ?*Interp {
             for (0..cfg.argc) |i| _ = mp_obj_list_append(argv, newStr(cfg.argv.?[i]));
         }
     } = .{ .config = config };
-    if (run(py, &ctx) != OK) {
+    if (run(py, bodyOf(@TypeOf(ctx)), &ctx) != OK) {
         py.live = false;
         return null;
     }
@@ -542,6 +549,10 @@ export fn ppy_set_global(py: *Interp, name: [*:0]const u8, value: Handle) c_int 
     return produce(py, null, setGlobal, .{ name, value });
 }
 
+export fn ppy_dup(py: *Interp, h: Handle, copy: ?*Handle) c_int {
+    return produce(py, copy, obj, .{h});
+}
+
 export fn ppy_release(py: *Interp, h: Handle) void {
     lock();
     defer unlock();
@@ -624,6 +635,21 @@ fn takeError(py: *Interp) Obj {
     const exc = py.fetched;
     py.fetched = 0;
     return exc;
+}
+
+fn raiseObject(py: *Interp, h: Handle) Obj {
+    const o = obj(py, h);
+    if (o == mirrors.OBJ_NULL) return o;
+    const t = mp_obj_get_type(o) orelse return mirrors.OBJ_NULL;
+    if (!mp_obj_is_subclass_fast(mirrors.objFromPtr(t), mirrors.objFromPtr(&mp_type_BaseException)))
+        return raise(&mp_type_TypeError, "not an exception");
+    pyerr.pending_exc = o;
+    return mirrors.OBJ_NULL;
+}
+
+export fn ppy_raise_exception(py: *Interp, exception: Handle) c_int {
+    _ = produce(py, null, raiseObject, .{exception});
+    return ERROR;
 }
 
 export fn ppy_fetch_error(py: *Interp, exception: ?*Handle) c_int {

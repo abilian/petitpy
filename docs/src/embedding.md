@@ -2,7 +2,7 @@
 
 petitpy can run inside another program, the host. The host creates an interpreter, keeps it for as long as it needs it, runs Python code in it, passes values in and reads results back, and gives Python functions of its own to call. The API is a C header, `petitpy.h`, and a static library, `libpetitpy.a`. Zig hosts use the same header through `@cImport`.
 
-The API is experimental in this release: names and signatures may still change.
+The API is experimental in this release: names and signatures may still change. The same API runs in the browser and Node as a wasm module, with a JavaScript wrapper: see [From JavaScript](#from-javascript).
 
 ## Building
 
@@ -67,7 +67,7 @@ In this release, a process holds one interpreter at a time: `ppy_new()` returns 
 
 ## Handles
 
-The host never holds a pointer to a Python object. Every value comes back as a `ppy_handle`, a small integer that names the value inside the interpreter, and 0 means no value. The interpreter keeps a value alive for as long as a handle names it: the garbage collector never frees it, even when nothing in Python refers to it any more. `ppy_release()` gives the handle back. `ppy_free()` releases every handle the interpreter still holds, so a short-lived host can skip releasing.
+The host never holds a pointer to a Python object. Every value comes back as a `ppy_handle`, a small integer that names the value inside the interpreter, and 0 means no value. The interpreter keeps a value alive for as long as a handle names it: the garbage collector never frees it, even when nothing in Python refers to it any more. `ppy_release()` gives the handle back, and `ppy_dup()` makes a second handle to the same value, for code that keeps a value its caller will release. `ppy_free()` releases every handle the interpreter still holds, so a short-lived host can skip releasing.
 
 A handle belongs to its interpreter. Using a released handle, or a number that was never a handle, raises `ValueError`; it never reaches another object.
 
@@ -88,7 +88,8 @@ No error ends the host process. An exception raised deep in the runtime's C code
 `ppy_define_function(py, "host", "name", fn, userdata)` makes `fn` callable from Python as `host.name`, and creates the module `host` the first time, so that `import host` finds it. The function receives the interpreter, the `userdata` pointer given at registration, and its arguments as handles, which the caller releases after the call. It returns `PPY_OK` with its result in `*result` (leave it 0 to return `None`), or `PPY_ERROR`:
 
 - after `ppy_raise(py, "ValueError", "message")`, which raises an exception of the named built-in type and returns `PPY_ERROR`, so the function can `return ppy_raise(...)`;
-- or after an API call of its own that failed, to pass that exception on to the Python caller.
+- or after an API call of its own that failed, to pass that exception on to the Python caller;
+- or after `ppy_raise_exception(py, exc)`, which raises an exception object again, such as one taken with `ppy_fetch_error()` and inspected.
 
 A host function can call back into the interpreter, as `ppy_call()` does when Python passes it a function.
 
@@ -98,9 +99,27 @@ The host may call the API from any thread. Calls into one interpreter take turns
 
 Python code itself cannot start threads: `_thread` is a stub.
 
+## From JavaScript
+
+`make web-embed` builds `web/petitpy-embed.wasm`: the same functions, compiled as a wasm module that is initialised once and then called. `web/lib/petitpy-embed.js` wraps it, and the npm package ships both as `petitpy/embed`:
+
+```js
+import { loadInterpreter } from "petitpy/embed";
+
+const py = await loadInterpreter();
+py.define("host", "twice", (n) => 2 * n);
+py.exec("import host\ndef f(x):\n    return host.twice(x) + 1");
+py.call("f", 20); // 41
+```
+
+The wrapper converts values both ways: `None`, `bool`, `int`, `float`, `str`, `bytes`, `list`, `tuple` and `dict` become JavaScript values, and any other Python object a `PyObject` proxy, which holds a handle until `release()` or until JavaScript collects the proxy. A Python exception is thrown as a `PythonError`; an error a JavaScript host function throws is raised in Python, and a `PythonError` passing back through a host function keeps its original exception. The module has the browser build's profile, so Python code can also `import js` and reach the page.
+
+JavaScript cannot give wasm a C function pointer, so the wasm module adds one export, `ppy_define_js_function(py, module, name, id)`, and calls the host back through one import, `env.ppy_js_call(id, py, argc, argv, result)`, with the same arguments and status as a C host function.
+
 ## Limits of this release
 
 - One interpreter per process at a time.
-- Python's output goes to the C `stdout` and `stderr`; the host cannot capture it yet.
+- Python's output goes to the C `stdout` and `stderr`; a C host cannot capture it yet. On wasm, the JavaScript wrapper receives it through WASI, line by line.
 - Tracebacks name the file and function of each frame, without line numbers, as the `petitpy` command prints them.
-- A static library only; no shared library yet, and no wasm build of the API.
+- A static library and a wasm module; no shared library yet.
+- On wasm, `ppy_to_int` reads 32-bit integers; the JavaScript wrapper reads wider ones through their digits.

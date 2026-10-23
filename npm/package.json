@@ -7,10 +7,12 @@
   "types": "./index.d.ts",
   "exports": {
     ".": { "types": "./index.d.ts", "default": "./index.js" },
+    "./embed": { "types": "./embed.d.ts", "default": "./embed.js" },
     "./petitpy.wasm": "./petitpy.wasm",
+    "./petitpy-embed.wasm": "./petitpy-embed.wasm",
     "./js-bridge.js": "./js-bridge.js"
   },
-  "files": ["index.js", "index.d.ts", "js-bridge.js", "wasi-fs.js", "petitpy.wasm", "README.md", "LICENSE"],
+  "files": ["index.js", "index.d.ts", "embed.js", "embed.d.ts", "js-bridge.js", "wasi-fs.js", "petitpy.wasm", "petitpy-embed.wasm", "README.md", "LICENSE"],
   "dependencies": {
     "@bjorn3/browser_wasi_shim": "^0.4.2"
   },

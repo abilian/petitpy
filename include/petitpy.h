@@ -99,6 +99,7 @@ ppy_status ppy_setattr(ppy_interp *py, ppy_handle obj, const char *name, ppy_han
 ppy_status ppy_get_global(ppy_interp *py, const char *name, ppy_handle *result);
 ppy_status ppy_set_global(ppy_interp *py, const char *name, ppy_handle value);
 
+ppy_status ppy_dup(ppy_interp *py, ppy_handle h, ppy_handle *copy); /* a second handle to the same value */
 void ppy_release(ppy_interp *py, ppy_handle h);
 
 /* Makes fn callable from Python as module.name; creates the module if
@@ -109,6 +110,7 @@ ppy_status ppy_define_function(ppy_interp *py, const char *module, const char *n
 /* Errors. After PPY_ERROR or PPY_EXIT the exception stays with the
  * interpreter until ppy_fetch_error() or the next call. */
 ppy_status ppy_raise(ppy_interp *py, const char *type_name, const char *message); /* returns PPY_ERROR */
+ppy_status ppy_raise_exception(ppy_interp *py, ppy_handle exception); /* raises it again; returns PPY_ERROR */
 ppy_status ppy_fetch_error(ppy_interp *py, ppy_handle *exception); /* 0 if none; clears it */
 ppy_status ppy_format_exception(ppy_interp *py, ppy_handle exception, ppy_handle *text);
 int ppy_exit_code(ppy_interp *py); /* after PPY_EXIT */

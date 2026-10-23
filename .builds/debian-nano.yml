@@ -10,8 +10,9 @@ packages:
   - curl
   - xz-utils
   - ca-certificates
-  # wasm-gc-check drives the web build under Node.
+  # wasm-gc-check and npm-check-node drive the web builds under Node.
   - nodejs
+  - npm
 sources:
   - https://git.sr.ht/~sfermigier/nanopython
   # Pinned: the qstr counts in src/compiler/qstr.zig (N_MAIN/N_STATIC) and
@@ -70,3 +71,8 @@ tasks:
       cd ~/nanopython
       node --version
       make wasm-gc-check
+  - npm_check_node: |
+      # The npm package under Node: run(), and the long-lived interpreter
+      # of petitpy/embed over the embedding API's wasm build.
+      cd ~/nanopython
+      make npm-check-node

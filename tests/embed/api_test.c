@@ -36,6 +36,16 @@ static ppy_status apply(ppy_interp *py, void *userdata, size_t argc, const ppy_h
     return ppy_call(py, argv[0], 1, &argv[1], result);
 }
 
+/* Fetches an exception, inspects it, and raises the same object again. */
+static ppy_status reraise(ppy_interp *py, void *userdata, size_t argc, const ppy_handle *argv, ppy_handle *result) {
+    (void)userdata, (void)argc, (void)argv, (void)result;
+    ppy_handle exc;
+    const char *src = "raise KeyError('kept')";
+    if (ppy_exec(py, src, strlen(src), "<test>") != PPY_ERROR || ppy_fetch_error(py, &exc) != PPY_OK) return PPY_OK;
+    if (strcmp(ppy_type_name(py, exc), "KeyError") != 0) return PPY_OK;
+    return ppy_raise_exception(py, exc);
+}
+
 static ppy_status count(ppy_interp *py, void *userdata, size_t argc, const ppy_handle *argv, ppy_handle *result) {
     (void)py, (void)argc, (void)argv, (void)result;
     ++*(int *)userdata;
@@ -114,6 +124,7 @@ int main(void) {
     check("still running after SystemExit", ppy_eval(py, "x", 1, &r) == PPY_OK);
     check("invalid handle", ppy_to_int(py, 999999, &n) == PPY_ERROR && ppy_type_name(py, 999999) == NULL);
     check("released handle", ppy_new_int(py, 5, &h) == PPY_OK && (ppy_release(py, h), ppy_to_int(py, h, &n)) == PPY_ERROR);
+    check("dup outlives release", ppy_new_str(py, "kept", 4, &h) == PPY_OK && ppy_dup(py, h, &a) == PPY_OK && a != h && (ppy_release(py, h), str_is(py, a, "kept")));
     check("missing global", ppy_get_global(py, "nope", &r) == PPY_ERROR && r == 0);
     check("not an int", ppy_new_str(py, "x", 1, &h) == PPY_OK && ppy_to_int(py, h, &n) == PPY_ERROR);
 
@@ -125,6 +136,8 @@ int main(void) {
     check("host raises", exec(py, "try:\n    host.twice()\nexcept TypeError as e:\n    msg = str(e)\n") == PPY_OK && ppy_get_global(py, "msg", &r) == PPY_OK && str_is(py, r, "twice() takes one argument"));
     check("host error propagates", exec(py, "host.twice('a')") == PPY_ERROR && ppy_fetch_error(py, &h) == PPY_OK && strcmp(ppy_type_name(py, h), "TypeError") == 0);
     check("nested calls", exec(py, "z = host.apply(lambda v: host.twice(v) + 1, 20)") == PPY_OK && ppy_get_global(py, "z", &r) == PPY_OK && ppy_to_int(py, r, &n) == PPY_OK && n == 41);
+    check("define_function", ppy_define_function(py, "host", "reraise", reraise, NULL) == PPY_OK);
+    check("raise_exception", exec(py, "try:\n    host.reraise()\nexcept KeyError as e:\n    assert e.args == ('kept',)\n") == PPY_OK);
     check("nested Python error", exec(py, "try:\n    host.apply(lambda v: 1 / v, 0)\nexcept ZeroDivisionError:\n    ok = 1\n") == PPY_OK);
 
     /* Values held only by handles survive many collections. */

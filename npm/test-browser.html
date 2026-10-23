@@ -23,6 +23,13 @@
     // exception handling.
     r = await py.run("try:\n    (2**100) // 0\nexcept ZeroDivisionError:\n    print('caught')");
     results.push(r.stdout === "caught\n" ? "PASS raise" : "FAIL raise " + JSON.stringify(r.stdout + r.stderr));
+    // The long-lived interpreter: state kept between calls, JS called back.
+    const { loadInterpreter } = await import("./dist/embed.js");
+    const ipy = await loadInterpreter();
+    ipy.define("host", "double", (n) => 2 * n);
+    ipy.exec("import host, js\ndef f(x):\n    return host.double(x) + 1");
+    const got = [ipy.call("f", 20), ipy.call("f", 1), ipy.eval("str(js.document.title)")];
+    results.push(JSON.stringify(got) === JSON.stringify([41, 3, document.title]) ? "PASS embed" : "FAIL embed " + JSON.stringify(got));
   } catch (e) {
     results.push("FAIL load " + e);
   }

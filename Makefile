@@ -466,6 +466,21 @@ web: freeze-modules gen-gallery
 	@echo "  http://localhost:8000/                     index"
 	@echo "  http://localhost:8000/demos/playground/    editor + bytecode + gallery"
 
+## web-embed: web/petitpy-embed.wasm, the embedding API (petitpy.h) as a
+##            wasm module that is initialised once and then called, for
+##            web/lib/petitpy-embed.js. Same profile as web/petitpy.wasm.
+web-embed: freeze-modules
+	zig build lib -Dtarget=wasm32-wasi -Dconfig=nano -Doptimize=ReleaseSmall -Dfrozen-tiny=true -p zig-out/embed-wasm
+	@if command -v wasm-opt >/dev/null 2>&1; then \
+	  wasm-opt -Oz --enable-bulk-memory --enable-nontrapping-float-to-int \
+	    --enable-exception-handling --enable-reference-types \
+	    -ocimfs 1000 --strip-debug --strip-producers --converge \
+	    zig-out/embed-wasm/bin/petitpy-embed.wasm -o web/petitpy-embed.wasm || exit 1; \
+	else \
+	  cp zig-out/embed-wasm/bin/petitpy-embed.wasm web/petitpy-embed.wasm; \
+	fi
+	@echo "  web/petitpy-embed.wasm: $$(wc -c < web/petitpy-embed.wasm) bytes"
+
 ## rebuild: clean caches + full rebuild (the strangle clean-rebuild)
 rebuild: clean build
 
@@ -742,10 +757,11 @@ wasm-gc-check: web
 ## npm-package: assemble the npm package in npm/dist/ (the web wasm, the
 ##              JS bridge and npm/'s API module), versioned from build.zig.
 ##              Publishing (`npm publish ./npm/dist`) is the maintainer's step.
-npm-package: web
+npm-package: web web-embed
 	rm -rf npm/dist && mkdir -p npm/dist
-	cp npm/index.js npm/index.d.ts npm/README.md LICENSE web/lib/js-bridge.js web/lib/wasi-fs.js npm/dist/
-	cp web/petitpy.wasm npm/dist/petitpy.wasm
+	cp npm/index.js npm/index.d.ts npm/embed.d.ts npm/README.md LICENSE web/lib/js-bridge.js web/lib/wasi-fs.js npm/dist/
+	cp web/lib/petitpy-embed.js npm/dist/embed.js
+	cp web/petitpy.wasm web/petitpy-embed.wasm npm/dist/
 	version=$$(sed -n 's/^pub const version = "\(.*\)";/\1/p' build.zig); \
 	  sed "s/\"version\": \"0.0.0\"/\"version\": \"$$version\"/" npm/package.json > npm/dist/package.json
 
@@ -789,11 +805,16 @@ publish: clean
 ## npm-check: run the assembled package under Node and in headless
 ##            Chromium (needs `make smoke-setup`). Installs its one
 ##            dependency into npm/dist (network); not in the aggregate.
-npm-check: npm-package
+npm-check: npm-check-node
+	python3 tools/browser-smoke.py --serve npm --page test-browser.html \
+	  --wait-for-text "passed" --assert-text "4 of 4 passed"
+
+## npm-check-node: the Node half of npm-check, run in CI: run() and the
+##                 long-lived interpreter of petitpy/embed.
+npm-check-node: npm-package
 	cd npm/dist && npm install --no-save --ignore-scripts --no-audit --no-fund >/dev/null
 	node --no-warnings npm/test.mjs $(CURDIR)/npm/dist
-	python3 tools/browser-smoke.py --serve npm --page test-browser.html \
-	  --wait-for-text "passed" --assert-text "3 of 3 passed"
+	node --no-warnings npm/test-embed.mjs $(CURDIR)/npm/dist
 
 SMOKE_PAGES := $(patsubst web/%index.html,%,\
                  $(wildcard web/demos/*/index.html) \
@@ -900,7 +921,7 @@ ext-package-zip:
 	  -x '*.swp' -x '*.swo'
 	@ls -lh $(EXT_ARTIFACT)/ci-build-monitor.xpi
 
-.PHONY: all help port build build-release build-small wasm wasm-small wasm-check wasm-opt wasm-tiny web rebuild \
+.PHONY: all help port build build-release build-small wasm wasm-small wasm-check wasm-opt wasm-tiny web web-embed rebuild \
         test test-unit test-unit-compiler test-unit-vm \
         test-integration test-integration-wasm test-e2e \
         test-coverage test-coverage-compiler test-coverage-vm test-coverage-e2e \
@@ -908,5 +929,5 @@ ext-package-zip:
         metrics-record metrics-record-perf metrics-report metrics-latest \
         golden compatibility \
         doc-setup doc-build doc-serve \
-        smoke smoke-setup wasm-gc-check test-wheel-layout test-embed npm-package npm-check pypi-dist release-dist release-publish publish \
+        smoke smoke-setup wasm-gc-check test-wheel-layout test-embed npm-package npm-check npm-check-node pypi-dist release-dist release-publish publish \
         ext-lint ext-package ext-run ext-package-zip
