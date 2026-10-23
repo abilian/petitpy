@@ -1,6 +1,6 @@
 # ADR 013. Restoring exception unwinding across vendor-C frames (the try/except-over-MPZ wall)
 
-- **Status**: Implemented in v0.7.0 as B' (§4): native `full` only; wasm keeps `exit(1)` for vendor-C raises (drafted 2026-06-13). The runtime layout check this ADR planned to re-enable (§4 step 4) was deleted instead: its constants came from the same Zig types it checked. The comptime assertions in `src/runtime/mpstate.zig` guard the state layout.
+- **Status**: Implemented in v0.7.0 as B' (§4): native `full` only; wasm kept `exit(1)` for vendor-C raises (drafted 2026-06-13). Amended in v0.9 (§7): the same trampoline runs on every wasm build, its setjmp/longjmp lowered to wasm exception handling. The runtime layout check this ADR planned to re-enable (§4 step 4) was deleted instead: its constants came from the same Zig types it checked. The comptime assertions in `src/runtime/mpstate.zig` guard the state layout.
 - **Decider**: project maintainers
 - **Supersedes**: nothing
 - **Branches from**: ADR 012 §3 D2 (per-feature flags as the only durable gate; this ADR introduces `build_options.exception_unwind` following that discipline). Phase 3.5 step 4 + 6 retrospectives documented the limitation that this ADR resolves.
@@ -188,3 +188,16 @@ Extend the polled-sentinel discipline INTO vendor C via small patches maintained
 - Does ADR 012 need an explicit feature-matrix row for "exception unwind across vendor C" with the wrapped-set enumerated, or is a known-failures entry sufficient?
 - When E lands its first port (`modio.c` → Zig is smallest at ~150 LOC), does the corresponding trampoline get removed in the same commit, or kept as defense-in-depth?
 
+## 7. Amendment (v0.9): the trampoline on wasm
+
+The wasm build moved to MPZ integers in v0.9, which made far more vendor-C raises reachable in the browser: `big // 0`, a negative shift, `int(None)`, `to_bytes` overflow. Each one ended the program with a traceback instead of reaching `except`. That was already true of `int([])`.
+
+§6's investigation stopped at the `wasm-wasi-musl/setjmp.h` guard. The guard only checks `__wasm_exception_handling__`, and wasi-libc ships the runtime half of LLVM's wasm setjmp/longjmp lowering (`libc-top-half/musl/src/setjmp/wasm32/rt.c`). With those, the trampoline of B' works on wasm unchanged:
+
+- `exception_unwind` is true on every wasm build, as on native `full`.
+- `nlr_trampoline.c` and `rt.c` alone compile with `-mllvm -wasm-enable-sjlj` and the exception-handling target feature. A throw unwinds through every other frame, which needs no change.
+- The browser build (the one with the `js` bridge, which npm ships) uses the legacy encoding, which browsers and Node have run by default for years. The wasmtime build uses the exnref encoding (`-wasm-use-legacy-eh=false`), the only one wasmtime runs (on by default in 47), which older Node releases do not run by default.
+- `rt.c` is compiled by `build.zig`, not taken from Zig's wasi-libc: turning on exception handling for the whole link makes Zig rebuild wasi-libc with it, and LLVM 21 crashes on that build of `rt.c` ("undefined tag symbol cannot be weak").
+- `wasm-opt` needs `--enable-exception-handling --enable-reference-types`. The per-call setjmp of `npy_nlr_call_function`, as on native, did not show under wasmtime: a loop of two million Python calls ran no slower. Together with MPZ, the browser build grew by about 9 KB, 3.7 KB gzipped.
+
+This closes Alternative D's open question and §5's wasm divergence. The wrapped set stays the same; one site outside it, the machine-word conversion behind a subscript (`[1][2**100]`), now raises polled on every build instead of through vendor C.

@@ -282,19 +282,10 @@ pub fn build(b: *std.Build) void {
     build_options.addOption(bool, "is_full", config_preset == .full);
     // Effective longint backend at the Zig comptime layer (mirrors
     // port/mpconfigport.h's MICROPY_LONGINT_IMPL selection):
-    //   - full → MPZ
-    //   - nano + 32-bit pointers (wasm32) → LONGLONG via vendor
-    //     py/objint_longlong.c carveout (added below)
-    //   - nano + 64-bit pointers (native) → NONE (62-bit smallint)
+    //   - full, and nano on wasm → MPZ (vendor objint_mpz.c + mpz.c)
+    //   - nano native → NONE (62-bit smallint; the corpus goldens)
     const longint_none = (config_preset == .nano) and !is_wasm_target;
     build_options.addOption(bool, "longint_none", longint_none);
-    // Tri-valued mirror of MICROPY_LONGINT_IMPL — lets parsenum.zig and any
-    // future bignum-aware Zig site distinguish MPZ (full) from LONGLONG
-    // (nano-wasm). The legacy `longint_none` bool above stays as a derived
-    // alias for existing callers; migrate next cycle.
-    const LongintImpl = enum { none, longlong, mpz };
-    const longint_impl: LongintImpl = if (config_preset == .full) .mpz else if (is_wasm_target) .longlong else .none;
-    build_options.addOption(LongintImpl, "longint_impl", longint_impl);
     // ADR-002 F1 — expose feature flags to Zig comptime gates. The C side
     // gets the same information via PETITPY_FEATURE_<X> macros (below);
     // the Zig side needs build_options because translate-c macros aren't
@@ -348,11 +339,12 @@ pub fn build(b: *std.Build) void {
     // ADR 013 — exception unwinding across vendor-C frames. Enables a
     // local setjmp/longjmp trampoline (src/runtime/nlr_trampoline.zig)
     // around a small enumerable set of vendor C entry points (MPZ binary-op,
-    // stream write/flush, pow3) so try/except can catch raises that
-    // originate in vendor C. Native full only — wasm32-wasi's setjmp.h
-    // #errors out (WasmEH spike 2026-06-13). Nano never uses it
-    // (no vendor C reaches non-Zig raises under nano).
-    const exception_unwind = (config_preset == .full) and !is_wasm_target;
+    // stream write/flush, pow3, calls) so try/except can catch raises that
+    // originate in vendor C. Native full, and every wasm build, where the
+    // setjmp/longjmp is lowered to wasm exception handling (see
+    // `trampoline_cflags` below). Native nano never needs it: no vendor C
+    // there raises.
+    const exception_unwind = config_preset == .full or is_wasm_target;
     build_options.addOption(bool, "exception_unwind", exception_unwind);
 
     // STR_UNICODE — controls how the lexer encodes high-code-point
@@ -630,6 +622,25 @@ pub fn build(b: *std.Build) void {
     }
     const cflags = cflags_list.toOwnedSlice(b.allocator) catch @panic("OOM");
 
+    // On wasm the trampoline's setjmp/longjmp compile to wasm exception
+    // handling. Only nlr_trampoline.c and wasi-libc's runtime for it, rt.c,
+    // need the lowering; a throw unwinds through every other frame. rt.c
+    // is compiled here because Zig's own wasi-libc build of it crashes
+    // LLVM once exception handling is on for the whole link.
+    //
+    // Two encodings: the browser build (the js bridge) uses the legacy one,
+    // which browsers and Node have run by default for years; the wasmtime
+    // build uses exnref, the only one wasmtime runs, and which older Node
+    // releases do not run by default.
+    const trampoline_cflags: []const []const u8 = if (is_wasm_target)
+        std.mem.concat(b.allocator, []const u8, &.{ cflags, &.{ "-Xclang", "-target-feature", "-Xclang", "+exception-handling", "-mllvm", "-wasm-enable-sjlj", "-mllvm", if (features.js) "-wasm-use-legacy-eh=true" else "-wasm-use-legacy-eh=false" } }) catch @panic("OOM")
+    else
+        cflags;
+    const sjlj_runtime: ?std.Build.LazyPath = if (is_wasm_target)
+        .{ .cwd_relative = b.pathJoin(&.{ b.graph.zig_lib_directory.path.?, "libc/wasi/libc-top-half/musl/src/setjmp/wasm32/rt.c" }) }
+    else
+        null;
+
     // C-source aggregation for the main `petitpy` binary.
     //
     // The strangle is converged. Files collected into a single
@@ -655,18 +666,6 @@ pub fn build(b: *std.Build) void {
         // EXTENSIBLE_MODULES / MODULE_DELEGATIONS macros. Removing
         // it requires teaching qstr-gen to scan something else.
         "src/objects/objtype/objmodule_shim.c",
-        // ADR 013 — NLR trampoline. Compiled unconditionally because
-        // the Zig side declares its symbols via extern, and Zig
-        // emits those refs even from comptime-dead branches. Under
-        // non-exception_unwind builds (nano, wasm32 full) the C
-        // functions exist but are never called — linker DCE strips
-        // them. Setjmp/longjmp in C because Zig's "returns twice"
-        // semantics are awkward; setjmp.h itself is unconditionally
-        // available on native (under wasm32 too the include is
-        // fine — the header just #error-guards the macro
-        // implementations, which we don't expand under our
-        // flag-gated callers).
-        "src/runtime/nlr_trampoline.c",
         // va_list-touching functions (mp_vprintf, mp_printf,
         // vstr_printf/_vprintf, mp_obj_new_exception_msg_varg/_vlist)
         // live in C because Zig 0.16's std.builtin.VaList emits
@@ -714,26 +713,21 @@ pub fn build(b: *std.Build) void {
             embed_root ++ "/py/warning.c",
         }) catch @panic("OOM");
     }
-    // wasm32-nano LONGLONG arm: vendor objint.c (polymorphic
-    // dispatcher) + objint_longlong.c (LONGLONG-flavored ops)
-    // provide the real int ctors + numeric ops + print/formatted
-    // dispatchers that handle heap mp_obj_int_t. Both files are
-    // gated internally by
-    //   #if MICROPY_LONGINT_IMPL == LONGLONG
-    // so on the native-nano (NONE) build they compile to empty; on
-    // full we still skip (objint.c is wired in the `if (is_full)`
-    // block above).
+    // wasm32-nano MPZ arm: the same vendor bignum engine as full —
+    // objint.c (polymorphic dispatcher), objint_mpz.c (MPZ ops) and
+    // mpz.c — provides the int ctors, numeric ops and the print and
+    // format dispatchers for heap mp_obj_int_t.
     //
     // objint.c is otherwise replaced by src/objects/numerics/objint.zig
-    // for nano-NONE (default). We pull it in here for the LONGLONG
-    // carveout. The Zig stubs that would conflict (mp_obj_int_print,
-    // mp_obj_int_formatted, mp_int_format_size,
-    // mp_obj_new_int_from_float) are gated off under LONGLONG via
+    // for nano-NONE (default). The Zig stubs that would conflict
+    // (mp_obj_int_print, mp_obj_int_formatted, mp_int_format_size,
+    // mp_obj_new_int_from_float) are gated off via
     // `if (build_options.longint_none)` in objint.zig.
     if (!is_full and !longint_none) {
         mod_files.appendSlice(b.allocator, &.{
             embed_root ++ "/py/objint.c",
-            embed_root ++ "/py/objint_longlong.c",
+            embed_root ++ "/py/objint_mpz.c",
+            embed_root ++ "/py/mpz.c",
         }) catch @panic("OOM");
     }
     // FLOAT arm: MICROPY_PY_BUILTINS_FLOAT=1 in both nano and full
@@ -764,6 +758,13 @@ pub fn build(b: *std.Build) void {
         .files = mod_files.items,
         .flags = cflags,
     });
+    // ADR 013 — NLR trampoline. Compiled into every build because the Zig
+    // side declares its symbols extern and emits the references even from
+    // comptime-dead branches; without exception_unwind its functions are
+    // plain forwarding calls. Setjmp/longjmp live in C because Zig's
+    // "returns twice" semantics are awkward.
+    mod.addCSourceFile(.{ .file = b.path("src/runtime/nlr_trampoline.c"), .flags = trampoline_cflags });
+    if (sjlj_runtime) |rt| mod.addCSourceFile(.{ .file = rt, .flags = trampoline_cflags });
 
     // NX-3 N3a (2026-06-05): `zig_compile_bridge.c` → ported to
     // `src/runtime/zig_compile_bridge.zig`. `defer mp_globals_set(saved)`
@@ -857,7 +858,6 @@ pub fn build(b: *std.Build) void {
     var vm_files = std.ArrayList([]const u8).empty;
     vm_files.appendSlice(b.allocator, &.{
         "src/objects/objtype/objmodule_shim.c",
-        "src/runtime/nlr_trampoline.c", // ADR 013 — see comment on main mod's same addition
         "src/objects/strings/va_ops.c", // va_list surface — see main mod
     }) catch @panic("OOM");
 
@@ -872,15 +872,13 @@ pub fn build(b: *std.Build) void {
             embed_root ++ "/py/warning.c",
         }) catch @panic("OOM");
     }
-    // Same LONGLONG carveout the main `petitpy` target gets —
-    // vendor objint.c (polymorphic dispatcher) + objint_longlong.c
-    // (LONGLONG ctors/ops + mp_type_int) must reach the vm-only
-    // binary too, otherwise its compile unit references mp_type_int
-    // with no provider.
+    // Same MPZ carveout the main `petitpy` target gets: it provides
+    // mp_type_int, which the vm-only binary references too.
     if (!is_full and !longint_none) {
         vm_files.appendSlice(b.allocator, &.{
             embed_root ++ "/py/objint.c",
-            embed_root ++ "/py/objint_longlong.c",
+            embed_root ++ "/py/objint_mpz.c",
+            embed_root ++ "/py/mpz.c",
         }) catch @panic("OOM");
     }
     // Float-arm carveout — differs from the main `petitpy` (which
@@ -902,6 +900,9 @@ pub fn build(b: *std.Build) void {
         .files = vm_files.items,
         .flags = cflags,
     });
+    // ADR 013 — see the main module's trampoline.
+    vm_mod.addCSourceFile(.{ .file = b.path("src/runtime/nlr_trampoline.c"), .flags = trampoline_cflags });
+    if (sjlj_runtime) |rt| vm_mod.addCSourceFile(.{ .file = rt, .flags = trampoline_cflags });
     const vm_exe = b.addExecutable(.{
         .name = "petitpy-vm",
         .root_module = vm_mod,

@@ -223,19 +223,18 @@
 // `OverflowError: long int not supported in this build` — every modern
 // web demo hits this on the first I/O timestamp.
 //
-// Default to LONGLONG on 32-bit pointer nano builds. Vendor
-// py/objint_longlong.c (compiled into the build via build.zig carveout)
-// provides the bignum int ctors + numeric ops + mp_type_int.
+// Use MPZ, arbitrary precision as in CPython, on 32-bit pointer nano
+// builds. Vendor py/objint_mpz.c + py/mpz.c (compiled in by a build.zig
+// carveout) provide the int ctors, numeric ops and mp_type_int.
 //
 // On 64-bit nano targets, keep vendor's default (NONE) — corpus
 // goldens were frozen there. Under -Dconfig=full the MPZ define in the
 // full arm wins regardless.
 #if __SIZEOF_POINTER__ == 4 && !defined(PETITPY_CONFIG_FULL)
 #undef  MICROPY_LONGINT_IMPL
-#define MICROPY_LONGINT_IMPL                  (MICROPY_LONGINT_IMPL_LONGLONG)
+#define MICROPY_LONGINT_IMPL                  (MICROPY_LONGINT_IMPL_MPZ)
 // wasi-libc doesn't expose SSIZE_MAX (POSIX-only). On wasm32 ssize_t is
-// signed 32-bit, so MP_SSIZE_MAX is INT32_MAX. Vendor objint_longlong.c
-// references SSIZE_MAX via mpconfig.h.
+// signed 32-bit, so MP_SSIZE_MAX is INT32_MAX.
 #define MP_SSIZE_MAX                          (2147483647)
 #endif
 

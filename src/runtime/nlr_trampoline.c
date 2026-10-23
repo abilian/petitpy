@@ -28,6 +28,12 @@
 
 #ifdef NPY_EXCEPTION_UNWIND
 #include <setjmp.h>
+#ifdef __wasm__
+// LLVM's wasm setjmp/longjmp lowering recognises the standard names; wasm
+// has no signal mask for the underscore forms to skip saving.
+#define _setjmp setjmp
+#define _longjmp longjmp
+#endif
 
 // nlr_buf_t mirror — must match vendor py/nlr.h:115 layout exactly
 // (MICROPY_NLR_SETJMP=1, MICROPY_ENABLE_PYSTACK=0 in port/mpconfigport.h).

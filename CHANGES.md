@@ -19,12 +19,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use 
 - **`sys.platform` is `linux`, `darwin` or `wasi`**, as in CPython, instead of `petitpy`.
 - **`ModuleNotFoundError`** on `full`, for a module that cannot be found, with CPython's message (`No module named 'os.nope'; 'os' is not a package`).
 - **`slice()` constructs slices** on `full`.
+- **The browser build has arbitrary-precision integers**, as the native one does: `2**100`, large timestamps and hashes no longer overflow. The wasm grows by 9 KB (2.6%), 3.7 KB gzipped.
 - **`dict()`, `dict.update()` and `{**x}` take any mapping** on `full`: an object with a `keys()` method, a `dict` subclass among them, is read as CPython reads it instead of as a sequence of pairs.
 
 ### Fixed
 
 - **`subprocess.run` no longer hangs on a child that writes more than a pipe holds** (64 KB on Linux): output is read while the child runs. `env=` is honoured, where it was ignored; output that is not captured goes to the parent's stdout and stderr, where it was dropped; and `run()` gains `cwd=`, `text=` (with `encoding`, `errors`, `universal_newlines`), `stdout`/`stderr`/`stdin` as `PIPE`, `STDOUT`, `DEVNULL`, a descriptor or a file, and the child no longer gets an empty stdin when no `input` is given. `check_output()` captures stdout only, as in CPython.
 - **`dict.__setitem__(self, k, v)` and `dict.__delitem__` called from a `dict` subclass's own override** recursed until the stack overflowed. They now act on the dict itself, as `super()` already did.
+- **Errors raised by MicroPython's C code are catchable in the browser build**: `int([])`, `int(None)`, division of a big integer by zero, a negative shift and `to_bytes` overflow ended the program instead of reaching `except`. The wasm build now unwinds through wasm exception handling, which wasmtime, Node and current browsers run.
+- **`[1][2**100]` and other uses of a huge integer as an index** raised an `OverflowError` that `except` could not catch, on every build.
+- **`float()` of an integer beyond 62 bits** (beyond 30 bits on wasm) raised `TypeError`, and comparing such an integer with a float gave `False`.
 - **`float()` of a `float` subclass** raised `TypeError` on `full`.
 - **`'%d' % 3.7`** raised `TypeError` instead of formatting `3`, on both builds; vendor MicroPython formats it.
 

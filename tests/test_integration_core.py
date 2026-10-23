@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 133. Coverage for `os` lives in test_integration_os.py.
+Cases: 134. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -20,6 +20,16 @@ from __future__ import annotations
 # expected_stdout=None skips the stdout check (used when only the exit
 # code matters — e.g. "raise → exit 1" without committing to exact
 # traceback text).
+BIGNUM_OUT = (
+    "1267650600228229401496703205376 142857142857142857142857142857 0x100000000000000000000 70 1717977600000\n"
+    "int([]) TypeError\n"
+    "int(None) TypeError\n"
+    "(2**100) // 0 ZeroDivisionError\n"
+    "(2**100) << -1 ValueError\n"
+    "int(float('inf')) OverflowError\n"
+    '(2**100).to_bytes(2, "little") OverflowError\n'
+)
+
 CASES = [
     # ── the --emit-mpy flag ────────────────────────────────────────────
     #
@@ -528,6 +538,22 @@ CASES = [
             ),
             "nano": None,
         },
+    ),
+    # Arbitrary-precision integers on every build, wasm included, and the
+    # errors from MicroPython's C integer code caught by try/except there
+    # too (on wasm through wasm exception handling).
+    (
+        "bignums_and_int_errors",
+        (
+            "print(2**100, 10**30 // 7, hex(2**80), int('9' * 25) % 97, 1717977600 * 1000)\n"
+            'for e in [\'int([])\', \'int(None)\', \'(2**100) // 0\', \'(2**100) << -1\', "int(float(\'inf\'))", \'(2**100).to_bytes(2, "little")\']:\n'
+            '    try:\n'
+            '        eval(e)\n'
+            '    except (TypeError, ValueError, ZeroDivisionError, OverflowError, IndexError) as ex:\n'
+            '        print(e, type(ex).__name__)\n'
+        ),
+        # Native nano has no long integers.
+        {"full": BIGNUM_OUT, "wasm": BIGNUM_OUT, "nano": None},
     ),
     # @enum decorator — the full-featured path retains .name/.value.
     (

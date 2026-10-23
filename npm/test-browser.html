@@ -19,6 +19,10 @@
     r = await py.run('import js\njs.document.getElementById("dom").textContent = "set from python"');
     const dom = document.getElementById("dom").textContent;
     results.push(dom === "set from python" ? "PASS dom" : "FAIL dom " + JSON.stringify(dom + r.stderr));
+    // A raise inside MicroPython's C integer code, caught through wasm
+    // exception handling.
+    r = await py.run("try:\n    (2**100) // 0\nexcept ZeroDivisionError:\n    print('caught')");
+    results.push(r.stdout === "caught\n" ? "PASS raise" : "FAIL raise " + JSON.stringify(r.stdout + r.stderr));
   } catch (e) {
     results.push("FAIL load " + e);
   }

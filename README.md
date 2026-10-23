@@ -1,6 +1,6 @@
 # petitpy
 
-petitpy is a small Python interpreter written in [Zig](https://ziglang.org/), for two places where CPython is too heavy. In the browser, it is a 346 KB wasm module that drives the DOM from Python. On native Linux or macOS, a 6.7 KLOC system daemon runs on it in 4 MB of memory instead of CPython's 17 MB. It speaks more of CPython's language than its small size suggests: Unicode strings, `match`, exception chaining, dataclasses, and an everyday stdlib with `pathlib`, `json`, `logging`, `subprocess` and `unittest.mock`. It installs with `pip` or `npm`, as **petitpy**, with `ppy` as the short command.
+petitpy is a small Python interpreter written in [Zig](https://ziglang.org/), for two places where CPython is too heavy. In the browser, it is a 352 KB wasm module that drives the DOM from Python. On native Linux or macOS, a 6.7 KLOC system daemon runs on it in 4 MB of memory instead of CPython's 17 MB. It speaks more of CPython's language than its small size suggests: Unicode strings, `match`, exception chaining, dataclasses, and an everyday stdlib with `pathlib`, `json`, `logging`, `subprocess` and `unittest.mock`. It installs with `pip` or `npm`, as **petitpy**, with `ppy` as the short command.
 
 petitpy builds on [MicroPython](https://micropython.org/): it shares MicroPython's `.mpy` bytecode format and much of its design, and uses MicroPython's test suite as a conformance check. See [Acknowledgments](#acknowledgments).
 
@@ -33,7 +33,7 @@ Prebuilt wheels cover macOS (arm64, x86_64) and Linux (x86_64, aarch64); elsewhe
 
 Three audiences are served, in priority order:
 
-- **🌐 Web developers**: Python in the browser. The shipping artifact is `web/petitpy.wasm` (346 KB). Direct DOM access via the `js` module ([ADR 006](docs/src/adrs/006-js-interop.md)). See [`docs/src/getting-started.md#for-web-developers`](docs/src/getting-started.md#for-web-developers).
+- **🌐 Web developers**: Python in the browser. The shipping artifact is `web/petitpy.wasm` (352 KB). Direct DOM access via the `js` module ([ADR 006](docs/src/adrs/006-js-interop.md)). See [`docs/src/getting-started.md#for-web-developers`](docs/src/getting-started.md#for-web-developers).
 - **🛠️ Embedded + systems developers**: a small native Python for daemons and scripts. Build cross-compiles to arm64/x86_64 macOS/Linux + wasm32-wasi. Per-feature build flags shrink the binary to your use case ([ADR 002](docs/src/adrs/002-feature-selection.md)). See [`docs/src/getting-started.md#for-embedded--systems-developers`](docs/src/getting-started.md#for-embedded--systems-developers).
 - **🔧 Contributors**: read [Contributing](docs/src/contributing.md) and the [ADR series](docs/src/adrs/). See [`docs/src/getting-started.md#for-contributors`](docs/src/getting-started.md#for-contributors).
 
@@ -45,10 +45,10 @@ The runtime works end to end on both native and wasm. Active work is on user exp
 |---|---|
 | Native corpus, nano (byte-exact vs. MicroPython's test outputs) | **541/541**, held |
 | Native corpus, full | **545/552**, 7 documented known-fails |
-| WASM corpus (under wasmtime) | **490/541**, baseline + skip list green |
-| Integration smoke (native + wasm, hand-written) | **189/189** on both arms |
+| WASM corpus (under wasmtime) | **536/541**, baseline + skip list green |
+| Integration smoke (native + wasm, hand-written) | **202/202** on both arms |
 | Real-world Python programs that work on both arms | **580** in `golden-programs/works/`; see [`docs/src/COMPATIBILITY.md`](docs/src/COMPATIBILITY.md) for the bucket-by-bucket breakdown |
-| wasm32-wasi shipping size (`web/petitpy.wasm`) | **346 KB** (post-`wasm-opt -Oz`, integrated into `make web`) |
+| wasm32-wasi shipping size (`web/petitpy.wasm`) | **352 KB** (post-`wasm-opt -Oz`, integrated into `make web`) |
 | Native arm64 shipping size (ReleaseFast) | **1170 KB** |
 
 ## Gate state
@@ -59,9 +59,9 @@ The harness has four independent gates plus an aggregate. Each answers a differe
 |---|---|---|
 | `make check` | Does the full-arm binary match the corpus minus its documented baseline? | **545/552**, green |
 | `make check CONFIG=nano` | Does the nano binary match the frozen MicroPython reference byte-exact? | **541/541**, invariant |
-| `make wasm-check` | Does the wasm binary match the corpus minus the documented wasm baseline? | **GREEN** at 490/541 (51-test known-fails baseline matches exactly) |
+| `make wasm-check` | Does the wasm binary match the corpus minus the documented wasm baseline? | **GREEN** at 536/541 (5-test known-fails baseline matches exactly) |
 | `make test-integration` | Does the native binary actually start up and run real Python? | **189/189** |
-| `make test-integration-wasm` | Same question, against the wasm binary via wasmtime. | **189/189** |
+| `make test-integration-wasm` | Same question, against the wasm binary via wasmtime. | **202/202** |
 | `make check-capability` | Do both front-ends and both back-ends agree on 67 language constructs? | **GREEN**, 0 gaps; not in the aggregate (needs vendor MicroPython + uv) |
 | `make` (the aggregate) | Runs all of the above bar the last, both arms. The "I'm about to commit" gate. | exit 0 |
 
@@ -99,7 +99,7 @@ All measurements were taken on macOS arm64. wasm and native are co-primary distr
 
 | Build | Size | Notes |
 |---|---|---|
-| **wasm32-wasi `make web`** | **346 KB** | the shipping artifact (ReleaseSmall + frozen-tiny + post-`wasm-opt -Oz`); [ADR 007 §4 P6](docs/src/adrs/007-wasm-fat-loss.md) wires the optimizer into the release pipeline |
+| **wasm32-wasi `make web`** | **352 KB** | the shipping artifact (ReleaseSmall + frozen-tiny + post-`wasm-opt -Oz`); [ADR 007 §4 P6](docs/src/adrs/007-wasm-fat-loss.md) wires the optimizer into the release pipeline |
 | wasm32-wasi raw (pre-optimizer) | 384 KB | what `zig build` produces before `wasm-opt`, for inspection |
 | native `make build` (Debug) | 3.9 MB | dev default (`full` profile), with DWARF symbols and no DCE |
 | native `make build-release` (ReleaseFast) | 1170 KB | inlined, full optimization (`full` profile) |
@@ -110,7 +110,7 @@ The wasm size is the metric that matters most: raw bytes drive both parse time a
 
 ## What works
 
-**Core types**: `int` (arbitrary precision on native `full`; 63-bit small on native `nano`; 64-bit `long long` on wasm32), `float` (IEEE 754 double), `str` (Unicode code points), `bytes`, `bytearray`, `bool`, `None`, `list`, `tuple`, `dict`, `set`, `frozenset`, `range` (with `start`/`stop`/`step` attributes and `[a:b]` slicing), `slice`, `memoryview`, `array.array`.
+**Core types**: `int` (arbitrary precision on native `full` and on wasm32; 63-bit small on native `nano`), `float` (IEEE 754 double), `str` (Unicode code points), `bytes`, `bytearray`, `bool`, `None`, `list`, `tuple`, `dict`, `set`, `frozenset`, `range` (with `start`/`stop`/`step` attributes and `[a:b]` slicing), `slice`, `memoryview`, `array.array`.
 
 **Control flow + classes**: full `try`/`except`/`finally`/`raise`, generators with `.send()`/`.throw()`/`.close()`, walrus (`:=`), `match` statements (literals, singletons, captures, or-patterns, sequences with `*rest`, mappings, class patterns, `as`, guards; vendor MicroPython parses none of it), all comprehensions, `async def` coroutines; classes with single and multiple inheritance, descriptors, properties, all dunder methods including `__getitem__` override on `dict` subclasses.
 
@@ -126,7 +126,7 @@ The wasm size is the metric that matters most: raw bytes drive both parse time a
 
 The full list, by build, is [Differences from CPython](docs/src/differences.md). Tracked by bucket in `golden-programs/`. The headline gaps:
 
-- **Arbitrary-precision ints on `nano` and wasm**: `2**100` raises `OverflowError` (64-bit `long long` on wasm32, 63-bit small ints on native `nano`).
+- **Arbitrary-precision ints on native `nano`**: `2**100` raises `OverflowError` (63-bit small ints).
 - **`asyncio`**: coroutines run, but there is no event loop module.
 - **Float literals in the browser build** can parse one ulp off with 17 significant digits (vendor's parser, kept for size); native parses them correctly rounded.
 - **Complex literals**: `2j` fails to compile, although `full` has the complex type.

@@ -1,0 +1,49 @@
+# Corpus tests the wasm gate checks against the full arm's golden
+# (corpus/full/basics/<test>.out) instead of nano's. Native nano has no
+# long integers, so its goldens for these bignum tests record
+# OverflowError; wasm, like full, has MPZ arbitrary-precision integers
+# and must print what full prints. tools/wasm_gate.py reads this list.
+
+builtin_abs_intbig
+builtin_bin_intbig
+builtin_divmod_intbig
+builtin_hash_intbig
+builtin_hex_intbig
+builtin_oct_intbig
+builtin_pow3_intbig
+bytearray_intbig
+bytes_construct_intbig
+floordivide_intbig
+int_64_basics
+int_big1
+int_big_add
+int_big_and
+int_big_and2
+int_big_and3
+int_big_cmp
+int_big_div
+int_big_error
+int_big_lshift
+int_big_mod
+int_big_mul
+int_big_or
+int_big_or2
+int_big_or3
+int_big_pow
+int_big_rshift
+int_big_to_small
+int_big_to_small_int29
+int_big_unary
+int_big_xor
+int_big_xor2
+int_big_xor3
+int_big_zeroone
+int_bytes_int64
+int_bytes_intbig
+int_constfolding_intbig
+int_divmod_intbig
+int_intbig
+op_error_intbig
+slice_intbig
+special_methods_intbig
+string_format_intbig

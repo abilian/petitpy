@@ -22,7 +22,7 @@ To pick between the two, skip to [When to use petitpy](#when-to-use-petitpy).
 | Compiler as a standalone tool | `zigpy-compile` | `mpy-cross` |
 | Bytecode format | `.mpy` v6, byte-for-byte compatible | `.mpy` v6 |
 | C-level ABI compatibility | not provided | no external ABI promise either |
-| Arbitrary-precision integers | under `full` on native; 64-bit on wasm | optional (`MICROPY_LONGINT_IMPL_MPZ`) |
+| Arbitrary-precision integers | under `full` on native, and on wasm | optional (`MICROPY_LONGINT_IMPL_MPZ`) |
 | `os`, `socket`, `select`, `signal`, `subprocess`, `pwd`, `grp` | under `full` (POSIX subset, Linux and macOS) | in `unix-standard` |
 | Extended stdlib (`pathlib`, `datetime`, `uuid`, `ipaddress`, `dataclasses`, `unittest.mock`, `logging`, a small `pytest`) | pure Python, shipped with petitpy | partly, via `micropython-lib` |
 | Threading | out of scope | yes, on supporting ports |

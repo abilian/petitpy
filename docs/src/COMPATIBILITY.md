@@ -6,7 +6,7 @@ This page answers **"does my program work on petitpy?"** for a collection of rea
 
 ## Headline
 
-- **580 / 756 programs (76.7%) run on both native AND wasm.**
+- **584 / 756 programs (77.2%) run on both native AND wasm.**
 - **585 / 756 (77.4%) run on native (incl. native-only).**
 - The remaining 171 programs are bucketed by what they need; see below.
 
@@ -16,11 +16,11 @@ Each bucket names what its programs need. `make check` and `make wasm-check` run
 
 ## The buckets
 
-### `works/`: 580 programs
+### `works/`: 584 programs
 
 Runs on **both** native and wasm, with the same output as MicroPython or CPython.
 
-By source corpus: `prescrypt-micropython`=418, `prescrypt-tryalgo`=79, `prescrypt-internal`=54, `p2w-internal`=29
+By source corpus: `prescrypt-micropython`=421, `prescrypt-tryalgo`=79, `prescrypt-internal`=54, `p2w-internal`=30
 
 Top requirements: `async`×9, `grammar.walrus`×6, `stdlib.bisect`×2, `fs.open`×1, `stdlib.heapq`×1, `grammar.match`×1, `stdlib.collections.Counter`×1
 
@@ -28,17 +28,17 @@ Programs (first 30):
 
 `0prelim`, `__init__`, `anagrams`, `andor`, `annotate_var`, `arithm`, `arithm_expr_eval`, `arithm_expr_target`, `array_add`, `array_construct`, `array_construct2`, `array_construct_endian`, `array_micropython`, `assert_statements`, `assign`, `assign1`, `assign_expr`, `assign_expr_scope`, `async`, `async_await`, `async_def`, `async_for`, `async_syntaxerror`, `async_with`, `async_with_break`, `async_with_return`, `bellman_ford`, `bfs`, `biconnected_components`, `binary_search`
 
-_…and 550 more; see `golden-programs/works/`._
+_…and 554 more; see `golden-programs/works/`._
 
-### `works-native-only/`: 5 programs
+### `works-native-only/`: 1 program
 
-Runs on native but not wasm, usually because wasm has 64-bit integers only.
+Runs on native but not wasm, usually because wasm stores array, memoryview and struct values in a 32-bit word.
 
-By source corpus: `prescrypt-micropython`=4, `p2w-internal`=1
+By source corpus: `prescrypt-micropython`=1
 
-Programs (first 5):
+Programs (first 1):
 
-`int1`, `int_bytes`, `large_integers`, `memoryview_intbig`, `special_methods`
+`memoryview_intbig`
 
 ### `needs-stdlib/`: 123 programs
 

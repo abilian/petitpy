@@ -434,11 +434,12 @@ web: freeze-modules gen-gallery
 	@# artifact by ~14% (see also: tools/metrics.py for the longitudinal
 	@# trend). Gracefully degrades when binaryen isn't installed so
 	@# contributors without it still get a working demo.
-	@# Feature flags: enable exactly what Zig emits (bulk-memory,
-	@# nontrapping-float-to-int) — `--all-features` would turn on
-	@# reference-types and similar features that wasmtime 24.x rejects
-	@# at load time ("function references required for index reference
-	@# types") even though the binary doesn't use them.
+	@# Feature flags: enable exactly what the binary uses — bulk-memory,
+	@# nontrapping-float-to-int, and exception-handling for ADR 013's
+	@# trampoline (with reference-types, which its exnref form needs). Not
+	@# `--all-features`, which would let wasm-opt emit features the
+	@# runtimes may lack. A wasm-opt failure fails the target, so a stale
+	@# web/petitpy.wasm is never shipped.
 	@# -ocimfs 1000: by default -Oz inlines every function that has one
 	@# caller, including dispatchBody (about 3950 in binaryen's measure)
 	@# into mp_execute_bytecode. The loop then never re-enters a function
@@ -446,8 +447,9 @@ web: freeze-modules gen-gallery
 	@# (ADR 020 C2). Smaller functions still inline.
 	@if command -v wasm-opt >/dev/null 2>&1; then \
 	  wasm-opt -Oz --enable-bulk-memory --enable-nontrapping-float-to-int \
+	    --enable-exception-handling --enable-reference-types \
 	    -ocimfs 1000 --strip-debug --strip-producers --converge \
-	    zig-out/bin/petitpy.wasm -o web/petitpy.wasm; \
+	    zig-out/bin/petitpy.wasm -o web/petitpy.wasm || exit 1; \
 	  before=$$(wc -c < zig-out/bin/petitpy.wasm); \
 	  after=$$(wc -c < web/petitpy.wasm); \
 	  saved=$$((before - after)); \
@@ -522,7 +524,7 @@ test-integration: build-frozen
 ##                        wasm-only regressions in paths the corpus
 ##                        has already flagged.
 test-integration-wasm: wasm-small
-	python3 tests/integration.py --config nano --runner "tools/run_wasm.sh zig-out/bin/petitpy.wasm"
+	python3 tests/integration.py --config wasm --runner "tools/run_wasm.sh zig-out/bin/petitpy.wasm"
 
 ## test-e2e: corpus (byte-identical vs frozen .out files) + compile-exec
 ##           (Zig frontend → vendor VM → diff stdout). The corpus is the
@@ -774,7 +776,7 @@ npm-check: npm-package
 	cd npm/dist && npm install --no-save --ignore-scripts --no-audit --no-fund >/dev/null
 	node --no-warnings npm/test.mjs $(CURDIR)/npm/dist
 	python3 tools/browser-smoke.py --serve npm --page test-browser.html \
-	  --wait-for-text "passed" --assert-text "2 of 2 passed"
+	  --wait-for-text "passed" --assert-text "3 of 3 passed"
 
 SMOKE_PAGES := $(patsubst web/%index.html,%,\
                  $(wildcard web/demos/*/index.html) \

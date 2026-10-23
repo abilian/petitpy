@@ -89,8 +89,9 @@ def run(cases: list[tuple], label_prefix: str = "integration smoke") -> int:
     parser.add_argument("--runner", default=None)
     # The build under test. A case whose behaviour differs by build (dict
     # order: insertion on full, hash order on nano) gives its expected
-    # stdout as {"full": ..., "nano": ...}.
-    parser.add_argument("--config", choices=["full", "nano"], default="full")
+    # stdout as {"full": ..., "nano": ...}. wasm is nano with full's MPZ
+    # integers; a case without a "wasm" entry expects what nano prints.
+    parser.add_argument("--config", choices=["full", "nano", "wasm"], default="full")
     args = parser.parse_args()
 
     runner_argv, label = resolve_runner_argv(args.binary, args.runner)
@@ -101,7 +102,7 @@ def run(cases: list[tuple], label_prefix: str = "integration smoke") -> int:
     for case in cases:
         name, src, expected = case[:3]
         if isinstance(expected, dict):
-            expected = expected[args.config]
+            expected = expected.get(args.config, expected.get("nano"))
         expected_exit = case[3] if len(case) >= 4 else None
         # A 5th element is argv for the binary itself, before the script.
         flags = case[4] if len(case) >= 5 else None

@@ -46,7 +46,7 @@ The build lists its C sources explicitly in `build.zig`. Three project-local `.c
 |---|---|
 | always | `py/objfloat.c`, `py/formatfloat.c` |
 | `feature-re=true` (the default) | `extmod/modre.c` |
-| nano on wasm32 (long-long ints) | `py/objint.c`, `py/objint_longlong.c` |
+| nano on wasm32 (MPZ ints) | `py/objint.c`, `py/objint_mpz.c`, `py/mpz.c` |
 | `-Dconfig=full` | `py/objint.c`, `py/objint_mpz.c`, `py/mpz.c`, `py/modio.c`, `py/objstringio.c`, `py/builtinhelp.c`, `py/warning.c` |
 
 The choice is made per file: compact subsystems were ported to Zig, and large, well-tuned engines such as the MPZ bignum code are reused. See [Architecture](../architecture.md#the-residual-c).

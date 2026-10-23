@@ -33,12 +33,8 @@ extern fn mp_parse_num_base(str: [*c]const u8, len: usize, base: [*c]c_int) usiz
 extern fn unichar_isspace(ch: u32) bool;
 
 extern fn mp_obj_new_int_from_str_len(s: *[*c]const u8, len: usize, neg: bool, base: c_uint) callconv(.c) Obj;
-// Vendor objint_longlong.c provides this under LONGLONG. Under NONE the
-// call is comptime-gated out (the symbol is unresolved by design).
-extern fn mp_obj_new_int_from_ll(val: i64) callconv(.c) Obj;
 extern fn mp_obj_exception_add_traceback(self_in: Obj, file: usize, line: usize, block: usize) callconv(.c) void;
 extern const mp_type_SyntaxError: anyopaque;
-extern const mp_type_OverflowError: anyopaque;
 
 const Obj = mirrors.Obj;
 const Lex = ?*anyopaque; // mp_lexer_t*
@@ -147,23 +143,11 @@ fn mpParseNumIntegerImpl(str_in: [*c]const u8, len: usize, base_in: c_int, lex: 
     const remaining = @intFromPtr(top) - @intFromPtr(str);
     str += mp_parse_num_base(str, remaining, &base);
 
-    // string should be an integer number. Accumulator type is
-    // comptime-selected per MICROPY_LONGINT_IMPL — matches vendor
-    // parsenum.c's PARSED_INT_FITS shape:
-    //   - LONGLONG (wasm32-nano): u64 accumulator, cap at LLONG_MAX+1,
-    //     overflow raises (no bignum to spill into).
-    //   - NONE (nano native) + MPZ (full): mp_int_t accumulator (=isize
-    //     on REPR_A), cap at smallint, overflow promotes via polymorphic
-    //     mp_obj_new_int_from_str_len — which raises under NONE and
-    //     allocates a heap mpz under MPZ.
-    // Earlier the MPZ arm was wrongly routed to the LONGLONG-shaped u64
-    // accumulator, which let parsed_val reach 1<<63 then panic with
-    // @intCast in the post-parse branch (e.g. `x = 0x8000000000000000`).
-    // ADR 012 Phase 3.5 step 3.
-    const Acc = if (build_options.longint_impl == .longlong) u64 else isize;
-    const ACC_MAX_POS_PLUS_ONE: u64 = if (build_options.longint_impl == .longlong) (1 << 63) else 0;
-
-    var parsed_val: Acc = 0;
+    // string should be an integer number, accumulated in an mp_int_t (=isize
+    // on REPR_A) capped at the smallint range. Overflow goes to the
+    // polymorphic mp_obj_new_int_from_str_len, which raises under NONE (nano
+    // native) and allocates a heap mpz under MPZ (full and wasm).
+    var parsed_val: isize = 0;
     const str_val_start: [*c]const u8 = str;
     var overflowed: bool = false;
     while (@intFromPtr(str) < @intFromPtr(top)) : (str += 1) {
@@ -182,82 +166,29 @@ fn mpParseNumIntegerImpl(str_in: [*c]const u8, len: usize, base_in: c_int, lex: 
         }
         if (dig >= @as(u32, @intCast(base))) break;
 
-        if (comptime build_options.longint_impl != .longlong) {
-            // NONE + MPZ arm: accumulate in isize; per-digit smallint fit check.
-            // Overflow promotes to the polymorphic ctor — raises under NONE,
-            // allocates heap mpz under MPZ.
-            const mul_result = @mulWithOverflow(parsed_val, @as(isize, @intCast(base)));
-            if (mul_result[1] != 0) {
-                overflowed = true;
-                break;
-            }
-            parsed_val = mul_result[0];
-            parsed_val +%= @intCast(dig);
-            if (!smallIntFits(parsed_val)) {
-                overflowed = true;
-                break;
-            }
-        } else {
-            // LONGLONG arm: u64 accumulator capped at LLONG_MAX+1.
-            const r = @mulWithOverflow(parsed_val, @as(u64, @intCast(base)));
-            if (r[1] != 0) {
-                overflowed = true;
-                break;
-            }
-            const s_ = @addWithOverflow(r[0], @as(u64, dig));
-            if (s_[1] != 0) {
-                overflowed = true;
-                break;
-            }
-            if (s_[0] > ACC_MAX_POS_PLUS_ONE) {
-                overflowed = true;
-                break;
-            }
-            parsed_val = s_[0];
+        const mul_result = @mulWithOverflow(parsed_val, @as(isize, @intCast(base)));
+        if (mul_result[1] != 0) {
+            overflowed = true;
+            break;
+        }
+        parsed_val = mul_result[0];
+        parsed_val +%= @intCast(dig);
+        if (!smallIntFits(parsed_val)) {
+            overflowed = true;
+            break;
         }
     }
 
     // produce ret_val from the path we took.
     var ret_val: Obj = undefined;
     if (overflowed) {
-        if (comptime build_options.longint_impl != .longlong) {
-            // NONE + MPZ both delegate to the vendor polymorphic str ctor.
-            // Under NONE the linked stub at objint.c:334 raises
-            // OverflowError("long int not supported in this build"); under
-            // MPZ the linked impl (objint_mpz.c:413) allocates a heap
-            // mp_obj_int_t and fills it via mpz_set_from_str. ADR 012
-            // Phase 3.5 — closes the parser-side LONGLONG hardcoding that
-            // broke 39 intbig tests under full.
-            var s2: [*c]const u8 = str_val_start;
-            const rem = @intFromPtr(top) - @intFromPtr(str_val_start);
-            ret_val = mp_obj_new_int_from_str_len(&s2, rem, neg, @intCast(base));
-            if (pyerr.pending_exc != 0) return error.PyRaise;
-            str = s2;
-        } else {
-            // LONGLONG arm: parsed_val exceeded LLONG_MAX+1 and there's no
-            // higher-precision backend to hand off to.
-            pyerr.pending_exc = mp_obj_new_exception_msg(
-                &mp_type_OverflowError,
-                "result overflows long long storage");
-            return error.PyRaise;
-        }
-    } else if (comptime build_options.longint_impl != .longlong) {
-        // NONE + MPZ arm: parsed_val fits in smallint by construction
-        // (overflow above bailed to the polymorphic ctor). Wrap directly.
-        const v: isize = if (neg) -parsed_val else parsed_val;
-        ret_val = mirrors.newSmallInt(v);
-    } else {
-        // LONGLONG arm: parsed_val ∈ [0, LLONG_MAX+1]. Convert to signed,
-        // dispatch through vendor mp_obj_new_int_from_ll (small_int when
-        // it fits, else heap mp_obj_int_t).
-        const signed_val: i64 = if (neg) blk: {
-            if (parsed_val == ACC_MAX_POS_PLUS_ONE) {
-                break :blk std.math.minInt(i64);
-            }
-            break :blk -@as(i64, @intCast(parsed_val));
-        } else @intCast(parsed_val);
-        ret_val = mp_obj_new_int_from_ll(signed_val);
+        var s2: [*c]const u8 = str_val_start;
+        const rem = @intFromPtr(top) - @intFromPtr(str_val_start);
+        ret_val = mp_obj_new_int_from_str_len(&s2, rem, neg, @intCast(base));
         if (pyerr.pending_exc != 0) return error.PyRaise;
+        str = s2;
+    } else {
+        ret_val = mirrors.newSmallInt(if (neg) -parsed_val else parsed_val);
     }
 
     // check we parsed something

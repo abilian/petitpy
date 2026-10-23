@@ -1,5 +1,5 @@
 # golden: source=p2w-internal; needs=
-# golden: works-on=micropython,petitpy-native
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Test large integers (exceeding i31 range)
 # i31 range: -1073741824 to 1073741823
 

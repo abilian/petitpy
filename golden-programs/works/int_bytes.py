@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,petitpy-native
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 import sys
 
 print((10).to_bytes(1, "little"))

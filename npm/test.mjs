@@ -25,6 +25,11 @@ check("files, stdin, argv", r.stdout === "7 typed ['a', 'b']\n", JSON.stringify(
 r = await py.run("raise ValueError('boom')");
 check("error exit", r.exitCode === 1 && r.stderr.includes("ValueError: boom"), JSON.stringify(r.stderr));
 
+// A raise inside MicroPython's C integer code, caught through wasm
+// exception handling.
+r = await py.run("try:\n    (2**100) // 0\nexcept ZeroDivisionError:\n    print('caught', 2**70)");
+check("bignums, C raise caught", r.stdout === "caught 1180591620717411303424\n", JSON.stringify(r.stdout));
+
 const lines = [];
 r = await py.run("print('streamed')", { onStdout: (l) => lines.push(l) });
 check("onStdout", lines.join() === "streamed", JSON.stringify(lines));

@@ -38,7 +38,7 @@ BUCKET_ORDER = [
 
 BUCKET_BLURB = {
     "works": "Runs on **both** native and wasm, with the same output as MicroPython or CPython.",
-    "works-native-only": "Runs on native but not wasm, usually because wasm has 64-bit integers only.",
+    "works-native-only": "Runs on native but not wasm, usually because wasm stores array, memoryview and struct values in a 32-bit word.",
     "needs-stdlib": "Needs a stdlib module petitpy does not ship yet. The header of each "
     "program names it. See [ADR 003](adrs/003-library-and-module-loading.md).",
     "needs-grammar": "Uses syntax petitpy does not parse.",

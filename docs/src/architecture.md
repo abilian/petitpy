@@ -21,7 +21,7 @@ The codebase is the result of an incremental C-to-Zig strangler of MicroPython, 
 
 `port/mpconfigport.h` has two arms, selected with `-Dconfig=...`:
 
-- **`full`** (the default) turns on everything available and tracks upstream MicroPython's unix port. Features that have not been ported to Zig, such as bignums (MPZ), `io` and warnings, come from vendor C files that `build.zig` adds only under this config.
+- **`full`** (the default) turns on everything available and tracks upstream MicroPython's unix port. Features that have not been ported to Zig, such as bignums (MPZ), `io` and warnings, come from vendor C files that `build.zig` adds under this config (bignums on wasm too).
 - **`nano`** is the minimal arm. Its output must stay byte-identical to the frozen MicroPython reference, which keeps the surface that has to match small. The wasm targets are always built as nano.
 
 ### Per-feature build flags
@@ -73,7 +73,7 @@ Comptime `@sizeOf` and `@offsetOf` checks make a layout mismatch fail the build 
 
 The core interpreter is Zig: lexer, parser, compiler, emitter, `.mpy` loader, VM, object model, allocator and GC. Some C remains.
 
-Vendor C still compiles for features that were never ported. On both configs this is `float` (`py/objfloat.c`, `py/formatfloat.c`) and the `re` module (`extmod/modre.c`). Nano on wasm adds the long-long integer files. Full adds MPZ bignums, `io`, `help()` and warnings. These are well-tuned upstream code, and reusing them costs less than rewriting them. The lists live in `build.zig`.
+Vendor C still compiles for features that were never ported. On both configs this is `float` (`py/objfloat.c`, `py/formatfloat.c`) and the `re` module (`extmod/modre.c`). Full and nano on wasm add MPZ bignums; full also adds `io`, `help()` and warnings. These are well-tuned upstream code, and reusing them costs less than rewriting them. The lists live in `build.zig`.
 
 Three project-local C files also compile into every build:
 

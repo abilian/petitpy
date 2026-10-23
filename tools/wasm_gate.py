@@ -6,6 +6,8 @@ correctness gate. The native target reports 100% pass; the WASM target
 does not (yet). To prevent quality drift, this script:
 
   - Runs the corpus through the WASM binary via tools/run_wasm.sh.
+  - Judges the tests in corpus/wasm-mpz-goldens.txt against the full
+    arm's golden instead (wasm has full's MPZ integers, native nano none).
   - Subtracts the skip-on-wasm32 list (tests whose goldens depend on
     64-bit smallint width; not runnable on wasm32 by construction).
   - Compares the remaining failures against corpus/wasm-known-fails.txt.
@@ -38,6 +40,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 KNOWN_FAILS = ROOT / "corpus" / "wasm-known-fails.txt"
 SKIP_LIST = ROOT / "corpus" / "skip-on-wasm32.txt"
+MPZ_GOLDENS = ROOT / "corpus" / "wasm-mpz-goldens.txt"
 WASM_BIN = ROOT / "zig-out" / "bin" / "petitpy.wasm"
 RUN_WASM = ROOT / "tools" / "run_wasm.sh"
 
@@ -102,6 +105,22 @@ def current_failures() -> tuple[set[str], int]:
     return fails, total
 
 
+def mpz_golden_failures(names: set[str]) -> set[str]:
+    """The tests in `names` whose wasm output differs from full's golden."""
+    fails = set()
+    for name in sorted(names):
+        p = subprocess.run(
+            [str(RUN_WASM), str(WASM_BIN), str(ROOT / "corpus" / "basics" / f"{name}.py")],
+            capture_output=True,
+            timeout=120,
+            check=False,
+        )
+        got = p.stdout + p.stderr + f"\n[exit {p.returncode}]\n".encode()
+        if got != (ROOT / "corpus" / "full" / "basics" / f"{name}.out").read_bytes():
+            fails.add(name)
+    return fails
+
+
 def main(argv: list[str]) -> int:
     argparse.ArgumentParser(description=__doc__).parse_args(argv)
 
@@ -119,6 +138,8 @@ def main(argv: list[str]) -> int:
         return 2
 
     all_failures, total = current_failures()
+    mpz = load_list(MPZ_GOLDENS, required=True)
+    all_failures = (all_failures - mpz) | mpz_golden_failures(mpz)
 
     # Raw is the honest top-line: tests that pass divided by tests that
     # exist. Skip-listed tests are documented but still count as failures

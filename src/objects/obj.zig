@@ -101,6 +101,7 @@ inline fn isFloat(o: Obj) bool {
 
 extern const mp_type_float: anyopaque;
 extern fn mp_obj_float_get(self_in: Obj) callconv(.c) f64;
+extern fn mp_obj_int_as_float_impl(self_in: Obj) callconv(.c) f64;
 
 inline fn isStrOrBytesForLen(o: Obj) bool {
     // !UNICODE && is_str → str fast-path; bytes fast-path always.
@@ -205,16 +206,33 @@ export fn mp_obj_get_int_maybe(arg: Obj, value: *isize) callconv(.c) bool {
     } else if (mirrors.isSmallInt(arg)) {
         value.* = mirrors.smallIntValue(arg);
     } else if (mirrors.isExactType(arg, &mp_type_int)) {
-        value.* = mp_obj_int_get_checked(arg);
+        return intGetChecked(arg, value);
     } else {
         const maybe_int = mp_unary_op(mp.MP_UNARY_OP_INT_MAYBE, arg);
         if (maybe_int != MP_OBJ_NULL) {
-            value.* = mp_obj_int_get_checked(maybe_int);
+            return intGetChecked(maybe_int, value);
         } else {
             return false;
         }
     }
     return true;
+}
+
+extern fn mpz_as_int_checked(z: *const anyopaque, value: *isize) callconv(.c) bool;
+extern const mp_type_OverflowError: anyopaque;
+
+/// An int's machine-word value. A bignum that does not fit raises
+/// OverflowError polled, where vendor mp_obj_int_get_checked raises
+/// through the vendor-C path that a plain subscript cannot catch.
+fn intGetChecked(o: Obj, value: *isize) bool {
+    if (build_options.longint_none or mirrors.isSmallInt(o)) {
+        value.* = mp_obj_int_get_checked(o);
+        return true;
+    }
+    // mp_obj_int_t: the object header, then the mpz.
+    if (mpz_as_int_checked(@ptrFromInt(o + @sizeOf(mirrors.MpObjBase)), value)) return true;
+    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_OverflowError, "overflow converting long int to machine word");
+    return false;
 }
 
 fn mpObjGetIntImpl(arg: Obj) PyError!isize {
@@ -649,6 +667,9 @@ export fn mp_obj_get_float_maybe(arg_in: Obj, value: *f64) callconv(.c) bool {
         val = 1;
     } else if (mirrors.isSmallInt(arg_in)) {
         val = @floatFromInt(mirrors.smallIntValue(arg_in));
+    } else if (!build_options.longint_none and mirrors.isExactType(arg_in, &mp_type_int)) {
+        // A heap int (vendor obj.c's LONGINT branch).
+        val = mp_obj_int_as_float_impl(arg_in);
     } else if (isFloat(arg_in)) {
         val = mp_obj_float_get(arg_in);
     } else {

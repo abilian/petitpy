@@ -45,7 +45,7 @@ btn = js.document.getElementById("go")
 btn.addEventListener("click", lambda e: js.alert("hello from Python!"))
 ```
 
-The browser build is smaller than the native one. Integers are 64-bit (`2**100` raises `OverflowError`), and there is no `open()` or `os`: programs see the files the page passes in. Everything else in the language works, including classes, generators, `match`, `eval` and `exec`, and the pure-Python stdlib modules. [Differences from CPython](differences.md) has the details.
+The browser build is smaller than the native one. There is no `open()` or `os`: programs see the files the page passes in. Everything else in the language works, including classes, generators, `match`, `eval` and `exec`, and the pure-Python stdlib modules. [Differences from CPython](differences.md) has the details.
 
 To try it without installing anything, use the [playground](/play/demos/playground/). For a game on a canvas, see [Writing games](writing-games.md).
 
