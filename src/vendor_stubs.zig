@@ -1,6 +1,3 @@
-const std_c = @cImport({
-    @cInclude("unistd.h");
-});
 const build_options = @import("build_options");
 
 // zigonly Phase 2 — placeholders for vendor-side symbols not on smoke path.
@@ -23,7 +20,7 @@ comptime {
 // mp_format_float is now provided by vendor py/formatfloat.c via the
 // float-arm carveout in build.zig.
 pub export fn mp_hal_stdout_tx_strn_cooked(str: [*]const u8, len: usize) callconv(.c) void {
-    _ = std_c.write(1, str, len);
+    @import("support/output.zig").write(1, str, len);
 }
 // mp_obj_float_get is now provided by vendor py/objfloat.c via the
 // float-arm carveout in build.zig. Panic stub retired.

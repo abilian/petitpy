@@ -34,6 +34,7 @@ const libc = @cImport({
     @cInclude("errno.h");
 });
 const mirrors = @import("../mp_mirrors.zig");
+const output = @import("../support/output.zig");
 
 const Obj = mirrors.Obj;
 const Qstr = usize;
@@ -162,6 +163,12 @@ fn npyFileWrite(self_in: Obj, buf: ?*const anyopaque, size: usize, errcode: *c_i
         errcode.* = EBADF;
         return MP_STREAM_ERROR;
     };
+    // An embedding host that takes the output gets sys.stdout's and
+    // sys.stderr's writes, in order with print()'s.
+    if (output.sink != null and self.is_stdio and (fp == stdoutFp() or fp == stderrFp())) {
+        output.write(if (fp == stdoutFp()) 1 else 2, @ptrCast(buf.?), size);
+        return size;
+    }
     const n = fwrite(buf.?, 1, size, fp);
     if (n < size) {
         errcode.* = errnoVal();

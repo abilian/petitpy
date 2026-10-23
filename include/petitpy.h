@@ -38,11 +38,17 @@ typedef enum {
     PPY_EXIT = 2,  /* SystemExit: see ppy_exit_code() */
 } ppy_status;
 
+/* Receives what Python writes to stdout (fd 1) or stderr (fd 2), in
+ * order: print(), sys.stdout and sys.stderr, warnings. */
+typedef void (*ppy_write_fn)(void *userdata, int fd, const char *data, size_t len);
+
 typedef struct {
     const char *const *path; /* directories appended to sys.path */
     size_t path_len;
     const char *const *argv; /* sys.argv */
     size_t argc;
+    ppy_write_fn write; /* NULL: the process's stdout and stderr */
+    void *write_userdata;
 } ppy_config;
 
 /* A function the host gives Python. It receives its arguments as handles,
@@ -55,7 +61,8 @@ int ppy_api_version(void);
 
 /* Lifetime. config may be NULL: empty sys.path and sys.argv. Standard
  * modules are compiled in; Python code imports from disk only from the
- * directories in config->path. Output goes to the C stdout and stderr. */
+ * directories in config->path. Output goes to config->write, or else to
+ * the process's stdout and stderr. */
 ppy_interp *ppy_new(const ppy_config *config);
 void ppy_free(ppy_interp *py); /* releases every handle */
 

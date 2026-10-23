@@ -362,17 +362,15 @@ fn plat_print_strn(env: ?*anyopaque, str: [*c]const u8, len: usize) callconv(.c)
 }
 pub export const mp_plat_print: PrintT = .{ .data = null, .print_strn = &plat_print_strn };
 
-// mp_stderr_print routes to fd 2 (write(2, ...)); used by the full build's
-// MICROPY_ERROR_PRINTER so warnings + tracebacks don't interleave with stdout.
-// Faithful to vendor's unix main.c (fwrite+fflush on stderr) — the unix
-// stdio is line-buffered, so the explicit fflush is needed there; with
-// write(2) the system call is unbuffered so no flush is required.
-const unistd = @cImport({
-    @cInclude("unistd.h");
-});
+// mp_stderr_print routes to fd 2 (write(2, ...), or an embedding host's
+// output function); used by the full build's MICROPY_ERROR_PRINTER so
+// warnings + tracebacks don't interleave with stdout. Faithful to vendor's
+// unix main.c (fwrite+fflush on stderr) — the unix stdio is line-buffered,
+// so the explicit fflush is needed there; with write(2) the system call is
+// unbuffered so no flush is required.
 fn stderr_print_strn(env: ?*anyopaque, str: [*c]const u8, len: usize) callconv(.c) void {
     _ = env;
-    _ = unistd.write(2, str, len);
+    @import("../../support/output.zig").write(2, str, len);
 }
 pub export const mp_stderr_print: PrintT = .{ .data = null, .print_strn = &stderr_print_strn };
 

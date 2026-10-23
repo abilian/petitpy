@@ -131,7 +131,7 @@ class Interpreter {
     this.registry = new FinalizationRegistry((h) => this.py && e.ppy_release(this.py, h));
     this.scratch = e.malloc(16); // output arguments
     const strings = [...path, ...argv].map((s) => this.cstr(s));
-    const config = e.malloc(16);
+    const config = e.malloc(24); // ppy_config; output goes through WASI
     const lists = e.malloc(4 * strings.length + 4);
     strings.forEach((p, i) => this.view().setUint32(lists + 4 * i, p, true));
     const v = this.view();
@@ -139,6 +139,8 @@ class Interpreter {
     v.setUint32(config + 4, path.length, true);
     v.setUint32(config + 8, lists + 4 * path.length, true);
     v.setUint32(config + 12, argv.length, true);
+    v.setUint32(config + 16, 0, true);
+    v.setUint32(config + 20, 0, true);
     this.py = e.ppy_new(config);
     for (const p of [...strings, lists, config]) e.free(p);
     if (!this.py) throw new Error("petitpy: the interpreter could not start");

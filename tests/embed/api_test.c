@@ -52,6 +52,15 @@ static ppy_status count(ppy_interp *py, void *userdata, size_t argc, const ppy_h
     return PPY_OK;
 }
 
+/* Output captured by write(): each write as "<fd>:<data>|". */
+static char captured[256];
+
+static void capture(void *userdata, int fd, const char *data, size_t len) {
+    size_t n = strlen(captured);
+    snprintf(captured + n, sizeof captured - n, "%d:%.*s|", fd, (int)len, data);
+    ++*(int *)userdata;
+}
+
 static ppy_interp *shared;
 
 static void *worker(void *arg) {
@@ -73,7 +82,7 @@ int main(void) {
 
     const char *path[] = {"/nonexistent"};
     const char *argv[] = {"host", "-v"};
-    ppy_config config = {path, 1, argv, 2};
+    ppy_config config = {.path = path, .path_len = 1, .argv = argv, .argc = 2};
     ppy_interp *py = ppy_new(&config);
     check("new", py != NULL);
     check("one interpreter at a time", ppy_new(NULL) == NULL);
@@ -172,9 +181,13 @@ int main(void) {
     check("threads", threads_ok);
 
     ppy_free(py);
-    py = ppy_new(NULL);
+    int writes = 0;
+    ppy_config capturing = {.write = capture, .write_userdata = &writes};
+    py = ppy_new(&capturing);
     check("new after free", py != NULL && ppy_eval(py, "1 + 1", 5, &r) == PPY_OK && ppy_to_int(py, r, &n) == PPY_OK && n == 2);
     check("fresh globals", ppy_get_global(py, "x", &r) == PPY_ERROR);
+    check("output reaches write()", exec(py, "import sys\nprint('a', 1)\nsys.stdout.write('b')\nprint('c', file=sys.stderr)\nsys.stderr.write('d')") == PPY_OK);
+    check("in order, by stream", strcmp(captured, "1:a|1: |1:1|1:\n|1:b|2:c|2:\n|2:d|") == 0 && writes == 8);
     ppy_free(py);
 
     printf("%s\n", failed ? "FAILED" : "all passed");

@@ -59,7 +59,17 @@ int main(void) {
 
 ## Interpreters
 
-`ppy_new()` creates an interpreter and `ppy_free()` destroys it. Every other function takes the interpreter as its first argument. The configuration, which may be `NULL`, gives the directories of `sys.path` and the contents of `sys.argv`. Python code imports the standard modules from the library itself, and other modules only from the directories the host lists, never from the current directory.
+`ppy_new()` creates an interpreter and `ppy_free()` destroys it. Every other function takes the interpreter as its first argument. The configuration, which may be `NULL`, gives the directories of `sys.path`, the contents of `sys.argv`, and a function that receives Python's output:
+
+```c
+static void on_output(void *userdata, int fd, const char *data, size_t len) {
+    /* fd is 1 for stdout, 2 for stderr */
+}
+
+ppy_config config = {.path = dirs, .path_len = 1, .write = on_output, .write_userdata = console};
+```
+
+It receives every write, in order: `print()`, `input()`'s prompt, `sys.stdout`, `sys.stderr` and warnings. Without it, output goes to the process's stdout and stderr. Python code imports the standard modules from the library itself, and other modules only from the directories the host lists, never from the current directory.
 
 In this release, a process holds one interpreter at a time: `ppy_new()` returns `NULL` while another exists. After `ppy_free()`, the host can create a new one, which starts with fresh modules and globals.
 
@@ -119,7 +129,6 @@ JavaScript cannot give wasm a C function pointer, so the wasm module adds one ex
 ## Limits of this release
 
 - One interpreter per process at a time.
-- Python's output goes to the C `stdout` and `stderr`; a C host cannot capture it yet. On wasm, the JavaScript wrapper receives it through WASI, line by line.
 - Tracebacks name the file and function of each frame, without line numbers, as the `petitpy` command prints them.
 - A static library and a wasm module; no shared library yet.
 - On wasm, `ppy_to_int` reads 32-bit integers; the JavaScript wrapper reads wider ones through their digits.

@@ -22,6 +22,7 @@ const gc = @import("../memory/gc.zig");
 const state = @import("../runtime/mpstate.zig");
 const nlr = @import("../runtime/nlr_trampoline.zig");
 const systemexit = @import("systemexit.zig");
+const output = @import("../support/output.zig");
 
 const Obj = mirrors.Obj;
 const Handle = u32;
@@ -44,6 +45,8 @@ const Config = extern struct {
     path_len: usize,
     argv: ?[*]const [*:0]const u8,
     argc: usize,
+    write: ?*const fn (userdata: ?*anyopaque, fd: c_int, data: [*]const u8, len: usize) callconv(.c) void,
+    write_userdata: ?*anyopaque,
 };
 
 const HostFn = *const fn (py: *Interp, userdata: ?*anyopaque, argc: usize, argv: [*]const Handle, result: *Handle) callconv(.c) c_int;
@@ -276,6 +279,7 @@ export fn ppy_new(config: ?*const Config) ?*Interp {
             const sys_path = mirrors.mp_state_ctx.vm.sys_mutable[0];
             mp_obj_list_set_len(sys_path, 0);
             const cfg = c.config orelse return;
+            if (cfg.write) |w| output.sink = .{ .write = w, .userdata = cfg.write_userdata };
             for (0..cfg.path_len) |i| _ = mp_obj_list_append(sys_path, newStr(cfg.path.?[i]));
             const argv = mirrors.objFromPtr(&mirrors.mp_state_ctx.vm.mp_sys_argv_obj);
             for (0..cfg.argc) |i| _ = mp_obj_list_append(argv, newStr(cfg.argv.?[i]));
@@ -283,6 +287,7 @@ export fn ppy_new(config: ?*const Config) ?*Interp {
     } = .{ .config = config };
     if (run(py, bodyOf(@TypeOf(ctx)), &ctx) != OK) {
         py.live = false;
+        output.sink = null;
         return null;
     }
     return py;
@@ -297,6 +302,7 @@ export fn ppy_free(py: *Interp) void {
     defer unlock();
     _ = fflush(null);
     mp_embed_deinit();
+    output.sink = null;
     py.free.deinit(std.heap.c_allocator);
     py.hosts.deinit(std.heap.c_allocator);
     py.* = .{}; // drops the slots: the collector frees what they held
