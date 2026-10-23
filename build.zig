@@ -785,6 +785,22 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(exe);
 
+    // ADR 022 — the embedding API as a static library: the executable's
+    // module, imported by a root without `main`. The API's exports
+    // (src/entry/api.zig) ride along unused in `petitpy`.
+    const lib_mod = b.createModule(.{
+        .root_source_file = b.path("src/lib.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .strip = strip,
+    });
+    lib_mod.addImport("petitpy", mod);
+    const lib = b.addLibrary(.{ .name = "petitpy", .linkage = .static, .root_module = lib_mod });
+    const lib_step = b.step("lib", "Build libpetitpy.a and install include/petitpy.h");
+    lib_step.dependOn(&b.addInstallArtifact(lib, .{}).step);
+    lib_step.dependOn(&b.addInstallHeaderFile(b.path("include/petitpy.h"), "petitpy.h").step);
+
     // `zig build run -- script.py`
     const run = b.addRunArtifact(exe);
     if (b.args) |args| run.addArgs(args);

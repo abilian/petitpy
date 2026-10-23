@@ -471,7 +471,7 @@ rebuild: clean build
 
 ## test: every test tier, fast first (unit → integration → e2e). Use
 ##       `test-unit` / `test-integration` / `test-e2e` to run one tier.
-test: test-unit test-integration test-e2e test-stdlib test-wheel-layout
+test: test-unit test-integration test-e2e test-stdlib test-wheel-layout test-embed
 
 ## test-wheel-layout: import every stdlib module from the directory layout
 ##                    `pip install` ships (scripts/hatch_build.py), with a
@@ -480,6 +480,23 @@ test: test-unit test-integration test-e2e test-stdlib test-wheel-layout
 test-wheel-layout: port
 	zig build -Dconfig=full -p zig-out/wheel-layout
 	python3 tests/wheel_layout.py zig-out/wheel-layout/bin/petitpy
+
+## test-embed: build libpetitpy.a and petitpy.h (`zig build lib`, the
+##             embedding API of ADR 022), link tests/embed/api_test.c
+##             against them with the system C compiler, and run it, then
+##             again with a collection every 10 allocations so that a value
+##             held only through a handle would be lost if it were not a
+##             root; and build and run examples/embed/host.c.
+EMBED_CFLAGS := $(if $(filter Darwin,$(shell uname -s)),-mmacosx-version-min=$(shell sw_vers -productVersion))
+test-embed: freeze-modules
+	zig build lib -Dconfig=full -Dfrozen-tiny=true -p zig-out/embed
+	$(CC) -std=c99 -Wall -Wextra -Werror $(EMBED_CFLAGS) -Izig-out/embed/include \
+	  tests/embed/api_test.c zig-out/embed/lib/libpetitpy.a -lpthread -lm -o zig-out/embed/api_test
+	zig-out/embed/api_test
+	NPY_GC_STRESS=10 zig-out/embed/api_test > zig-out/embed/stress.log || { cat zig-out/embed/stress.log; exit 1; }
+	$(CC) -std=c99 -Wall -Wextra -Werror $(EMBED_CFLAGS) -Izig-out/embed/include \
+	  examples/embed/host.c zig-out/embed/lib/libpetitpy.a -lpthread -lm -o zig-out/embed/host
+	test "$$(zig-out/embed/host)" = 41
 
 ## test-stdlib: run petitpy-lib/*'s test suite under
 ##              tests/stdlib/test_*.py via pytest_lite (ADR 011).
@@ -891,5 +908,5 @@ ext-package-zip:
         metrics-record metrics-record-perf metrics-report metrics-latest \
         golden compatibility \
         doc-setup doc-build doc-serve \
-        smoke smoke-setup wasm-gc-check test-wheel-layout npm-package npm-check pypi-dist release-dist release-publish publish \
+        smoke smoke-setup wasm-gc-check test-wheel-layout test-embed npm-package npm-check pypi-dist release-dist release-publish publish \
         ext-lint ext-package ext-run ext-package-zip

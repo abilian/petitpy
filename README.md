@@ -122,6 +122,8 @@ The wasm size is the metric that matters most: raw bytes drive both parse time a
 
 **Process semantics**: `petitpy script.py` and `petitpy -c CODE`; uncaught exceptions exit 1 (not 0); `sys.exit(N)` propagates correctly; SystemExit with no arg or None exits 0.
 
+**Embedding** (experimental): a C API, `petitpy.h`, over a static library, `libpetitpy.a`, to run Python inside another program: values cross as handles, host functions are callable from Python, and errors come back as statuses. See [`docs/src/embedding.md`](docs/src/embedding.md).
+
 ## What doesn't work yet
 
 The full list, by build, is [Differences from CPython](docs/src/differences.md). Tracked by bucket in `golden-programs/`. The headline gaps:

@@ -145,6 +145,33 @@ obj_t npy_nlr_call_function(call_fn_t fn, obj_t fun_in, unsigned long n_args, un
 }
 #endif
 
+// Embedding API funnel (ADR 022): runs one API call's body, so a raise in
+// vendor C anywhere inside it becomes a pending exception instead of an
+// exit. ctx carries the body's arguments and results.
+typedef void (*ctx_fn_t)(void *ctx);
+
+#ifdef NPY_EXCEPTION_UNWIND
+void npy_nlr_call_ctx(ctx_fn_t fn, void *ctx) {
+    struct nlr_buf buf;
+    buf.prev = (struct nlr_buf *)npy_nlr_top_get();
+    buf.ret_val = NULL;
+    if (_setjmp(buf.jmpbuf) == 0) {
+        npy_nlr_top_set(&buf);
+        fn(ctx);
+        npy_nlr_top_set(buf.prev);
+    } else {
+        npy_nlr_top_set(buf.prev);
+        if (buf.ret_val != NULL) {
+            npy_pyerr_set_pending((unsigned long)buf.ret_val);
+        }
+    }
+}
+#else
+void npy_nlr_call_ctx(ctx_fn_t fn, void *ctx) {
+    fn(ctx);
+}
+#endif
+
 // Counterpart called by the raise side to perform the longjmp. Vendor C
 // raise helpers call this through the Zig-side longlongRaiseDie when an
 // nlr_top is registered.

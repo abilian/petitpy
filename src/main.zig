@@ -114,6 +114,7 @@ comptime {
     // Entry
     _ = @import("entry/embed_exec.zig");
     _ = @import("entry/embed.zig");
+    _ = @import("entry/api.zig"); // ADR 022 — the embedding API (libpetitpy)
     // Runtime (state, NLR glue, qstr, stack control)
     _ = @import("runtime/mpstate.zig");
     _ = @import("runtime/stackctrl.zig");

@@ -64,3 +64,8 @@ tasks:
       # for months that way).
       cd ~/nanopython
       make check-release
+  - test_embed: |
+      # The embedding API: libpetitpy.a linked into a C host with gcc and
+      # glibc, threads included.
+      cd ~/nanopython
+      make test-embed

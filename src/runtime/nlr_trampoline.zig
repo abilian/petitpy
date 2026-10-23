@@ -47,6 +47,11 @@ extern fn npy_nlr_call_function(
     args: [*c]const Obj,
 ) callconv(.c) Obj;
 
+extern fn npy_nlr_call_ctx(
+    fn_ptr: *const fn (?*anyopaque) callconv(.c) void,
+    ctx: ?*anyopaque,
+) callconv(.c) void;
+
 extern fn npy_nlr_jump(exc: Obj) callconv(.c) noreturn;
 
 // ── Zig wrappers — call these from runtime dispatch sites ───────────
@@ -86,6 +91,11 @@ pub fn callFunction(
         return fn_ptr(fun_in, n_args, n_kw, args);
     }
     return npy_nlr_call_function(@ptrCast(fn_ptr), fun_in, n_args, n_kw, args);
+}
+
+pub fn callCtx(fn_ptr: *const fn (?*anyopaque) callconv(.c) void, ctx: ?*anyopaque) void {
+    if (comptime !build_options.exception_unwind) return fn_ptr(ctx);
+    npy_nlr_call_ctx(fn_ptr, ctx);
 }
 
 // ── Raise side: longjmp into the registered handler if one exists ───

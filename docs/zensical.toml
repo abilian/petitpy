@@ -49,6 +49,7 @@ nav = [
         { "vs MicroPython" = "comparison-micropython.md" },
         { "Compatibility matrix" = "COMPATIBILITY.md" },
         { "Writing games with nanopy" = "writing-games.md" },
+        { "Embedding in C" = "embedding.md" },
         { "Benchmarks" = "benchmarks.md" },
         { "Case study: a Linux daemon" = "case-study-daemon.md" },
     ]},

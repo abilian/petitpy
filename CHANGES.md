@@ -5,6 +5,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use 
 
 ## [Unreleased]
 
+### Added
+
+- **An embedding API (experimental)**: a C program, or a Zig one through `@cImport`, can keep an interpreter alive, run code in it, exchange values and give Python functions of its own to call. `zig build lib -Dconfig=full -Dfrozen-tiny=true` builds `libpetitpy.a`, with the standard modules compiled in, and `petitpy.h`. Values cross the API as handles that keep them alive across collections, every call returns a status instead of ending the process, and calls from several host threads take turns. One interpreter per process at a time for now. `make test-embed` checks it, and the docs have a guide, "Embedding in C".
+
 ### Changed
 
 - **One name, petitpy**, in the repository as in the packages: the binaries are `zig-out/bin/petitpy` and `petitpy-vm`, the browser build `web/petitpy.wasm`, the stdlib sources `petitpy-lib/`, the wheel build's target variable `PETITPY_TARGET`, and the golden-program platforms `petitpy-native` and `petitpy-wasm`. The browser games store their high scores under new keys, so saved scores start over.
