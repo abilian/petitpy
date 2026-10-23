@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # With MICROPY_CPYTHON_COMPAT, the "return" statement can only appear in a
 # function.
 # Otherwise (in minimal builds), it ends execution of a module/class.

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 a = []
 for i in range(100):
     a.append(i)

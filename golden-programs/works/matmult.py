@@ -1,5 +1,5 @@
 # golden: source=p2w-internal; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 """Test matrix multiplication operator: @."""
 

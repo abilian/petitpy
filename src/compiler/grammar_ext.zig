@@ -1,4 +1,4 @@
-//! Extension grammar rules — the productions nanopython adds on top of
+//! Extension grammar rules — the productions petitpy adds on top of
 //! vendor `py/grammar.h`.
 //!
 //! `grammar_data.zig` is generated from vendor grammar.h and pinned by

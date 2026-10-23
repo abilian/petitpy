@@ -1,4 +1,4 @@
-//! nanopython bytecode emitter — pure-Zig (C6 of the compiler/ track).
+//! petitpy bytecode emitter — pure-Zig (C6 of the compiler/ track).
 //!
 //! Port of src/frontend/emitbc.zig + emitcommon_shim.c, stripped of every
 //! @cImport / C-ABI dependency. The algorithm is the one validated by

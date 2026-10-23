@@ -1,4 +1,4 @@
-"""Minimal nanopython json module — just enough for the ADR-003 L1+L2
+"""Minimal petitpy json module — just enough for the ADR-003 L1+L2
 smoke test (`json.dumps({"a": 1, "b": [1, 2, 3]})`).
 
 This is NOT a CPython-compatible json implementation. It's a placeholder
@@ -75,4 +75,4 @@ def dumps(obj):
 
 
 def loads(s):
-    raise NotImplementedError("nanopython json: loads not implemented yet")
+    raise NotImplementedError("petitpy json: loads not implemented yet")

@@ -1,4 +1,4 @@
-//! nanopython — Zig partial port of py/modbuiltins.c.
+//! petitpy — Zig partial port of py/modbuiltins.c.
 //!
 //! Ports the simple raise-path builtin wrappers — 1-line
 //! delegations to mp_unary_op / mp_binary_op / mp_obj_str_format. Each

@@ -9,7 +9,7 @@ page is still a self-contained static drop.
 
 The corpus is *measured*, not curated: `make golden` runs every program on
 every arm and writes the result into a `# golden: works-on=` header. Filtering
-on `nanopython-wasm` is therefore a claim the repository has already tested,
+on `petitpy-wasm` is therefore a claim the repository has already tested,
 which is what makes this better than a hand-maintained manifest — and it
 replaces the note at the top of examples.js: "keep in sync by hand if they
 drift."
@@ -59,7 +59,7 @@ def main() -> int:
     for path in sorted(WORKS.glob("*.py")):
         text = path.read_text()
         m = WORKS_ON.search(text)
-        if not m or "nanopython-wasm" not in m.group(1):
+        if not m or "petitpy-wasm" not in m.group(1):
             continue
         shutil.copyfile(path, OUT_DIR / path.name)
         src = SOURCE.search(text)
@@ -78,7 +78,7 @@ def main() -> int:
         "// Each entry is [name, summary]; the file is the name plus \".py\".\n"
         "//\n"
         "// Membership is measured, not curated — every program here carries a\n"
-        "// `works-on=…nanopython-wasm` header that `make golden` wrote after\n"
+        "// `works-on=…petitpy-wasm` header that `make golden` wrote after\n"
         "// actually running it on the wasm arm.\n"
         "\n"
         "export const GALLERY = [\n"

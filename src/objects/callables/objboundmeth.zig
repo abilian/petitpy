@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objboundmeth.c (incl. mp_type_bound_meth ROM).
+//! petitpy — full Zig port of py/objboundmeth.c (incl. mp_type_bound_meth ROM).
 //!
 //! Under nano: MICROPY_PY_BOUND_METHOD_FULL_EQUALITY_CHECK=0 →
 //! binary_op uses pointer comparison (no mp_obj_equal). The print

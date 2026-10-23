@@ -1,6 +1,6 @@
 # golden-programs/
 
-Curated real Python programs that we explicitly want nanopython to run. **Filesystem-level "what works."**
+Curated real Python programs that we explicitly want petitpy to run. **Filesystem-level "what works."**
 
 See `docs/src/adrs/008-golden-programs.md` for the design + rationale.
 
@@ -10,7 +10,7 @@ Each program lives in **one bucket** — the minimal profile it needs:
 
 | Bucket | Meaning |
 |---|---|
-| [`works/`](works/) | Runs correctly on current nanopython (native AND wasm) |
+| [`works/`](works/) | Runs correctly on current petitpy (native AND wasm) |
 | [`works-native-only/`](works-native-only/) | Runs on native, fails on wasm (longjmp issues, etc.) |
 | [`needs-stdlib/`](needs-stdlib/) | Would run with pure-Python stdlib stubs (`heapq`, `bisect`, ...) |
 | [`needs-grammar/`](needs-grammar/) | Would run with parser features (walrus `:=`, match/case) |
@@ -27,7 +27,7 @@ Each `.py` file has a header comment:
 
 ```python
 # golden: source=tryalgo; needs=heapq
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 """Program docstring."""
 ```
 
@@ -41,7 +41,7 @@ Keys:
 
 | Question | Where to look |
 |---|---|
-| "What runs on nanopython today?" | `works/` and `works-native-only/` directories |
+| "What runs on petitpy today?" | `works/` and `works-native-only/` directories |
 | "What feature is missing for *my* program?" | Search for the program by name; check its bucket + `needs=` |
 | "What does adding `heapq` unlock?" | `ls needs-stdlib/` (and filter for `needs=heapq`) |
 | "What's the user-facing compatibility view?" | [`docs/src/COMPATIBILITY.md`](../docs/src/COMPATIBILITY.md) (auto-generated) |

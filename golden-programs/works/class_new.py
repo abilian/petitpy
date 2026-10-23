@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 try:
     # If we don't expose object.__new__ (small ports), there's
     # nothing to test.

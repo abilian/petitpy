@@ -1,5 +1,5 @@
 // Loader for the js-bridge conformance page. Minimal by design: it boots the
-// same web/nanopython.wasm the demos load, runs main.py, and gets out of the
+// same web/petitpy.wasm the demos load, runs main.py, and gets out of the
 // way. main.py writes its verdict into #out so `--assert-text` can gate it.
 import {
   WASI,
@@ -19,7 +19,7 @@ function rawConsoleFd(tag, sink) {
 
 const _v = Date.now();
 const [wasmResp, mainResp] = await Promise.all([
-  fetch(`../../nanopython.wasm?v=${_v}`, { cache: "no-store" }),
+  fetch(`../../petitpy.wasm?v=${_v}`, { cache: "no-store" }),
   fetch(`./main.py?v=${_v}`, { cache: "no-store" }),
 ]);
 const wasmModule = await WebAssembly.compileStreaming(wasmResp);
@@ -31,7 +31,7 @@ const fs = new PreopenDirectory("/", fsMap);
 
 const bridge = makeJsBridge();
 const wasi = new WASI(
-  ["nanopython", "/main.py"],
+  ["petitpy", "/main.py"],
   [],
   [
     new OpenFile(new File(enc.encode(""), { readonly: true })),

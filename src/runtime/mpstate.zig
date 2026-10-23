@@ -17,7 +17,7 @@
 //   unsigned fields of equivalent total width — the runtime never reads them
 //   in zigonly mode.
 //
-// CONFIG ASSUMED (port/mpconfigport.h default arm, NANOPYTHON_CONFIG_FULL undefined):
+// CONFIG ASSUMED (port/mpconfigport.h default arm, PETITPY_CONFIG_FULL undefined):
 //   MICROPY_PY_THREAD                       = 0
 //   MICROPY_MEM_STATS                       = 0
 //   MICROPY_ENABLE_FINALISER                = 0  → GC_LOCK_DEPTH_SHIFT = 0

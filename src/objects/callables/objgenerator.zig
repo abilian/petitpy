@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objgenerator.c (post-deep-sweep).
+//! petitpy — full Zig port of py/objgenerator.c (post-deep-sweep).
 //!
 //! Lifts what remained in objgenerator_shim.c:
 //!   - mp_const_GeneratorExit_obj      (singleton GeneratorExit instance)

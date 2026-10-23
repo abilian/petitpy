@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/moderrno.c (the `errno` module).
+//! petitpy — Zig port of py/moderrno.c (the `errno` module).
 //!
 //! Nano + full: MICROPY_PY_ERRNO=1 and MICROPY_PY_ERRNO_ERRORCODE=1
 //! (vendor default), so the live surface is:

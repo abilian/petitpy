@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objreversed.c.
+//! petitpy — Zig port of py/objreversed.c.
 
 const mp = @cImport({
     @cInclude("py/runtime.h");

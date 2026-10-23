@@ -1,4 +1,4 @@
-# Linux verify-environment for nanopython.
+# Linux verify-environment for petitpy.
 #
 # When developing on macOS the fastest way to reproduce a Linux build
 # failure is a native-arch Debian container. Bookworm-slim + zig 0.16 +
@@ -6,17 +6,17 @@
 #
 # ── Build ─────────────────────────────────────────────────────────────
 #   docker build -f tools/Dockerfile.verify-linux \
-#                -t nanopython-verify-linux:latest .
+#                -t petitpy-verify-linux:latest .
 #
 # Defaults target linux/arm64 (native on Apple Silicon; no emulation).
 # On x86_64 hosts, or to reproduce an x86_64-specific failure:
 #   docker build --build-arg ZIG_ARCH=x86_64 \
 #                --platform=linux/amd64 \
 #                -f tools/Dockerfile.verify-linux \
-#                -t nanopython-verify-linux:latest .
+#                -t petitpy-verify-linux:latest .
 #
 # ── Run ───────────────────────────────────────────────────────────────
-#   docker run --rm -it -v $PWD:/src nanopython-verify-linux \
+#   docker run --rm -it -v $PWD:/src petitpy-verify-linux \
 #     bash -c 'cp -a /src /work/np && cd /work/np && \
 #              rm -rf .zig-cache zig-out vendor \
 #                     build-embed build-frozen && \

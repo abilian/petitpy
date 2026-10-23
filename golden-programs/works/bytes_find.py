@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 print(b"hello world".find(b"ll"))
 print(b"hello world".find(b"ll", None))
 print(b"hello world".find(b"ll", 1))

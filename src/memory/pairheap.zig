@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/pairheap.c (Axis-B B1 W6; TRUE-ZIG).
+//! petitpy — Zig port of py/pairheap.c (Axis-B B1 W6; TRUE-ZIG).
 //! A pure pairing-heap: 3 fns over `mp_pairheap_t*` + a C fn-ptr
 //! comparator. No nlr, no mp_obj, no MP_STATE, no config — the
 //! genuine-algorithm ideal of the corrected bar. `mp_pairheap_t` is

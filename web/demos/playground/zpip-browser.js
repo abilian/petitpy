@@ -7,13 +7,13 @@
 // before each Run.
 //
 // Cache key (per ADR-003 D6/D7):
-//   nanopython:<runtime>:<package>@<version>
+//   petitpy:<runtime>:<package>@<version>
 // LRU eviction at 10 MB total cap.
 
 const REGISTRY = "https://micropython.org/pi/v2";
 const MPY_VERSION = "py"; // .py source — wasm reads them via the L1 filesystem importer
 const RUNTIME = "0.x.x"; // ADR-003 D7 example key prefix; bump when binary ABI shifts
-const DB_NAME = "nanopython-cache";
+const DB_NAME = "petitpy-cache";
 const DB_VERSION = 1;
 const STORE = "packages";
 const CAP_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -54,7 +54,7 @@ function _done(tx) {
 }
 
 function _cacheKey(pkg, version) {
-  return `nanopython:${RUNTIME}:${pkg}@${version}`;
+  return `petitpy:${RUNTIME}:${pkg}@${version}`;
 }
 
 export async function openCache() {

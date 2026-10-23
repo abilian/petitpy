@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Empirical smoke: try to import hop3-rootd under nanopython, log the
+"""Empirical smoke: try to import hop3-rootd under petitpy, log the
 first blocker at each level.
 
 Reproducible probe for running hop3-rootd on full-native.
 Instead of guessing the dependency order, this script:
 
-  1. Builds a shim tree combining hop3-rootd's source, nanopython-lib's
+  1. Builds a shim tree combining hop3-rootd's source, petitpy-lib's
      modules, and skeleton stubs for stdlib gaps (typing,
      collections.abc, importlib.metadata) — every stub is 100% no-op,
      just enough for `import X` to succeed.
@@ -22,7 +22,7 @@ Usage:
     python3 tools/hop3_rootd_smoke.py [BINARY] [HOP3_ROOTD_SRC]
 
 Defaults:
-    BINARY         zig-out/bin/nanopython
+    BINARY         zig-out/bin/petitpy
     HOP3_ROOTD_SRC ~/projects/hop3/hop3/packages/hop3-rootd/src
 
 The shim dir goes under the scratchpad; re-runs rebuild it from
@@ -49,7 +49,7 @@ DEFAULT_HOP3_SRC = Path(
     )
 )
 
-# Minimal, no-op stubs. Real implementations belong in nanopython-lib/
+# Minimal, no-op stubs. Real implementations belong in petitpy-lib/
 # or as C-side modules; these are just enough to unblock `import X`.
 STUBS: dict[str, str] = {
     "typing.py": '''"""No-op typing stub.
@@ -165,7 +165,7 @@ AsyncGenerator = object
     "importlib/metadata.py": '''"""Minimal importlib.metadata stub.
 
 CPython reads package metadata from installed .dist-info dirs. Under
-nanopython there's no such directory; we hardcode a table keyed by
+petitpy there's no such directory; we hardcode a table keyed by
 package name. Extend as needed.
 """
 
@@ -175,7 +175,7 @@ class PackageNotFoundError(ImportError):
 
 
 _VERSIONS = {
-    "nanopython": "0.7.1",
+    "petitpy": "0.7.1",
     # Preseed anything a probed package needs. Keeps hop3-rootd's
     # `version("hop3-rootd")` on line 15 of __init__.py from raising.
     "hop3-rootd": "0.6.2",
@@ -192,7 +192,7 @@ def version(pkg):
 Does NOT compute real calendar arithmetic. hop3-rootd's use is
 `datetime.now(timezone.utc).isoformat()` for audit-log timestamps;
 this returns a fixed-but-shaped string. Ship a real Python datetime
-implementation in nanopython-lib when a caller needs correctness.
+implementation in petitpy-lib when a caller needs correctness.
 """
 
 
@@ -315,7 +315,7 @@ class Path:
 
     def _raise(self, method):
         raise NotImplementedError(
-            "pathlib stub: " + method + " not implemented under nanopython smoke"
+            "pathlib stub: " + method + " not implemented under petitpy smoke"
         )
 
     def exists(self): self._raise("exists")
@@ -341,9 +341,9 @@ class PosixPath(Path): pass
     "importlib/__init__.py": "",
     # Deliberately no `collections/__init__.py` + `collections/abc.py`.
     # The frozen `collections` bare module (baked from
-    # nanopython-lib/collections.py) shadows any on-disk `collections/`
+    # petitpy-lib/collections.py) shadows any on-disk `collections/`
     # package — see finding in the smoke script output for the real fix
-    # (convert nanopython-lib/collections.py into a package).
+    # (convert petitpy-lib/collections.py into a package).
     # ── Modules that will eventually be C-side, stubbed for probe-time.
     # Each raises NotImplementedError when its functions are CALLED;
     # imports and attribute reads succeed, which is enough to walk
@@ -608,7 +608,7 @@ def run_probe(
         os.unlink(path)
 
 
-# nanopython ships frozen importlib.metadata now (Phase 8) so our shim
+# petitpy ships frozen importlib.metadata now (Phase 8) so our shim
 # is shadowed. Preseed hop3-rootd's version by patching `_VERSIONS` in
 # the frozen module at the start of every probe script.
 _VERSION_PRELUDE = (
@@ -641,15 +641,15 @@ PUNCH_LIST = """\
 PUNCH LIST — categorized findings
 ============================================================
 
-A. Nanopython bugs / gaps that no PETITPY_LIB shim can fix:
+A. petitpy bugs / gaps that no PETITPY_LIB shim can fix:
 
-   1. `collections.abc` unresolvable — FIXED. nanopython-lib/
+   1. `collections.abc` unresolvable — FIXED. petitpy-lib/
       collections/ is now a package with abc.py inside; the
       freezer registers 'collections.abc' as a dotted entry;
       import_search.tryLoadComponent tries frozen lookup by
       the full dotted name (not just the top level).
 
-   2. `re.IGNORECASE` (etc.) — FIXED via frozen nanopython-lib/re.py
+   2. `re.IGNORECASE` (etc.) — FIXED via frozen petitpy-lib/re.py
       shim (IGNORECASE=0 no-op flag; underlying case-sensitive).
 
    2b. re1.5 engine capacity — FIXED via port/re1.5-patched/
@@ -675,7 +675,7 @@ A. Nanopython bugs / gaps that no PETITPY_LIB shim can fix:
       tests/test_integration_core.py::dict_unpack_pep448.
 
    7. `ipaddress` missing — FIXED (2026-07-20). Shipped
-      nanopython-lib/ipaddress.py: ip_address, ip_network,
+      petitpy-lib/ipaddress.py: ip_address, ip_network,
       IPv4/IPv6 Address/Network with str/int/eq/hash. IPv6
       stored as 8-group tuple to avoid needing 128-bit ints
       under nano's `MICROPY_LONGINT_IMPL=NONE`. Frozen at
@@ -696,8 +696,8 @@ A. Nanopython bugs / gaps that no PETITPY_LIB shim can fix:
       Regression pin ::positional_only_pep570. Unblocks ops._base.
 
    10. `class Foo(Enum):` — FIXED (2026-07-21). Added Enum,
-       IntEnum, StrEnum stub base classes to nanopython-lib/
-       enum.py (Enum module now frozen). Under nanopython the
+       IntEnum, StrEnum stub base classes to petitpy-lib/
+       enum.py (Enum module now frozen). Under petitpy the
        subclass form doesn't fire __init_subclass__ so members
        stay as plain class attributes — for str-valued enums
        used as opaque tokens (hop3-rootd's ErrorCode pattern)
@@ -718,7 +718,7 @@ A. Nanopython bugs / gaps that no PETITPY_LIB shim can fix:
 
    6. `TypeError: unexpected keyword argument` in hop3_rootd.state —
       FIXED. Root cause: @dataclass(frozen=True) — the shim
-      only accepted init/repr/eq. Extended nanopython-lib/
+      only accepted init/repr/eq. Extended petitpy-lib/
       dataclasses.py to accept-and-ignore frozen/slots/
       kw_only/order/unsafe_hash/match_args (silent semantics,
       documented). state.py + any similar CPython dataclass
@@ -733,7 +733,7 @@ B. Real C-side modules the plan needs to ship (per phase order):
    - subprocess (phase 6, ~2 sessions)   — needed by exec.py
    - pwd, grp  (phase 7, ~0.5 session)   — needed by mount.py, server.py
 
-C. Pure-Python shims to add to nanopython-lib/ (order roughly
+C. Pure-Python shims to add to petitpy-lib/ (order roughly
    by scope — cheap wins first):
 
    - typing.py       (~50 LOC — see this script's STUBS)
@@ -751,7 +751,7 @@ Stubs live under (safe to inspect + delete):"""
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument(
-        "binary", nargs="?", default=str(REPO / "zig-out/bin/nanopython")
+        "binary", nargs="?", default=str(REPO / "zig-out/bin/petitpy")
     )
     parser.add_argument(
         "hop3_src",
@@ -801,7 +801,7 @@ def main() -> int:
         "signal",
         "socket",
         "importlib.metadata",
-        # from nanopython-lib (should already work):
+        # from petitpy-lib (should already work):
         "argparse",
         "logging",
         "json",
@@ -842,7 +842,7 @@ def main() -> int:
     print()
 
     # ── Level 4: entry point ──────────────────────────────────────────
-    # nanopython doesn't ship `-m`, so simulate by running the package's
+    # petitpy doesn't ship `-m`, so simulate by running the package's
     # __main__.py directly via a wrapper script that calls its main().
     # `sys.argv = ...` would need a mutable module globals dict (deferred
     # — same architectural blocker as os.path), so we mutate the existing

@@ -1,11 +1,11 @@
-# WASM composition: what's inside `nanopython.wasm`
+# WASM composition: what's inside `petitpy.wasm`
 
-`scripts/wasm_composition.py` reports what a wasm binary is made of. It reads the WebAssembly format directly, has no dependencies, and inspects `web/nanopython.wasm` unless given another path:
+`scripts/wasm_composition.py` reports what a wasm binary is made of. It reads the WebAssembly format directly, has no dependencies, and inspects `web/petitpy.wasm` unless given another path:
 
 ```sh
 make web
 python3 scripts/wasm_composition.py                       # the shipping artifact
-python3 scripts/wasm_composition.py zig-out/bin/nanopython.wasm
+python3 scripts/wasm_composition.py zig-out/bin/petitpy.wasm
 ```
 
 It prints section sizes, the function-size distribution, a breakdown of the Code section by subsystem, the printable strings in the Data section, and the imports. The output format is stable, so diffing two runs is a fair way to see whether a change made the binary smaller.
@@ -34,7 +34,7 @@ The subsystem breakdown classifies functions by their export names. Since the sh
 
 **Medium (architectural)**
 
-5. **A VM-only binary.** `zig build` already produces `nanopython-vm`, which loads precompiled `.mpy` and has no compiler. It suits deployments whose Python source is fixed ahead of time.
+5. **A VM-only binary.** `zig build` already produces `petitpy-vm`, which loads precompiled `.mpy` and has no compiler. It suits deployments whose Python source is fixed ahead of time.
 6. **Merge the printf-family paths** into one formatting entry point.
 7. **Compact type slot tables.** Most slots are null for any given type; a bitmap plus the non-null entries would be smaller, at the cost of an extra step on every slot dispatch.
 8. **More feature flags** for language features (generators, f-strings, comprehensions), each a small saving that adds up, at the price of a larger CI matrix ([ADR 002](../adrs/002-feature-selection.md)).

@@ -10,7 +10,7 @@ Makefile flow freezes ship as .py files there instead; skipping frozen-tiny
 removes the two-pass build that would need `zigpy-compile` in the isolated
 pip build env.
 
-Cross-compile via the `NANOPYTHON_TARGET` env var (`<zig-triple>:<wheel-tag>`,
+Cross-compile via the `PETITPY_TARGET` env var (`<zig-triple>:<wheel-tag>`,
 e.g. `x86_64-linux-gnu.2.17:manylinux_2_17_x86_64`).  Absent = host build.
 """
 
@@ -27,8 +27,8 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 from packaging import tags
 
 # The wheel's stdlib, bundled at share/petitpy/lib/: every module under
-# nanopython-lib/ (packages included).
-STDLIB_DIR = "nanopython-lib"
+# petitpy-lib/ (packages included).
+STDLIB_DIR = "petitpy-lib"
 # The JS bridge: importing it on native raises ImportError by design.
 BROWSER_ONLY = {"js.py"}
 
@@ -52,7 +52,7 @@ class CustomBuildHook(BuildHookInterface):
 
         # Cross-compile shape (used by the sourcehut release matrix; a local
         # `uv build` sets no env var and gets a native host wheel).
-        target = os.environ.get("NANOPYTHON_TARGET", "")
+        target = os.environ.get("PETITPY_TARGET", "")
         if target:
             zig_target, wheel_tag = target.split(":", 1)
             zig_target_arg = [f"-Dtarget={zig_target}"]
@@ -78,7 +78,7 @@ class CustomBuildHook(BuildHookInterface):
         )
 
         suffix = ".exe" if "win" in build_data["tag"] else ""
-        binary = root / "zig-out" / "bin" / f"nanopython{suffix}"
+        binary = root / "zig-out" / "bin" / f"petitpy{suffix}"
         short = binary.with_name(f"ppy{suffix}")
         shutil.copy2(binary, short)
 

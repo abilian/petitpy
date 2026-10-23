@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objtuple.c (drops objtuple_shim).
+//! petitpy — full Zig port of py/objtuple.c (drops objtuple_shim).
 //!
 //! Nano config (probed): SLICE=1 (slice subscr live), JSON=0 (print
 //! JSON branch dead).

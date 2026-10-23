@@ -8,7 +8,7 @@
 //!
 //! No compile step — the caller has already produced bytecode out-of-band
 //! (via `zigpy-compile`). Used by `src/main_vm.zig` to build the VM-only
-//! `nanopython-vm` binary that excludes the compiler track from the link.
+//! `petitpy-vm` binary that excludes the compiler track from the link.
 
 const std = @import("std");
 const mirrors = @import("../mp_mirrors.zig");

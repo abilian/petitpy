@@ -1,4 +1,4 @@
-//! nanopython — Zig port of src/runtime/runtime_shim.c.
+//! petitpy — Zig port of src/runtime/runtime_shim.c.
 //!
 //! Provides `mp_module___main__`, the (singleton) `__main__` module that
 //! holds the top-level script's globals dict. The dict body lives in

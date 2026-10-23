@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=grammar.walrus
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Test scoping rules for assignment expression :=.
 
 # Test that var is closed over (assigned to in the scope of scope0).

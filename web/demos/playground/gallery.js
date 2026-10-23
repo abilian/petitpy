@@ -6,7 +6,7 @@
 // Each entry is [name, summary]; the file is the name plus ".py".
 //
 // Membership is measured, not curated — every program here carries a
-// `works-on=…nanopython-wasm` header that `make golden` wrote after
+// `works-on=…petitpy-wasm` header that `make golden` wrote after
 // actually running it on the wasm arm.
 
 export const GALLERY = [

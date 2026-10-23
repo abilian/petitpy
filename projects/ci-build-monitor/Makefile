@@ -9,7 +9,7 @@ WEB := ../../web
 
 help:
 	@echo "Targets:"
-	@echo "  sync-wasm   Re-copy nanopython.wasm + js-bridge.js from $(WEB)/"
+	@echo "  sync-wasm   Re-copy petitpy.wasm + js-bridge.js from $(WEB)/"
 	@echo "  serve       Serve this directory at http://localhost:8000/"
 	@echo "  smoke       Headless-Chromium console-capture smoke for popup.html"
 	@echo "  build       (session 4) Bundle the extension"
@@ -18,7 +18,7 @@ smoke:
 	python3 ../../tools/browser-smoke.py --serve . --page popup.html --wait 5000
 
 sync-wasm:
-	cp $(WEB)/nanopython.wasm wasm/nanopython.wasm
+	cp $(WEB)/petitpy.wasm wasm/petitpy.wasm
 	cp $(WEB)/lib/js-bridge.js wasm/js-bridge.js
 	@echo "wasm pair refreshed from $(WEB)/"
 

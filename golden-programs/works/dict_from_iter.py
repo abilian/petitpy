@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 print(dict([(1, "foo")]))
 d = dict([("foo", "foo2"), ("bar", "baz")])
 print(sorted(d.keys()))

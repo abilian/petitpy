@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/sequence.c.
+//! petitpy — Zig port of py/sequence.c.
 //! 5 class-A exports, 0 nlr-hosts (raises only via the verbatim
 //! ValueError path — freely strangleable). Shim-tier (the argcheck
 //! recipe): MP_BINARY_OP_* + obj helpers via npy_sq_*.

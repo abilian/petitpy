@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Test importing a method from a class instance.
 # This is not a common thing to do, but ensures MicroPython has the same semantics as CPython.
 

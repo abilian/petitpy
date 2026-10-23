@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objproperty.c.
+//! petitpy — Zig port of py/objproperty.c.
 //! property(fget, fset, fdel, doc) — 4 kw-args, doc ignored.
 
 const mp = @cImport({

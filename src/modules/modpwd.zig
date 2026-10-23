@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `pwd` module (getpwnam/getpwuid).
+//! petitpy — Zig-native `pwd` module (getpwnam/getpwuid).
 //!
 //! Full-native only. Thin libc wrapper.
 //!

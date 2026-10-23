@@ -1,4 +1,4 @@
-//! nanopython VM — Zig port of py/vm.c (Phase 2.4.3, the keystone).
+//! petitpy VM — Zig port of py/vm.c (Phase 2.4.3, the keystone).
 //!
 //! `mp_execute_bytecode` (the ~77-opcode dispatch loop, the ONLY
 //! remaining setjmp host). Design = trampoline-hosted OUTER LOOP:

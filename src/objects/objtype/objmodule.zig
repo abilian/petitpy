@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objmodule.c bodies (Phase 2 lift,
+//! petitpy — Zig port of py/objmodule.c bodies (Phase 2 lift,
 //! enabled by mp_mirrors.zig). Cleanup pass: replaced ~20 shim
 //! constants and qstr/MP_MAP/config helpers with direct @cImport of
 //! the MicroPython headers. Only the helpers that need MP_STATE access,

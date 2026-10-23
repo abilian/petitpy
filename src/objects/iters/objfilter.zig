@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objfilter.c.
+//! petitpy — Zig port of py/objfilter.c.
 
 const mp = @cImport({
     @cInclude("py/runtime.h");

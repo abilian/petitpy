@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# nanopython — grammar overlays.
+# petitpy — grammar overlays.
 #
 # Adds two syntax features MicroPython's grammar doesn't ship:
 #

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nanopython integration smoke tests — top-level runner.
+"""petitpy integration smoke tests — top-level runner.
 
 Small, readable, fast suite complementing the byte-exact corpus
 (tools/corpus.py). Runs against a built interpreter, asserting exact
@@ -9,7 +9,7 @@ list and can also be run individually (see their `__main__` footer).
 
 Runner-pluggable:
     python3 tests/integration.py                          # local zig-out
-    python3 tests/integration.py path/to/nanopython
+    python3 tests/integration.py path/to/petitpy
     python3 tests/integration.py --runner "tools/run_wasm.sh wasm/path"
 
 The runner argv is split via shell rules and the script path is

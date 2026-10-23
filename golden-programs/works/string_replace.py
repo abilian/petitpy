@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 print("".replace("a", "b"))
 print("aaa".replace("b", "c"))
 print("aaa".replace("a", "b", 0))

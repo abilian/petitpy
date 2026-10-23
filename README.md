@@ -1,6 +1,6 @@
 # petitpy
 
-petitpy is a small Python interpreter written in [Zig](https://ziglang.org/), for two places where CPython is too heavy. In the browser, it is a 346 KB wasm module that drives the DOM from Python. On native Linux or macOS, a 6.7 KLOC system daemon runs on it in 4 MB of memory instead of CPython's 17 MB. It speaks more of CPython's language than its small size suggests: Unicode strings, `match`, exception chaining, dataclasses, and an everyday stdlib with `pathlib`, `json`, `logging`, `subprocess` and `unittest.mock`. It installs with `pip` or `npm`, as **petitpy**, with `ppy` as the short command; the repository and its internals still use its development name, nanopython.
+petitpy is a small Python interpreter written in [Zig](https://ziglang.org/), for two places where CPython is too heavy. In the browser, it is a 346 KB wasm module that drives the DOM from Python. On native Linux or macOS, a 6.7 KLOC system daemon runs on it in 4 MB of memory instead of CPython's 17 MB. It speaks more of CPython's language than its small size suggests: Unicode strings, `match`, exception chaining, dataclasses, and an everyday stdlib with `pathlib`, `json`, `logging`, `subprocess` and `unittest.mock`. It installs with `pip` or `npm`, as **petitpy**, with `ppy` as the short command.
 
 petitpy builds on [MicroPython](https://micropython.org/): it shares MicroPython's `.mpy` bytecode format and much of its design, and uses MicroPython's test suite as a conformance check. See [Acknowledgments](#acknowledgments).
 
@@ -33,7 +33,7 @@ Prebuilt wheels cover macOS (arm64, x86_64) and Linux (x86_64, aarch64); elsewhe
 
 Three audiences are served, in priority order:
 
-- **🌐 Web developers**: Python in the browser. The shipping artifact is `web/nanopython.wasm` (346 KB). Direct DOM access via the `js` module ([ADR 006](docs/src/adrs/006-js-interop.md)). See [`docs/src/getting-started.md#for-web-developers`](docs/src/getting-started.md#for-web-developers).
+- **🌐 Web developers**: Python in the browser. The shipping artifact is `web/petitpy.wasm` (346 KB). Direct DOM access via the `js` module ([ADR 006](docs/src/adrs/006-js-interop.md)). See [`docs/src/getting-started.md#for-web-developers`](docs/src/getting-started.md#for-web-developers).
 - **🛠️ Embedded + systems developers**: a small native Python for daemons and scripts. Build cross-compiles to arm64/x86_64 macOS/Linux + wasm32-wasi. Per-feature build flags shrink the binary to your use case ([ADR 002](docs/src/adrs/002-feature-selection.md)). See [`docs/src/getting-started.md#for-embedded--systems-developers`](docs/src/getting-started.md#for-embedded--systems-developers).
 - **🔧 Contributors**: read [Contributing](docs/src/contributing.md) and the [ADR series](docs/src/adrs/). See [`docs/src/getting-started.md#for-contributors`](docs/src/getting-started.md#for-contributors).
 
@@ -48,7 +48,7 @@ The runtime works end to end on both native and wasm. Active work is on user exp
 | WASM corpus (under wasmtime) | **490/541**, baseline + skip list green |
 | Integration smoke (native + wasm, hand-written) | **189/189** on both arms |
 | Real-world Python programs that work on both arms | **580** in `golden-programs/works/`; see [`docs/src/COMPATIBILITY.md`](docs/src/COMPATIBILITY.md) for the bucket-by-bucket breakdown |
-| wasm32-wasi shipping size (`web/nanopython.wasm`) | **346 KB** (post-`wasm-opt -Oz`, integrated into `make web`) |
+| wasm32-wasi shipping size (`web/petitpy.wasm`) | **346 KB** (post-`wasm-opt -Oz`, integrated into `make web`) |
 | Native arm64 shipping size (ReleaseFast) | **1170 KB** |
 
 ## Gate state
@@ -70,9 +70,9 @@ The harness has four independent gates plus an aggregate. Each answers a differe
 Needs [Zig 0.16](https://ziglang.org/) and [wasmtime](https://wasmtime.dev/) (for running wasm locally). A MicroPython source tree is required at `vendor/micropython`; if it's missing, `make port` (and everything downstream: `make build`, `make check`, …) will run `make bootstrap`, cloning MicroPython at the pinned `MICROPY_REV` into that path on first use. If you already keep MicroPython checked out elsewhere, symlink it at `vendor/micropython` before the first build to skip the auto-clone.
 
 ```sh
-make build               # Debug native binary → zig-out/bin/nanopython
+make build               # Debug native binary → zig-out/bin/petitpy
 make build-small         # ReleaseSmall native (development companion)
-make web                 # production wasm → web/nanopython.wasm
+make web                 # production wasm → web/petitpy.wasm
 
 make                     # the aggregate gate (all 4 + lint, both arms)
 make test                # native-only test pyramid (faster)
@@ -162,7 +162,7 @@ make doc-build       # render to ./site/ (gitignored)
 | `src/pyerr.zig` | `PyError!T` error union + polled-sentinel bridge |
 | `build.zig` | Build script; explicit per-arm `addCSourceFiles` lists drive vendor C inclusion |
 | `port/` | `mpconfigport.h` (nano + full arms) + Makefile generating the embed package |
-| `nanopython-lib/` | Pure-Python frozen-tiny stdlib modules |
+| `petitpy-lib/` | Pure-Python frozen-tiny stdlib modules |
 | `tools/` | Build, test, metrics scripts (`corpus.py`, `progress.py`, `wasm_gate.py`, `metrics.py`) |
 | `tests/integration.py` | 189-case integration smoke (runs against any binary via `--runner`) |
 | `benchmarks/`, `sandbox/p2w/programs/benchmarks/` | Benchmark programs (used by `tools/metrics.py`) |

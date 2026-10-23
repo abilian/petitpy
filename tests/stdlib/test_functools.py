@@ -1,8 +1,8 @@
-"""Tests for nanopython-lib/functools.py via pytest_lite."""
+"""Tests for petitpy-lib/functools.py via pytest_lite."""
 
 import sys
 
-sys.path.insert(0, "nanopython-lib")
+sys.path.insert(0, "petitpy-lib")
 
 import pytest
 from functools import partial, wraps, reduce, lru_cache

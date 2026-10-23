@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Nano Build Monitor",
   "short_name": "NanoBuilds",
-  "description": "Monitor CI builds across Sourcehut, GitHub, and GitLab (nanopython port)",
+  "description": "Monitor CI builds across Sourcehut, GitHub, and GitLab (petitpy port)",
   "version": "1.1.0",
   "browser_specific_settings": {
     "gecko": {

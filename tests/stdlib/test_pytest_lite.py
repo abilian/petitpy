@@ -10,9 +10,9 @@ the run_module() programmatic entry, and summarize()'s exit-code logic.
 import sys
 
 
-# Make nanopython-lib importable. On the dev host, run from repo root:
-#     ./zig-out/bin/nanopython tests/stdlib/test_pytest_lite.py
-sys.path.insert(0, "nanopython-lib")
+# Make petitpy-lib importable. On the dev host, run from repo root:
+#     ./zig-out/bin/petitpy tests/stdlib/test_pytest_lite.py
+sys.path.insert(0, "petitpy-lib")
 
 import pytest  # noqa: E402  — the re-export shim
 

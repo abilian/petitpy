@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 # test "is" and "is not" with literal arguments
 # these raise a SyntaxWarning in CPython because the results are

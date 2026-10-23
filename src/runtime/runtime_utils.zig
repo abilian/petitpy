@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/runtime_utils.c.
+//! petitpy — Zig port of py/runtime_utils.c.
 //!
 //! NX-3 N4 (2026-06-05): npy_nlr_run wrap dropped — m_malloc_fail is
 //! now polled (no longjmp) and no other Zig path longjmps under nano,

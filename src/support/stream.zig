@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/stream.c (drops support/stream_shim.c).
+//! petitpy — Zig port of py/stream.c (drops support/stream_shim.c).
 //!
 //! VERBATIM-B2DEBT relocation: the stream protocol (read/write/readinto/
 //! readline/seek via MP_OBJ_TYPE_GET_SLOT stream-slot dispatch) + ioctl/

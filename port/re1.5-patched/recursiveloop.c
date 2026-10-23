@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
-// nanopython patch (2026-07-20): read 2-byte little-endian signed
+// petitpy patch (2026-07-20): read 2-byte little-endian signed
 // offsets for Jmp/Split/RSplit (was 1 byte). Matches the encoding
 // widening in compilecode.c.
 

@@ -13,7 +13,7 @@
 # runner passes per-case.
 #
 # Wired into the corpus runner via:
-#   python3 tools/progress.py tools/run_wasm.sh zig-out/bin/nanopython.wasm
+#   python3 tools/progress.py tools/run_wasm.sh zig-out/bin/petitpy.wasm
 
 WASM="$1"
 shift

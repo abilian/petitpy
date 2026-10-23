@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objobject.c.
+//! petitpy — full Zig port of py/objobject.c.
 //!
 //! Config:
 //!   nano: CPYTHON_COMPAT=1, DELATTR_SETATTR=0

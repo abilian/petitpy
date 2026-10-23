@@ -1,8 +1,8 @@
-"""Tests for nanopython-lib/argparse.py via pytest_lite."""
+"""Tests for petitpy-lib/argparse.py via pytest_lite."""
 
 import sys
 
-sys.path.insert(0, "nanopython-lib")
+sys.path.insert(0, "petitpy-lib")
 
 import pytest
 import argparse

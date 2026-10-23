@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/modarray.c (the `array` builtin module).
+//! petitpy — Zig port of py/modarray.c (the `array` builtin module).
 //!
 //! Tiny module: just two entries (`__name__`, `array`). The
 //! MP_REGISTER_EXTENSIBLE_MODULE marker stays in modarray.c (a 4-line

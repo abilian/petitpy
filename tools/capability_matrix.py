@@ -15,7 +15,7 @@ Columns:
 
   zigpy      zigpy-compile SOURCE -> .mpy           (the Zig front-end)
   pyfront    pyfront SOURCE -> .mpy                 (the Python front-end)
-  vm         nanopython-vm                          (the Zig back-end)
+  vm         petitpy-vm                          (the Zig back-end)
   upy        vendor micropython                     (the C back-end)
   via        which .mpy the back-ends ran: z, p, or zp when both were tried
 
@@ -49,7 +49,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ZIGPY = ROOT / "zig-out" / "bin" / "zigpy-compile"
-VM = ROOT / "zig-out" / "bin" / "nanopython-vm"
+VM = ROOT / "zig-out" / "bin" / "petitpy-vm"
 UPY = ROOT / "vendor" / "micropython" / "ports" / "unix" / "build-standard" / "micropython"
 PYFRONT = ROOT / "projects" / "pyfront"
 KNOWN = ROOT / "corpus" / "capability-known.txt"
@@ -244,7 +244,7 @@ def main(argv: list[str]) -> int:
     )
     args = ap.parse_args(argv)
 
-    for tool, label in ((ZIGPY, "zigpy-compile"), (VM, "nanopython-vm")):
+    for tool, label in ((ZIGPY, "zigpy-compile"), (VM, "petitpy-vm")):
         if not tool.exists():
             print(f"error: {tool.relative_to(ROOT)} not built", file=sys.stderr)
             return 2

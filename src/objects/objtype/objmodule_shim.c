@@ -1,4 +1,4 @@
-/* nanopython - objmodule residual shim. The module type ROM, attr,
+/* petitpy - objmodule residual shim. The module type ROM, attr,
  * print, mp_obj_new_module, and mp_module_get_builtin are now in
  * src/objects/objtype/objmodule.zig + src/mp_type_roms.zig.
  *

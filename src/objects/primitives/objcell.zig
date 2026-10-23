@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objcell.c (the entire file).
+//! petitpy — Zig port of py/objcell.c (the entire file).
 //! mp_type_cell is `static` — only referenced internally by
 //! mp_obj_new_cell. Pair the two in Zig and the symbol stays
 //! file-local.

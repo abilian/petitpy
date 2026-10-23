@@ -1,12 +1,12 @@
 //! ADR-006 J1 — JS interop bridge (sync host calls).
 //!
-//! Defines the wasm imports + Python-facing builtin module `_nanopython_js`.
-//! Python code (typically nanopython-lib/js.py) imports `_nanopython_js`
+//! Defines the wasm imports + Python-facing builtin module `_petitpy_js`.
+//! Python code (typically petitpy-lib/js.py) imports `_petitpy_js`
 //! and calls into the wasm imports via thin shims defined here.
 //!
 //! Gated on `build_options.feature_js`. When OFF the entire body is `else
 //! struct {}` so nothing is exported, nothing is linked, and `import
-//! _nanopython_js` raises ModuleNotFoundError from the Python side
+//! _petitpy_js` raises ModuleNotFoundError from the Python side
 //! (which `js.py` converts to ImportError per ADR-006 D5).
 //!
 //! The wasm import contract (matching web/lib/js-bridge.js):
@@ -29,7 +29,7 @@
 //!                         args_count: usize) -> u32
 //!
 //! __qstr_shadow_begin__
-//! MP_QSTR__nanopython_js
+//! MP_QSTR__petitpy_js
 //! MP_QSTR__bridge_present
 //! MP_QSTR__get_global
 //! MP_QSTR__get_attr
@@ -42,7 +42,7 @@
 //! MP_QSTR__to_int
 //! MP_QSTR__create_callback
 //! MP_QSTR__set_dispatcher
-//! MP_REGISTER_MODULE(MP_QSTR__nanopython_js, mp_module_nanopython_js);
+//! MP_REGISTER_MODULE(MP_QSTR__petitpy_js, mp_module_petitpy_js);
 //! __qstr_shadow_end__
 
 const build_options = @import("build_options");
@@ -69,8 +69,8 @@ const Body = if (enabled) struct {
     //
     // These are declared `extern fn` so the linker produces wasm imports
     // under the default `env` module name. The JS host registers them as
-    // `nanopython_js: { js_get_global, ... }` and our wasm shim merges
-    // both `nanopython_js` and `env` namespaces during instantiation —
+    // `petitpy_js: { js_get_global, ... }` and our wasm shim merges
+    // both `petitpy_js` and `env` namespaces during instantiation —
     // see web/lib/js-bridge.js + web/playground/app.js.
     extern fn js_get_global(name_ptr: [*]const u8, name_len: usize) callconv(.c) u32;
     extern fn js_get_attr(handle: u32, name_ptr: [*]const u8, name_len: usize) callconv(.c) u32;
@@ -115,7 +115,7 @@ const Body = if (enabled) struct {
     // _bridge_present() -> int (0 if the JS host did not register js_*).
     //
     // The wasm runtime *will* call js_bridge_present at link time; under
-    // wasmtime CLI (which doesn't supply the nanopython_js imports) the
+    // wasmtime CLI (which doesn't supply the petitpy_js imports) the
     // module fails to instantiate, so we never reach this. To make the
     // ImportError path actually work under wasmtime, we wrap the call
     // in @hasDecl-style protection — but Zig has no FFI-resolve probe.
@@ -125,7 +125,7 @@ const Body = if (enabled) struct {
     // instantiate the binary if the imports aren't there — that's a
     // different error path (the WASI runtime reports the missing
     // import). The Python `js.py` module catches ImportError around
-    // the `from _nanopython_js import _bridge_present` line, which
+    // the `from _petitpy_js import _bridge_present` line, which
     // covers both: missing module (feature off) and missing wasm
     // import (host hasn't supplied it).
     fn py_bridge_present() callconv(.c) Obj {
@@ -271,113 +271,113 @@ const Body = if (enabled) struct {
 
     // ── Builtin fun-obj definitions ───────────────────────────────────
 
-    pub export const mp_nanopython_js_bridge_present_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_bridge_present_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_0 },
         .fun = @ptrCast(&py_bridge_present),
     };
-    pub export const mp_nanopython_js_get_global_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_get_global_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_get_global),
     };
-    pub export const mp_nanopython_js_get_attr_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_get_attr_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_2 },
         .fun = @ptrCast(&py_get_attr),
     };
-    pub export const mp_nanopython_js_set_attr_obj: mirrors.MpObjFunBuiltinVar = .{
+    pub export const mp_petitpy_js_set_attr_obj: mirrors.MpObjFunBuiltinVar = .{
         .base = .{ .type = &mp_type_fun_builtin_var },
         .sig = mirrors.makeFunSig(3, 3, false),
         .fun = @ptrCast(&py_set_attr),
     };
-    pub export const mp_nanopython_js_call_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_call_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_2 },
         .fun = @ptrCast(&py_call),
     };
-    pub export const mp_nanopython_js_release_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_release_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_release),
     };
-    pub export const mp_nanopython_js_create_string_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_create_string_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_create_string),
     };
-    pub export const mp_nanopython_js_create_int_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_create_int_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_create_int),
     };
-    pub export const mp_nanopython_js_to_string_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_to_string_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_to_string),
     };
-    pub export const mp_nanopython_js_to_int_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_to_int_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_to_int),
     };
-    pub export const mp_nanopython_js_create_callback_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_create_callback_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_create_callback),
     };
-    pub export const mp_nanopython_js_set_dispatcher_obj: mirrors.MpObjFunBuiltinFixed = .{
+    pub export const mp_petitpy_js_set_dispatcher_obj: mirrors.MpObjFunBuiltinFixed = .{
         .base = .{ .type = &mp_type_fun_builtin_1 },
         .fun = @ptrCast(&py_set_dispatcher),
     };
 
     // ── Module globals dict ───────────────────────────────────────────
 
-    const mp_module_nanopython_js_globals_table = [_]RomEntry{
+    const mp_module_petitpy_js_globals_table = [_]RomEntry{
         .{
             .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR___name__)),
-            .value = @ptrFromInt(mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__nanopython_js))),
+            .value = @ptrFromInt(mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__petitpy_js))),
         },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__bridge_present)), .value = &mp_nanopython_js_bridge_present_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__get_global)), .value = &mp_nanopython_js_get_global_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__get_attr)), .value = &mp_nanopython_js_get_attr_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__set_attr)), .value = &mp_nanopython_js_set_attr_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__call)), .value = &mp_nanopython_js_call_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__release)), .value = &mp_nanopython_js_release_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__create_string)), .value = &mp_nanopython_js_create_string_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__create_int)), .value = &mp_nanopython_js_create_int_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__to_string)), .value = &mp_nanopython_js_to_string_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__to_int)), .value = &mp_nanopython_js_to_int_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__create_callback)), .value = &mp_nanopython_js_create_callback_obj },
-        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__set_dispatcher)), .value = &mp_nanopython_js_set_dispatcher_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__bridge_present)), .value = &mp_petitpy_js_bridge_present_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__get_global)), .value = &mp_petitpy_js_get_global_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__get_attr)), .value = &mp_petitpy_js_get_attr_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__set_attr)), .value = &mp_petitpy_js_set_attr_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__call)), .value = &mp_petitpy_js_call_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__release)), .value = &mp_petitpy_js_release_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__create_string)), .value = &mp_petitpy_js_create_string_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__create_int)), .value = &mp_petitpy_js_create_int_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__to_string)), .value = &mp_petitpy_js_to_string_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__to_int)), .value = &mp_petitpy_js_to_int_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__create_callback)), .value = &mp_petitpy_js_create_callback_obj },
+        .{ .key = mirrors.objFromQstr(@as(Qstr, mp.MP_QSTR__set_dispatcher)), .value = &mp_petitpy_js_set_dispatcher_obj },
     };
 
-    pub export const mp_module_nanopython_js_globals: mirrors.MpObjDict = .{
+    pub export const mp_module_petitpy_js_globals: mirrors.MpObjDict = .{
         .base = .{ .type = &mp_type_dict },
         .map = .{
             .bits = .{
                 .all_keys_are_qstrs = 1,
                 .is_fixed = 1,
                 .is_ordered = 1,
-                .used = mp_module_nanopython_js_globals_table.len,
+                .used = mp_module_petitpy_js_globals_table.len,
             },
-            .alloc = mp_module_nanopython_js_globals_table.len,
-            .table = @ptrCast(@constCast(&mp_module_nanopython_js_globals_table)),
+            .alloc = mp_module_petitpy_js_globals_table.len,
+            .table = @ptrCast(@constCast(&mp_module_petitpy_js_globals_table)),
         },
     };
 
-    pub export const mp_module_nanopython_js: mirrors.MpObjModule = .{
+    pub export const mp_module_petitpy_js: mirrors.MpObjModule = .{
         .base = .{ .type = &mp_type_module },
-        .globals = @ptrCast(@constCast(&mp_module_nanopython_js_globals)),
+        .globals = @ptrCast(@constCast(&mp_module_petitpy_js_globals)),
     };
 } else struct {};
 
 comptime {
     if (enabled) {
-        _ = &Body.mp_module_nanopython_js;
-        _ = &Body.mp_module_nanopython_js_globals;
-        _ = &Body.mp_nanopython_js_bridge_present_obj;
-        _ = &Body.mp_nanopython_js_get_global_obj;
-        _ = &Body.mp_nanopython_js_get_attr_obj;
-        _ = &Body.mp_nanopython_js_set_attr_obj;
-        _ = &Body.mp_nanopython_js_call_obj;
-        _ = &Body.mp_nanopython_js_release_obj;
-        _ = &Body.mp_nanopython_js_create_string_obj;
-        _ = &Body.mp_nanopython_js_create_int_obj;
-        _ = &Body.mp_nanopython_js_to_string_obj;
-        _ = &Body.mp_nanopython_js_to_int_obj;
-        _ = &Body.mp_nanopython_js_create_callback_obj;
-        _ = &Body.mp_nanopython_js_set_dispatcher_obj;
+        _ = &Body.mp_module_petitpy_js;
+        _ = &Body.mp_module_petitpy_js_globals;
+        _ = &Body.mp_petitpy_js_bridge_present_obj;
+        _ = &Body.mp_petitpy_js_get_global_obj;
+        _ = &Body.mp_petitpy_js_get_attr_obj;
+        _ = &Body.mp_petitpy_js_set_attr_obj;
+        _ = &Body.mp_petitpy_js_call_obj;
+        _ = &Body.mp_petitpy_js_release_obj;
+        _ = &Body.mp_petitpy_js_create_string_obj;
+        _ = &Body.mp_petitpy_js_create_int_obj;
+        _ = &Body.mp_petitpy_js_to_string_obj;
+        _ = &Body.mp_petitpy_js_to_int_obj;
+        _ = &Body.mp_petitpy_js_create_callback_obj;
+        _ = &Body.mp_petitpy_js_set_dispatcher_obj;
         _ = &Body.npy_dispatch_callback;
     }
 }

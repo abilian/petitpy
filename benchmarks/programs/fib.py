@@ -1,5 +1,5 @@
 # Recursive Fibonacci. Tests call/return + integer arithmetic.
-# fib(28) on CPython 3.14 ~0.05s, much slower on MicroPython/nanopython.
+# fib(28) on CPython 3.14 ~0.05s, much slower on MicroPython/petitpy.
 
 
 def fib(n):

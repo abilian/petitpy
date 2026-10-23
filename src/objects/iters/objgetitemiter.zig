@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objgetitemiter.c's it_iternext.
+//! petitpy — Zig port of py/objgetitemiter.c's it_iternext.
 //!
 //! NX-3 N4 (2026-06-05): npy_nlr_run wrap dropped. m_malloc_fail is
 //! polled and no other Zig code longjmps under nano, so the setjmp

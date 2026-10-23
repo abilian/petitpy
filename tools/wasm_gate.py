@@ -38,7 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 KNOWN_FAILS = ROOT / "corpus" / "wasm-known-fails.txt"
 SKIP_LIST = ROOT / "corpus" / "skip-on-wasm32.txt"
-WASM_BIN = ROOT / "zig-out" / "bin" / "nanopython.wasm"
+WASM_BIN = ROOT / "zig-out" / "bin" / "petitpy.wasm"
 RUN_WASM = ROOT / "tools" / "run_wasm.sh"
 
 

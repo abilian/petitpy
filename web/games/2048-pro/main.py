@@ -41,7 +41,7 @@ TILE_COLORS = {
     11: "#f7768e",  # 2048
 }
 
-STORAGE_KEY = "nanopython:2048:high"
+STORAGE_KEY = "petitpy:2048:high"
 
 canvas = Canvas("board")
 

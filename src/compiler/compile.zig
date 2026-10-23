@@ -1,4 +1,4 @@
-//! nanopython compiler driver — pure-Zig port (C7 of the compiler/ track).
+//! petitpy compiler driver — pure-Zig port (C7 of the compiler/ track).
 //!
 //! Port of src/frontend/compile.zig + the C shim trampoline in
 //! src/frontend/compile_shim.c, stripped of every `@cImport` / vendor
@@ -4957,7 +4957,7 @@ const CompileRules = struct {
 
     // Dict key:value pairs — vendor swaps to value-then-key for STORE_MAP.
     pub const dictorsetmaker_item = compileDictorsetmakerItem;
-    // PEP 448 `{**expr}` — nanopython grammar overlay adds this rule.
+    // PEP 448 `{**expr}` — petitpy grammar overlay adds this rule.
     pub const dictorsetmaker_dbl_star = compileDictorsetmakerDblStar;
 
     pub const testlist = compileTestlist;

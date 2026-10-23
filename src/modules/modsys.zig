@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/modsys.c (the `sys` builtin module).
+//! petitpy — Zig port of py/modsys.c (the `sys` builtin module).
 //!
 //! Under nano: PY_SYS=1, PY_SYS_PATH/ARGV/MAXSIZE/EXIT/MODULES/PS1_PS2=1,
 //!   PY_SYS_TRACEBACKLIMIT=1, PY_SYS_ATTR_DELEGATION=1 (cascade), all other
@@ -126,10 +126,10 @@ pub export const mp_sys_implementation_version_info_obj: ImplVersionTuple = .{
     },
 };
 
-// implementation._machine: "nanopython [<compiler>] version"
+// implementation._machine: "petitpy [<compiler>] version"
 // (per MICROPY_BANNER_MACHINE in mpconfig.h:2229; we hard-code the result
 // for the host build).
-const MACHINE_STR = "nanopython [GCC 4.2.1 (Apple Inc. build 5658) (LLVM build)] version";
+const MACHINE_STR = "petitpy [GCC 4.2.1 (Apple Inc. build 5658) (LLVM build)] version";
 
 pub export const mp_sys_implementation_machine_obj: StrObj = .{
     .base = .{ .type = &mp_type_str },

@@ -1,7 +1,7 @@
 //! SystemExit classification + exit-code mapping, shared by both entry paths.
 //!
-//! `embed_exec.zig` (compile-then-exec, used by `nanopython`) and
-//! `embed_run_mpy.zig` (load-a-.mpy, used by `nanopython-vm`) both have to
+//! `embed_exec.zig` (compile-then-exec, used by `petitpy`) and
+//! `embed_run_mpy.zig` (load-a-.mpy, used by `petitpy-vm`) both have to
 //! treat an uncaught SystemExit as a clean exit rather than a traceback.
 //! It lived only in the former, so the VM binary printed a traceback for the
 //! `except: print("SKIP"); raise SystemExit` skip idiom — 13 corpus tests.

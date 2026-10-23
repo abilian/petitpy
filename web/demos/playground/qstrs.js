@@ -329,7 +329,7 @@ export const STATIC_QSTRS = [
   "_get_global",
   "_machine",
   "_mpy",
-  "_nanopython_js",
+  "_petitpy_js",
   "_release",
   "_set_attr",
   "_set_dispatcher",

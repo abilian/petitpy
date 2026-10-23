@@ -4,7 +4,7 @@
 import js
 from providers_base import create_obj
 
-# chrome is not pre-instantiated in nanopython-lib/js.py; fetch the global
+# chrome is not pre-instantiated in petitpy-lib/js.py; fetch the global
 # once at module load and reuse. See projects/ci-build-monitor/notes/PORTING.md.
 chrome = js.get("chrome")
 

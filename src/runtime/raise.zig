@@ -1,4 +1,4 @@
-//! nanopython — surviving mp_raise_* helpers + m_malloc_fail.
+//! petitpy — surviving mp_raise_* helpers + m_malloc_fail.
 //!
 //! NX-3 N4 (2026-06-05): m_malloc_fail is now polled — sets
 //! pyerr.pending_exc + returns instead of longjmping via nlr_raise.

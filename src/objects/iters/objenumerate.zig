@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objenumerate.c.
+//! petitpy — Zig port of py/objenumerate.c.
 //! Under nano CPYTHON_COMPAT=1 → make_new takes kw args (iterable=, start=).
 
 const build_options = @import("build_options");

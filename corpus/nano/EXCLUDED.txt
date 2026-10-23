@@ -1,6 +1,6 @@
 # Tests excluded from the corpus: reference output differs across two
 # runs (memory addresses, dict/set ordering, timing). One name/line.
-# Reference: ./zig-out/bin/nanopython
+# Reference: ./zig-out/bin/petitpy
 assign_expr
 bytearray1
 bytes_partition

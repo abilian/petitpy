@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/bc.c. Originally 4 varint helpers
+//! petitpy — Zig port of py/bc.c. Originally 4 varint helpers
 //! (Axis-B B1.5 W3). Expanded to cover mp_setup_code_state wrapper.
 //! Final port (this session): mp_setup_code_state_helper — the
 //! ~250-LOC arg/kwarg/defaults binding algorithm that runs on every

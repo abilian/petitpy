@@ -7,7 +7,7 @@ captures parse + instantiate + first-execute, which is the metric
 ADR-001 cared about ("page loads in <1 s") and which was previously
 unmeasured.
 
-Times zig-out/bin/nanopython.wasm rather than web/nanopython.wasm:
+Times zig-out/bin/petitpy.wasm rather than web/petitpy.wasm:
 the latter declares `env::js_create_callback` (browser-only) and won't
 load under wasmtime. The two binaries differ only in the JS-bridge
 imports, so wasmtime timings track shipping-artifact startup faithfully.
@@ -35,7 +35,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-WASM_WASMTIME = ROOT / "zig-out" / "bin" / "nanopython.wasm"
+WASM_WASMTIME = ROOT / "zig-out" / "bin" / "petitpy.wasm"
 
 
 def time_once(wasm: Path, script: Path) -> float | None:

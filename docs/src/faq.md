@@ -1,8 +1,8 @@
 # FAQ
 
-## Why "petitpy", and why "nanopython"?
+## Why "petitpy"?
 
-The project started from MicroPython's **nano** configuration, and the codename nanopython stuck. PyPI refused that name as too close to an existing project, so releases are published as **petitpy** ("small Python"), with `ppy` as the short command. The repository and its internals still say nanopython.
+The project started from MicroPython's **nano** configuration and was developed as N@NOPYTHON. PyPI refused that name as too close to an existing project, so it became **petitpy** ("small Python"), with `ppy` as the short command.
 
 ## How does it relate to CPython and MicroPython?
 

@@ -136,7 +136,7 @@ fn print_usage() void {
 }
 
 fn print_version() void {
-    print_line("zigpy-compile (nanopython {s}) -- emitting mpy v6\n", .{VERSION});
+    print_line("zigpy-compile (petitpy {s}) -- emitting mpy v6\n", .{VERSION});
 }
 
 /// Parse argv[1..]. Exits with code 2 on bad flags.

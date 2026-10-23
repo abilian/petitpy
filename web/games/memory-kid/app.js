@@ -26,10 +26,10 @@ function setStatus(text, kind = "") {
   if (kind) $status.classList.add(kind);
 }
 
-setStatus("Loading nanopython.wasm + nanopy.py + main.py…");
+setStatus("Loading petitpy.wasm + nanopy.py + main.py…");
 const _v = Date.now();
 const [wasmResp, helperResp, mainResp] = await Promise.all([
-  fetch(`../../nanopython.wasm?v=${_v}`, { cache: "no-store" }),
+  fetch(`../../petitpy.wasm?v=${_v}`, { cache: "no-store" }),
   fetch(`./nanopy.py?v=${_v}`, { cache: "no-store" }),
   fetch(`./main.py?v=${_v}`, { cache: "no-store" }),
 ]);
@@ -48,7 +48,7 @@ const stdoutFd = rawConsoleFd("[py]", (tag, t) => console.log(tag, t));
 const stderrFd = rawConsoleFd("[stderr]", (tag, t) => console.error(tag, t));
 
 const bridge = makeJsBridge();
-const wasi = new WASI(["nanopython", "/main.py"], [], [stdinFd, stdoutFd, stderrFd, fs]);
+const wasi = new WASI(["petitpy", "/main.py"], [], [stdinFd, stdoutFd, stderrFd, fs]);
 try {
   const inst = await WebAssembly.instantiate(wasmModule, {
     wasi_snapshot_preview1: wasi.wasiImport,

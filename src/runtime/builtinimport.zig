@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/builtin_import.c's mp_builtin___import___default
+//! petitpy — Zig port of py/builtin_import.c's mp_builtin___import___default
 //! (W6 #5). Under nano MICROPY_ENABLE_EXTERNAL_IMPORT=0, this is the live
 //! __import__ implementation.
 //!

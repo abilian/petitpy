@@ -1,4 +1,4 @@
-//! nanopython — the top-level exec HOST in Zig.
+//! petitpy — the top-level exec HOST in Zig.
 //!
 //! Replaces `mp_embed_exec_str`'s C `if (nlr_push(&nlr) == 0) {body} else
 //! {print exc}` with:

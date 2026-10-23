@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objset.c.
+//! petitpy — full Zig port of py/objset.c.
 //!
 //! Nano config (probed): SET=1, FROZENSET=1. Both types live and share
 //! make_new, print, iter, unary_op, binary_op. The frozenset locals_dict

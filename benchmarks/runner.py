@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nanopython benchmark runner — wall-clock comparison vs MicroPython + CPython.
+"""petitpy benchmark runner — wall-clock comparison vs MicroPython + CPython.
 
 Simple by design (ADR-004 D4 first pass): no SQLite, no YAML, no pyperf —
 just the runner the maintainer asked for. Discovers benchmarks/programs/*.py,
@@ -47,12 +47,12 @@ def _find_binary(*relative_paths: str) -> Path | None:
 
 # Interpreter wiring. Path is resolved at runtime; missing ones are skipped
 # (the report notes which were unavailable).
-NANO_BIN = _find_binary("zig-out/bin/nanopython")
+NANO_BIN = _find_binary("zig-out/bin/petitpy")
 MPY_BIN = _find_binary("vendor/micropython/ports/unix/build-standard/micropython")
 
 # Order matters: leftmost column in the report is the headline interpreter.
 INTERPRETERS = [
-    ("nanopython", str(NANO_BIN) if NANO_BIN else ""),
+    ("petitpy", str(NANO_BIN) if NANO_BIN else ""),
     ("MicroPython", str(MPY_BIN) if MPY_BIN else ""),
     ("CPython", sys.executable),
 ]
@@ -106,7 +106,7 @@ def interpreter_version(name: str, binary: str) -> str:
                 [binary, "--version"], capture_output=True, text=True, timeout=5
             ).stdout.strip()
             return out or "unknown"
-        if name == "nanopython":
+        if name == "petitpy":
             out = subprocess.run(
                 [binary, "--version"], capture_output=True, text=True, timeout=5
             ).stdout.strip()
@@ -148,7 +148,7 @@ def render_report(results, available, warmups, runs):
     """
     names = [n for n, _ in available]
     lines = []
-    lines.append("# nanopython benchmarks")
+    lines.append("# petitpy benchmarks")
     lines.append("")
     lines.append(f"- Date: {time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
     lines.append(f"- Platform: {platform.system()} {platform.machine()} ({platform.platform()})")
@@ -175,15 +175,15 @@ def render_report(results, available, warmups, runs):
                 path_disp = Path(binary).name
         lines.append(f"| {name} | `{path_disp}` | {size} | {ver} |")
     lines.append("")
-    lines.append("nanopython is built with `make build-release` (`-Doptimize=ReleaseFast -Dconfig=nano`). MicroPython is the upstream `unix-standard` build. CPython is the system `python3`.")
+    lines.append("petitpy is built with `make build-release` (`-Doptimize=ReleaseFast -Dconfig=nano`). MicroPython is the upstream `unix-standard` build. CPython is the system `python3`.")
     lines.append("")
 
     # Build the comparison table dynamically based on `names`.
     lines.append("## Results")
     lines.append("")
     headers = ["benchmark"] + [f"{n} median (s)" for n in names]
-    # Ratios are only meaningful when nanopython is present alongside another.
-    has_nano = "nanopython" in names
+    # Ratios are only meaningful when petitpy is present alongside another.
+    has_nano = "petitpy" in names
     if has_nano and "MicroPython" in names:
         headers.append("nano / MicroPython")
     if has_nano and "CPython" in names:
@@ -206,7 +206,7 @@ def render_report(results, available, warmups, runs):
                 row.append(f"{med:.3f} (min {lo:.3f})")
             else:
                 row.append("—")
-        nano_med = per_interp.get("nanopython", (None, None, None))[1]
+        nano_med = per_interp.get("petitpy", (None, None, None))[1]
         mpy_med = per_interp.get("MicroPython", (None, None, None))[1]
         cpy_med = per_interp.get("CPython", (None, None, None))[1]
         if has_nano and "MicroPython" in names:
@@ -238,7 +238,7 @@ def render_report(results, available, warmups, runs):
     lines.append("| " + " | ".join(geo_row) + " |")
     lines.append("")
 
-    lines.append("Ratio reading: `nano / X` means nanopython's median divided by X's median. A value of `1.50×` means nanopython took 1.5× as long as X (i.e. X is faster). Lower is better for nanopython.")
+    lines.append("Ratio reading: `nano / X` means petitpy's median divided by X's median. A value of `1.50×` means petitpy took 1.5× as long as X (i.e. X is faster). Lower is better for petitpy.")
     lines.append("")
     lines.append("## Output equivalence")
     lines.append("")
@@ -259,7 +259,7 @@ def render_report(results, available, warmups, runs):
     lines.append("## Reproduce")
     lines.append("")
     lines.append("```sh")
-    lines.append("# 1. Build a ReleaseFast nanopython (Debug is artificially slow).")
+    lines.append("# 1. Build a ReleaseFast petitpy (Debug is artificially slow).")
     lines.append("make build-release")
     lines.append("")
     lines.append("# 2. (Optional) Build MicroPython unix-standard if absent.")

@@ -19,7 +19,7 @@ from services_storage import (
 )
 from ui_dom import get_prop
 
-# chrome is not pre-instantiated in nanopython-lib/js.py; fetch the global
+# chrome is not pre-instantiated in petitpy-lib/js.py; fetch the global
 # once at module load and reuse. See projects/ci-build-monitor/notes/PORTING.md.
 chrome = js.get("chrome")
 

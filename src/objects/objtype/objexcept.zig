@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objexcept.c.
+//! petitpy — Zig port of py/objexcept.c.
 //!
 //! Includes the easy half (predicates + accessors) lifted previously, plus
 //! the previously-VERBATIM B2 half: the static `mp_type_BaseException` ROM

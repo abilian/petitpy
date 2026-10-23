@@ -1,5 +1,5 @@
 # golden: source=prescrypt-internal; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 """Test Python dict methods on plain objects.
 
 This tests that .get(), .keys(), .values(), .items() work correctly

@@ -4,13 +4,13 @@ Each bucket under `golden-programs/` corresponds to a profile — a feature bund
 
 ## `works/`
 
-**Current nanopython, no additional features required.** This is what ships today.
+**Current petitpy, no additional features required.** This is what ships today.
 
 Includes: f-strings, list/dict/set comprehensions, classes (single inheritance + multiple via `-Dconfig=full`), decorators (`@staticmethod`, `@classmethod`, `@property`), exception handling (`try/except/finally`), context managers (`with`), generators (`yield`), `__future__` imports (no-op stub), most builtin types, basic `sys`, basic `math`.
 
 ## `works-native-only/`
 
-**Current nanopython, but only the native build.** The wasm build hits a documented architectural blocker.
+**Current petitpy, but only the native build.** The wasm build hits a documented architectural blocker.
 
 Mostly programs that raise exceptions caught by a `try/except` going through C-NORETURN raise paths (vendor C still uses `nlr_jump` → `longjmp` for some paths). Native unwinds; wasm cannot.
 
@@ -61,7 +61,7 @@ On native this is straightforward; on wasm it depends on what filesystem access 
 
 **Adds arbitrary-precision integers (beyond 2^63).**
 
-Today nanopython has LONGLONG on wasm (2^63 ceiling) and NONE on native (62-bit smallint). Both cover all realistic web-developer values. `needs-mpz/` would only include programs that genuinely use larger numbers (crypto, factorials of large N, etc.).
+Today petitpy has LONGLONG on wasm (2^63 ceiling) and NONE on native (62-bit smallint). Both cover all realistic web-developer values. `needs-mpz/` would only include programs that genuinely use larger numbers (crypto, factorials of large N, etc.).
 
 Requires `MICROPY_LONGINT_IMPL=MPZ` + a corpus refresh.
 

@@ -4,7 +4,7 @@
 // imports `bootstrap(entryPath)` from this module and calls it once with
 // its own entry-point path under /src/. This module:
 //
-//   1. Fetches nanopython.wasm + every Python source under src/ (the list
+//   1. Fetches petitpy.wasm + every Python source under src/ (the list
 //      is hard-coded — porting the directory walk into the browser would
 //      add nothing for a fixed source tree).
 //   2. Mounts every file flat under a PreopenDirectory at /src, so
@@ -12,7 +12,7 @@
 //   3. Wires the ADR-006 js bridge so Python code can reach DOM / chrome
 //      globals via the `js` module.
 //
-// Layout note: nanopython's import machinery is flat-only (no packages,
+// Layout note: petitpy's import machinery is flat-only (no packages,
 // no dotted module names — see src/runtime/import_search.zig). The source
 // tree is therefore flattened: what was `providers/base.py` is now
 // `providers_base.py`, imported as `from providers_base import ...`.
@@ -65,7 +65,7 @@ export async function bootstrap(entryPath) {
   const v = Date.now();
 
   // Fetch the wasm + every .py in parallel.
-  const wasmResp = await fetch(`../wasm/nanopython.wasm?v=${v}`, { cache: "no-store" });
+  const wasmResp = await fetch(`../wasm/petitpy.wasm?v=${v}`, { cache: "no-store" });
   const pyResps = await Promise.all(
     SRC_PATHS.map((p) =>
       fetch(`../src/${p}?v=${v}`, { cache: "no-store" }).then(async (r) => [p, await r.text()]),
@@ -90,7 +90,7 @@ export async function bootstrap(entryPath) {
 
   const bridge = makeJsBridge();
   const wasi = new WASI(
-    ["nanopython", entryPath],
+    ["petitpy", entryPath],
     ["PETITPY_LIB=/src"],
     [stdinFd, stdoutFd, stderrFd, srcDir],
   );

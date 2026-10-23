@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # see https://docs.python.org/3/reference/expressions.html#operator-precedence
 
 # '|' is the least binding numeric operator

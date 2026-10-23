@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 # PEP-0498 specifies that '\\' and '#' must be disallowed explicitly, whereas
 # MicroPython relies on the syntax error as a result of the substitution.

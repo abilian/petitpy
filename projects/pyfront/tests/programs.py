@@ -2,7 +2,7 @@
 
 Two tiers assert different things about the same programs. The unit tier
 compiles each and checks the container it produces is well formed — no VM,
-no subprocess. The e2e tier runs them on nanopython-vm and compares against
+no subprocess. The e2e tier runs them on petitpy-vm and compares against
 CPython, which is the only way to say the bytecode is *right*.
 
 One corpus, so a construct added for either tier is measured by both.

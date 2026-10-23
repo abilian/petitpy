@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/emitglue.c (replaces emitglue_shim.c).
+//! petitpy — Zig port of py/emitglue.c (replaces emitglue_shim.c).
 //!
 //! Compile/emit-internal glue: builds mp_raw_code_t records during the
 //! compile pass, and at runtime turns a proto-fun (bytecode pointer OR

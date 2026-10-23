@@ -1,12 +1,13 @@
 # Changelog
 
-All notable changes to petitpy (development name nanopython) are documented in this file.
+All notable changes to petitpy (developed as nanopython until 0.8) are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use [Conventional Commits](https://www.conventionalcommits.org/) types (feat, fix, perf, docs, build, test).
 
 ## [Unreleased]
 
 ### Changed
 
+- **One name, petitpy**, in the repository as in the packages: the binaries are `zig-out/bin/petitpy` and `petitpy-vm`, the browser build `web/petitpy.wasm`, the stdlib sources `petitpy-lib/`, the wheel build's target variable `PETITPY_TARGET`, and the golden-program platforms `petitpy-native` and `petitpy-wasm`. The browser games store their high scores under new keys, so saved scores start over.
 - **Dicts keep insertion order on `full`**, as in CPython 3.7+: printing, `json.dumps`, `**kwargs`, and class and instance namespaces follow the order keys were added, a key deleted and re-added moves to the end, and `popitem()` takes the last item. Maps use a compact layout: entries in insertion order followed by a hash index of 1, 2 or 4-byte slots. Speed is unchanged on the benchmarks; small dicts and 3-attribute instances use the same memory as before, while a large dict takes 40 to 75% more, depending on where its size falls between growth steps. `nano` and the browser build keep MicroPython's hash order, so nano stays byte-exact.
 - **Built-in methods and constructors take keyword arguments on `full`** where CPython does: `str.split(sep=, maxsplit=)`, `rsplit`, `encode`/`decode(encoding=, errors=)`, `replace(count=)`, `str()`, `bytes()` and `bytearray()` with `encoding=`, `sum(start=)`, `round(ndigits=)`, `pow(mod=)`, `os.getenv(default=)`, and `print(flush=)`, which calls the file's `flush()`. `round(x, None)` now works. The `int` methods are vendor MicroPython's and still take positional arguments only.
 - **`os.environ` is the real environment** on `full`: every variable at startup, and assigning or deleting a key changes the process environment, so child processes see it. `os` also gains `makedirs`, `walk`, `replace`, `fspath`, `devnull` and `pathsep`, and `os.fdopen` is reached as `os.fdopen`. File objects have `fileno()`.

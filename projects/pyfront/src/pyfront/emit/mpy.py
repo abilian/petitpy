@@ -32,7 +32,7 @@ from .bytecode import uint
 
 MPY_MAGIC = ord("M")
 MPY_VERSION = 6
-#: 64-bit builds use 63; nanopython's wasm32 arm uses 31. The runtime checks
+#: 64-bit builds use 63; petitpy's wasm32 arm uses 31. The runtime checks
 #: this against its own, so it has to match the target that will load the file.
 SMALL_INT_BITS_64 = 63
 SMALL_INT_BITS_32 = 31

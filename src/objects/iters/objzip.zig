@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objzip.c. Previously a hybrid
+//! petitpy — full Zig port of py/objzip.c. Previously a hybrid
 //! port (Zig slot fns + C-shim glue); now self-contained.
 
 const mp = @cImport({

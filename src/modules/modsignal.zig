@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `signal` module MVP.
+//! petitpy — Zig-native `signal` module MVP.
 //!
 //! Full-native only. Ships the surface
 //! `hop3-rootd`'s `__main__.py` calls at boot (`signal.signal(SIGTERM,

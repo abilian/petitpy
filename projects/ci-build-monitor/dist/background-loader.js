@@ -1,6 +1,6 @@
 // background-loader.js — Chrome MV3 service worker entry-point.
 //
-// This is the wasm-aware service worker that boots nanopython and runs
+// This is the wasm-aware service worker that boots petitpy and runs
 // pages_background.py to register the chrome.alarms / chrome.notifications
 // / chrome.runtime.onMessage event handlers that drive the extension.
 //
@@ -73,7 +73,7 @@ function extUrl(path) {
 }
 
 async function bootBackground() {
-  const wasmResp = await fetch(extUrl("wasm/nanopython.wasm"));
+  const wasmResp = await fetch(extUrl("wasm/petitpy.wasm"));
   const pyResps = await Promise.all(
     SRC_PATHS.map((p) =>
       fetch(extUrl(`src/${p}`)).then(async (r) => [p, await r.text()]),
@@ -95,7 +95,7 @@ async function bootBackground() {
 
   const bridge = makeJsBridge();
   const wasi = new WASI(
-    ["nanopython", "/src/pages_background.py"],
+    ["petitpy", "/src/pages_background.py"],
     ["PETITPY_LIB=/src"],
     [stdinFd, stdoutFd, stderrFd, srcDir],
   );

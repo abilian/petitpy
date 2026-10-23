@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objpolyiter.c (excluding the
+//! petitpy — full Zig port of py/objpolyiter.c (excluding the
 //! ENABLE_FINALISER variant which is dead under both nano and full).
 //! Universal iterator type: stores an `iternext` fn-ptr at offset 8;
 //! dispatches via indirect call.

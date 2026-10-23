@@ -1,4 +1,4 @@
-# Known failures: zigpy-compile -> nanopython-vm
+# Known failures: zigpy-compile -> petitpy-vm
 #
 # Quadrant 1 (our bytecode + our VM) of the four-quadrant matrix: front-end (ours or
 # vendor's) by VM (ours or vendor's), split at the .mpy bytecode boundary.

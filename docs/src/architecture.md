@@ -9,7 +9,7 @@ petitpy has two halves that share one source tree:
 - **The compiler** (`src/compiler/`) is pure Zig. It lexes and parses Python source, runs scope analysis and emits MicroPython `.mpy` bytecode. The parser is a Zig port of MicroPython's `parse.c`. Its grammar is upstream's `grammar.h`, patched at `make port` time (`port/grammar-patched/`) to accept `{**d}` dict unpacking and PEP 570 positional-only `/` markers. It ships as the standalone `zigpy-compile` binary and is linked into the interpreter.
 - **The VM** (`src/runtime/`, `src/objects/`, `src/modules/`, `src/memory/`) loads bytecode, runs the bytecode interpreter, and implements the object model, the allocator and the garbage collector. It is Zig apart from the residual C described below.
 
-The main binary (`zig-out/bin/nanopython`) contains both and calls the compiler at run time to compile source. A VM-only binary, `nanopython-vm`, loads `.mpy` files. Keeping the compiler separate means it can be tested on its own, and the VM can be checked against bytecode from MicroPython's own `mpy-cross`.
+The main binary (`zig-out/bin/petitpy`) contains both and calls the compiler at run time to compile source. A VM-only binary, `petitpy-vm`, loads `.mpy` files. Keeping the compiler separate means it can be tested on its own, and the VM can be checked against bytecode from MicroPython's own `mpy-cross`.
 
 The [ADR series](adrs/index.md) records the decisions behind this page.
 

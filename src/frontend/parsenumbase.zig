@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/parsenumbase.c. One pure function,
+//! petitpy — Zig port of py/parsenumbase.c. One pure function,
 //! no nlr, no type-def → shimless `export fn` (the smallint recipe). Runtime-hot: the
 //! radix-prefix scan for every int/float literal & int()/float().
 //!

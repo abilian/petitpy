@@ -45,7 +45,7 @@ pub const N_STATIC: u16 = 228;
 /// Ids N_STATIC..N_STATIC+N_MAIN-1.
 ///
 /// ADR-006 J1 — bumped from 216 to 227 (+11) to absorb the qstrs the
-/// `_nanopython_js` module shadow declares (`_nanopython_js`,
+/// `_petitpy_js` module shadow declares (`_petitpy_js`,
 /// `_bridge_present`, `_get_global`, `_get_attr`, `_set_attr`, `_call`,
 /// `_release`, `_create_string`, `_create_int`, `_to_string`, `_to_int`).
 /// J5a — bumped from 227 to 229 (+2) for `_create_callback` +

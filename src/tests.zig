@@ -1,4 +1,4 @@
-//! nanopython — Zig unit tests for the pure (shimless) strangled
+//! petitpy — Zig unit tests for the pure (shimless) strangled
 //! modules. Run with `zig build unittest` (or `make unit`).
 //!
 //! Zig has first-class built-in testing: `test "name" { ... }`

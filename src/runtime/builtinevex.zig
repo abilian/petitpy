@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/builtinevex.c.
+//! petitpy — Zig port of py/builtinevex.c.
 //!
 //! Nano config (probed): MICROPY_PY_BUILTINS_COMPILE=0,
 //! MICROPY_PY_BUILTINS_EXECFILE=0, MICROPY_PY_BUILTINS_EVAL_EXEC=1.

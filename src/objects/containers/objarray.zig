@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objarray.c.
+//! petitpy — full Zig port of py/objarray.c.
 //!
 //! Three types in one file (all enabled under nano):
 //!   array.array (MICROPY_PY_ARRAY=1)

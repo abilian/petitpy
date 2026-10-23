@@ -1,4 +1,4 @@
-//! nanopython build.
+//! petitpy build.
 //!
 //! Native-first strangler. Compiles the generated
 //! MicroPython embed C package (vendor/micropython_embed) for the host,
@@ -82,7 +82,7 @@ pub fn build(b: *std.Build) void {
         pwd_grp: bool,
         // Zig-native low-level
         // `_subprocess` module (fork+exec+wait+pipes). Python `subprocess`
-        // wrapper lives in nanopython-lib/subprocess.py (frozen).
+        // wrapper lives in petitpy-lib/subprocess.py (frozen).
         subprocess_mod: bool,
     };
     const is_wasm_target = target.result.cpu.arch.isWasm();
@@ -296,7 +296,7 @@ pub fn build(b: *std.Build) void {
     const longint_impl: LongintImpl = if (config_preset == .full) .mpz else if (is_wasm_target) .longlong else .none;
     build_options.addOption(LongintImpl, "longint_impl", longint_impl);
     // ADR-002 F1 — expose feature flags to Zig comptime gates. The C side
-    // gets the same information via NANOPYTHON_FEATURE_<X> macros (below);
+    // gets the same information via PETITPY_FEATURE_<X> macros (below);
     // the Zig side needs build_options because translate-c macros aren't
     // visible to Zig's comptime branches in src/*.zig.
     build_options.addOption(bool, "feature_math", features.math);
@@ -361,7 +361,7 @@ pub fn build(b: *std.Build) void {
     // stored as the raw byte `ff`.
     //
     // It is also the runtime's MICROPY_PY_BUILTINS_STR_UNICODE (passed as
-    // NANOPYTHON_STR_UNICODE to C and translate-c, read as
+    // PETITPY_STR_UNICODE to C and translate-c, read as
     // build_options.str_unicode in Zig): on, str indexes, slices and
     // iterates by code point (objstr.zig str_subscr); off, str is bytes.
     // One switch, because a mismatch makes the compiler reject `"\u20ac"`
@@ -379,7 +379,7 @@ pub fn build(b: *std.Build) void {
     const frozen_tiny_enabled = b.option(bool, "frozen-tiny", "Bake the frozen-tiny module set (json/types/__future__/_thread); requires `make freeze` to have populated build-frozen/") orelse false;
     build_options.addOption(bool, "frozen_tiny_enabled", frozen_tiny_enabled);
 
-    // Frozen-tiny wiring, shared between `nanopython` and `nanopython-vm`.
+    // Frozen-tiny wiring, shared between `petitpy` and `petitpy-vm`.
     //
     // tools/freeze_modules.py emits two artifacts:
     //   - build-frozen/frozen-bundle.bin — concatenated .mpy bytes
@@ -416,7 +416,7 @@ pub fn build(b: *std.Build) void {
 
     // Zig strips only ReleaseSmall by default; the wheel's ReleaseFast
     // binary would otherwise carry ~6 MB of debug info.
-    const strip = b.option(bool, "strip", "Strip debug info from the nanopython binary (default: only under ReleaseSmall).");
+    const strip = b.option(bool, "strip", "Strip debug info from the petitpy binary (default: only under ReleaseSmall).");
     const mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
@@ -441,7 +441,7 @@ pub fn build(b: *std.Build) void {
     // reach the .mpy bytes.
     if (frozen_index_mod) |fim| mod.addImport("frozen_index", fim);
     const exe = b.addExecutable(.{
-        .name = "nanopython",
+        .name = "petitpy",
         .root_module = mod,
     });
     // ADR 010 §D1 P2: wasm export-section strip. rdynamic=true forces every
@@ -543,94 +543,94 @@ pub fn build(b: *std.Build) void {
         // Signals to port/mpconfigport.h that the full-features config arm
         // should be selected. Phase 1
         // wires the toggle, subsequent phases add the actual feature flips.
-        cflags_list.append(b.allocator, "-DNANOPYTHON_CONFIG_FULL=1") catch @panic("OOM");
+        cflags_list.append(b.allocator, "-DPETITPY_CONFIG_FULL=1") catch @panic("OOM");
         // Critical: Zig's @cImport runs translate-c separately from C source
         // compilation. Without addCMacro, lexer.h / parse.h etc. would be
         // translated WITHOUT the full define, leaving Zig with the wrong
         // (nano) enum values for MP_TOKEN_*. Mismatch breaks all parsing
         // under full once ASYNC_AWAIT shifts the keyword token enum.
-        mod.addCMacro("NANOPYTHON_CONFIG_FULL", "1");
+        mod.addCMacro("PETITPY_CONFIG_FULL", "1");
     }
     // MICROPY_PY_BUILTINS_STR_UNICODE follows str_unicode, the lexer's switch.
     if (str_unicode) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_STR_UNICODE=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_STR_UNICODE", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_STR_UNICODE=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_STR_UNICODE", "1");
     }
-    // ADR-002 F1 — emit NANOPYTHON_FEATURE_<X> per active feature. The
+    // ADR-002 F1 — emit PETITPY_FEATURE_<X> per active feature. The
     // mpconfigport.h gates MICROPY_PY_MATH / MICROPY_WARNINGS on these.
     // Both cflag and addCMacro forms are required (cflag for the C
     // compile graph; addCMacro for Zig's translate-c).
     if (features.math) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_MATH=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_MATH", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_MATH=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_MATH", "1");
     }
     if (features.warning) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_WARNING=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_WARNING", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_WARNING=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_WARNING", "1");
     }
     if (features.collections) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_COLLECTIONS=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_COLLECTIONS", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_COLLECTIONS=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_COLLECTIONS", "1");
     }
     if (features.struct_mod) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_STRUCT=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_STRUCT", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_STRUCT=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_STRUCT", "1");
     }
     if (features.array) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_ARRAY=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_ARRAY", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_ARRAY=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_ARRAY", "1");
     }
     if (features.errno) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_ERRNO=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_ERRNO", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_ERRNO=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_ERRNO", "1");
     }
     if (features.micropython) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_MICROPYTHON=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_MICROPYTHON", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_MICROPYTHON=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_MICROPYTHON", "1");
     }
     if (features.gc_module) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_GC_MODULE=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_GC_MODULE", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_GC_MODULE=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_GC_MODULE", "1");
     }
     if (features.js) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_JS=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_JS", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_JS=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_JS", "1");
     }
     if (features.re) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_RE=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_RE", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_RE=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_RE", "1");
     }
     if (features.os) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_OS=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_OS", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_OS=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_OS", "1");
     }
     if (features.time_mod) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_TIME=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_TIME", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_TIME=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_TIME", "1");
     }
     if (features.socket_mod) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_SOCKET=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_SOCKET", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_SOCKET=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_SOCKET", "1");
     }
     if (features.select_mod) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_SELECT=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_SELECT", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_SELECT=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_SELECT", "1");
     }
     if (features.signal_mod) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_SIGNAL=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_SIGNAL", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_SIGNAL=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_SIGNAL", "1");
     }
     if (features.pwd_grp) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_PWD_GRP=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_PWD_GRP", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_PWD_GRP=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_PWD_GRP", "1");
     }
     if (features.subprocess_mod) {
-        cflags_list.append(b.allocator, "-DNANOPYTHON_FEATURE_SUBPROCESS=1") catch @panic("OOM");
-        mod.addCMacro("NANOPYTHON_FEATURE_SUBPROCESS", "1");
+        cflags_list.append(b.allocator, "-DPETITPY_FEATURE_SUBPROCESS=1") catch @panic("OOM");
+        mod.addCMacro("PETITPY_FEATURE_SUBPROCESS", "1");
     }
     const cflags = cflags_list.toOwnedSlice(b.allocator) catch @panic("OOM");
 
-    // C-source aggregation for the main `nanopython` binary.
+    // C-source aggregation for the main `petitpy` binary.
     //
     // The strangle is converged. Files collected into a single
     // ArrayList across the feature-gated branches and handed to Zig
@@ -787,11 +787,11 @@ pub fn build(b: *std.Build) void {
     // `zig build run -- script.py`
     const run = b.addRunArtifact(exe);
     if (b.args) |args| run.addArgs(args);
-    b.step("run", "Run nanopython").dependOn(&run.step);
+    b.step("run", "Run petitpy").dependOn(&run.step);
 
-    // ── nanopython-vm — VM-only binary (loads .mpy, no compiler) ─────
+    // ── petitpy-vm — VM-only binary (loads .mpy, no compiler) ─────
     //
-    // Same C sources + include paths as `nanopython`, but rooted at
+    // Same C sources + include paths as `petitpy`, but rooted at
     // `src/main_vm.zig` which deliberately does NOT comptime-import
     // `runtime/zig_compile_bridge.zig`, `entry/embed_exec.zig`, or
     // `compiler/bridge.zig`. The compiler-track Zig modules
@@ -833,23 +833,23 @@ pub fn build(b: *std.Build) void {
     vm_mod.addIncludePath(b.path("src/support"));
     vm_mod.addIncludePath(b.path("src/entry"));
     if (is_wasm) vm_mod.addCMacro("__wasm_exception_handling__", "1");
-    if (is_full) vm_mod.addCMacro("NANOPYTHON_CONFIG_FULL", "1");
-    if (str_unicode) vm_mod.addCMacro("NANOPYTHON_STR_UNICODE", "1");
+    if (is_full) vm_mod.addCMacro("PETITPY_CONFIG_FULL", "1");
+    if (str_unicode) vm_mod.addCMacro("PETITPY_STR_UNICODE", "1");
     // ADR-002 F1 — mirror the per-feature macros on vm_mod (same rationale
     // as the main mod: translate-c needs them, and the cflags also carry
     // the -D so the C compile sees them).
-    if (features.math) vm_mod.addCMacro("NANOPYTHON_FEATURE_MATH", "1");
-    if (features.re) vm_mod.addCMacro("NANOPYTHON_FEATURE_RE", "1");
-    if (features.warning) vm_mod.addCMacro("NANOPYTHON_FEATURE_WARNING", "1");
-    if (features.collections) vm_mod.addCMacro("NANOPYTHON_FEATURE_COLLECTIONS", "1");
-    if (features.struct_mod) vm_mod.addCMacro("NANOPYTHON_FEATURE_STRUCT", "1");
-    if (features.array) vm_mod.addCMacro("NANOPYTHON_FEATURE_ARRAY", "1");
-    if (features.errno) vm_mod.addCMacro("NANOPYTHON_FEATURE_ERRNO", "1");
-    if (features.micropython) vm_mod.addCMacro("NANOPYTHON_FEATURE_MICROPYTHON", "1");
-    if (features.gc_module) vm_mod.addCMacro("NANOPYTHON_FEATURE_GC_MODULE", "1");
-    if (features.js) vm_mod.addCMacro("NANOPYTHON_FEATURE_JS", "1");
-    // C-source aggregation for the `nanopython-vm` variant. Same
-    // single-list pattern as the main `nanopython` binary above;
+    if (features.math) vm_mod.addCMacro("PETITPY_FEATURE_MATH", "1");
+    if (features.re) vm_mod.addCMacro("PETITPY_FEATURE_RE", "1");
+    if (features.warning) vm_mod.addCMacro("PETITPY_FEATURE_WARNING", "1");
+    if (features.collections) vm_mod.addCMacro("PETITPY_FEATURE_COLLECTIONS", "1");
+    if (features.struct_mod) vm_mod.addCMacro("PETITPY_FEATURE_STRUCT", "1");
+    if (features.array) vm_mod.addCMacro("PETITPY_FEATURE_ARRAY", "1");
+    if (features.errno) vm_mod.addCMacro("PETITPY_FEATURE_ERRNO", "1");
+    if (features.micropython) vm_mod.addCMacro("PETITPY_FEATURE_MICROPYTHON", "1");
+    if (features.gc_module) vm_mod.addCMacro("PETITPY_FEATURE_GC_MODULE", "1");
+    if (features.js) vm_mod.addCMacro("PETITPY_FEATURE_JS", "1");
+    // C-source aggregation for the `petitpy-vm` variant. Same
+    // single-list pattern as the main `petitpy` binary above;
     // see that block for per-file rationale. The only deliberate
     // divergence: vm_mod skips objfloat/formatfloat under is_full
     // (leaves the 10 float symbols unresolved — documented
@@ -872,7 +872,7 @@ pub fn build(b: *std.Build) void {
             embed_root ++ "/py/warning.c",
         }) catch @panic("OOM");
     }
-    // Same LONGLONG carveout the main `nanopython` target gets —
+    // Same LONGLONG carveout the main `petitpy` target gets —
     // vendor objint.c (polymorphic dispatcher) + objint_longlong.c
     // (LONGLONG ctors/ops + mp_type_int) must reach the vm-only
     // binary too, otherwise its compile unit references mp_type_int
@@ -883,7 +883,7 @@ pub fn build(b: *std.Build) void {
             embed_root ++ "/py/objint_longlong.c",
         }) catch @panic("OOM");
     }
-    // Float-arm carveout — differs from the main `nanopython` (which
+    // Float-arm carveout — differs from the main `petitpy` (which
     // includes float unconditionally). Under is_full the vm binary
     // deliberately omits float; the 10 unresolved float symbols are
     // documented pre-existing deferred work.
@@ -903,13 +903,13 @@ pub fn build(b: *std.Build) void {
         .flags = cflags,
     });
     const vm_exe = b.addExecutable(.{
-        .name = "nanopython-vm",
+        .name = "petitpy-vm",
         .root_module = vm_mod,
     });
     b.installArtifact(vm_exe);
     const vm_run = b.addRunArtifact(vm_exe);
     if (b.args) |args| vm_run.addArgs(args);
-    b.step("run-vm", "Run nanopython-vm").dependOn(&vm_run.step);
+    b.step("run-vm", "Run petitpy-vm").dependOn(&vm_run.step);
 
     // ── Compiler track — pure Zig, no C dependency ──
     // First milestone (C1): `.mpy` round-trip tool.
@@ -1175,7 +1175,7 @@ pub fn build(b: *std.Build) void {
     // can be tested in isolation — the compiler (src/compiler/*, also
     // shipped as the standalone `zigpy-compile` binary) and the VM
     // (src/runtime/* + src/objects/* + src/modules/*, integrated into
-    // the `nanopython` binary). Per-module steps (qstr-unit, …) stay
+    // the `petitpy` binary). Per-module steps (qstr-unit, …) stay
     // as developer conveniences for narrowly targeted runs.
     const unit_compiler = b.step("unit-compiler", "Run compiler-track unit tests (qstr, lexer, bigint, parser, scope, emit, driver)");
     unit_compiler.dependOn(&run_qstr_unit.step);

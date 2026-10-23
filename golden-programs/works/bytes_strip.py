@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 print(b"".strip())
 print(b" \t\n\r\v\f".strip())
 print(b" T E S T".strip())

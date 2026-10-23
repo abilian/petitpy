@@ -1,14 +1,14 @@
-# nanopython — common tasks. (Generation of vendor/ lives in port/Makefile;
+# petitpy — common tasks. (Generation of vendor/ lives in port/Makefile;
 # this root Makefile drives the strangler build/test/lint loop.)
 #
 # Invariant (CLAUDE.md): `make check` must end at 100.0% N/N byte-identical
 # to the nano-C reference. Never commit a red tree.
 
 MAKE     := make
-BIN      := ./zig-out/bin/nanopython
+BIN      := ./zig-out/bin/petitpy
 ZIGSRC   := build.zig $(wildcard src/*.zig)
 # Host-side (CPython) Python that `make lint` checks. Deliberately NOT the
-# whole tree: nanopython-lib/, web/ and projects/*/src/ target the nano
+# whole tree: petitpy-lib/, web/ and projects/*/src/ target the nano
 # runtime, where host lint rules give the wrong answer.
 # tests/qstr_fixture.py is lexer input,
 # not code — same reason corpus/*.out is excluded.
@@ -50,10 +50,10 @@ EVERYDAY := build test check check-all wasm-check test-integration lint smoke ru
 
 help:
 ifdef ALL
-	@echo "nanopython make targets (all):"
+	@echo "petitpy make targets (all):"
 	@grep -E '^## [a-zA-Z0-9_-]+:' $(MAKEFILE_LIST) | sed 's/^## /  /'
 else
-	@echo "nanopython — everyday targets:"
+	@echo "petitpy — everyday targets:"
 	@for t in $(EVERYDAY); do \
 	  grep -E "^## $$t:" $(MAKEFILE_LIST) | sed 's/^## /  /'; \
 	done
@@ -79,7 +79,7 @@ vendor/micropython:
 
 bootstrap: vendor/micropython
 
-## verify-linux: cross-compile nanopython for the container's native
+## verify-linux: cross-compile petitpy for the container's native
 ##               arch on the host, then run the integration suite
 ##               against the resulting ELF inside a Debian container.
 ##               Requires Docker.
@@ -87,7 +87,7 @@ bootstrap: vendor/micropython
 ##               Uses the docker/OrbStack default platform (arm64 on
 ##               Apple Silicon, amd64 on Intel/AMD). No emulation
 ##               involved either way.
-VERIFY_IMAGE ?= nanopython-verify-linux:latest
+VERIFY_IMAGE ?= petitpy-verify-linux:latest
 
 # Match the host CPU: arm64/aarch64 hosts get an aarch64 Zig +
 # aarch64-linux-gnu cross-compile; anything else defaults to x86_64.
@@ -112,21 +112,21 @@ verify-linux-image:
 verify-linux: verify-linux-image freeze-modules
 	@echo "→ cross-compiling for $(ZIG_LINUX_TARGET) on the host..."
 	@zig build -Dtarget=$(ZIG_LINUX_TARGET) -Doptimize=ReleaseSmall -Dconfig=full -Dfrozen-tiny=true || true
-	@test -x zig-out/bin/nanopython \
-	  || (echo "cross-compile failed to produce zig-out/bin/nanopython"; exit 1)
-	@file zig-out/bin/nanopython | grep -q $(ELF_ARCH_MATCH) \
-	  || (echo "zig-out/bin/nanopython is not $(ELF_ARCH_MATCH) — did the cross-compile pick up the host target?"; exit 1)
+	@test -x zig-out/bin/petitpy \
+	  || (echo "cross-compile failed to produce zig-out/bin/petitpy"; exit 1)
+	@file zig-out/bin/petitpy | grep -q $(ELF_ARCH_MATCH) \
+	  || (echo "zig-out/bin/petitpy is not $(ELF_ARCH_MATCH) — did the cross-compile pick up the host target?"; exit 1)
 	@echo "→ running tests/integration.py inside the container..."
 	@docker run --rm \
 	  -v $(PWD):/src:ro \
 	  $(VERIFY_IMAGE) \
-	  bash -c 'cd /src && python3 tests/integration.py zig-out/bin/nanopython'
+	  bash -c 'cd /src && python3 tests/integration.py zig-out/bin/petitpy'
 
 ## port: (re)generate vendor/micropython_embed from the symlinked tree
 port: | vendor/micropython
 	$(MAKE) -C port
 
-## build: regenerate vendor/ then build zig-out/bin/nanopython (Debug).
+## build: regenerate vendor/ then build zig-out/bin/petitpy (Debug).
 ##        Default CONFIG=full per ADR 012 Phase 4b. Use CONFIG=nano for
 ##        the shipping arm.
 build: port
@@ -137,12 +137,12 @@ build: port
 ##                  `make build` first; this rule runs `zig build` to
 ##                  ensure it's present). After this, `make build-frozen`
 ##                  or `zig build -Dfrozen-tiny=true` bakes the bytes
-##                  into the nanopython binary via @embedFile.
+##                  into the petitpy binary via @embedFile.
 freeze-modules: port
 	zig build -Dconfig=$(CONFIG)
 	python3 tools/freeze_modules.py
 
-## build-frozen: build nanopython with the frozen-tiny set baked in.
+## build-frozen: build petitpy with the frozen-tiny set baked in.
 ##               Runs `make freeze-modules` first, then re-invokes
 ##               `zig build` with -Dfrozen-tiny=true so
 ##               frozen_modules.zig's @embedFile calls find their inputs.
@@ -166,8 +166,8 @@ build-release-frozen: freeze-modules
 build-small: port
 	zig build -Dconfig=$(CONFIG) -Doptimize=ReleaseSmall
 
-## wasm: build the WASI WASM binary at zig-out/bin/nanopython.wasm.
-##       Run with: wasmtime --dir=/tmp zig-out/bin/nanopython.wasm script.py
+## wasm: build the WASI WASM binary at zig-out/bin/petitpy.wasm.
+##       Run with: wasmtime --dir=/tmp zig-out/bin/petitpy.wasm script.py
 ##       Defaults to Debug (~4 MB, with debug-info-style symbols intact —
 ##       useful for inspection / fault localization); for the
 ##       production-size ~340 KB build use `wasm-small`.
@@ -217,12 +217,12 @@ check-full: freeze-modules
 ##             Paired with check-full per ADR 012 dual-arm discipline.
 ##             NOT frozen-tiny: nano has ucollections.deque compiled in
 ##             (strict MP semantics), while frozen-tiny would shadow it
-##             with nanopython-lib/collections.py (CPython-compat deque).
+##             with petitpy-lib/collections.py (CPython-compat deque).
 ##             Two deque tests would flip from PASS to FAIL and break
 ##             the 541/541 invariant.
 check-nano:
 	zig build -Dconfig=nano
-	python3 tools/progress.py --config nano --strict ./zig-out/bin/nanopython
+	python3 tools/progress.py --config nano --strict ./zig-out/bin/petitpy
 
 ## check-release: the corpus and integration gates on ReleaseFast builds,
 ##        what benchmarks and build-release ship. Every other gate builds
@@ -231,7 +231,7 @@ check-nano:
 ##        Leaves ReleaseFast binaries in zig-out. Not in the aggregate.
 check-release: freeze-modules
 	zig build -Dconfig=nano -Doptimize=ReleaseFast
-	python3 tools/progress.py --config nano --strict ./zig-out/bin/nanopython
+	python3 tools/progress.py --config nano --strict ./zig-out/bin/petitpy
 	zig build -Dconfig=full -Dfrozen-tiny=true -Doptimize=ReleaseFast
 	python3 tools/full_gate.py
 	zig build -Dconfig=nano -Dfrozen-tiny=true -Doptimize=ReleaseFast
@@ -247,8 +247,8 @@ check-all:
 
 ## check-split: strict gate for the split (compiler/VM) configuration —
 ##              quadrants 1 and 3 of the compiler x VM matrix.
-##              Q1 is zigpy-compile -> nanopython-vm; Q3 is vendor mpy-cross
-##              -> nanopython-vm, the only check that validates the VM against
+##              Q1 is zigpy-compile -> petitpy-vm; Q3 is vendor mpy-cross
+##              -> petitpy-vm, the only check that validates the VM against
 ##              a front-end we didn't write. In a combined binary a compiler
 ##              bug and a VM bug can cancel out invisibly; this is what stops
 ##              that. Run by check-all — you don't need to invoke it directly.
@@ -314,7 +314,7 @@ metrics-record-perf: web build-release-frozen wasm-small
 ## golden: re-bootstrap golden-programs/ from source corpora. Walks the
 ##         four collections under sandbox/, dedupes by content hash,
 ##         filters out-of-scope third-party libs, runs each program
-##         through vendor MicroPython (oracle) + nanopython native +
+##         through vendor MicroPython (oracle) + petitpy native +
 ##         wasm, re-categorises into the bucket dirs. See ADR 008
 ##         (docs/src/adrs/008-golden-programs.md). Takes ~30s.
 ##         Native uses build-frozen so json/_thread/types work —
@@ -326,7 +326,7 @@ golden: build-frozen wasm-small
 ## compatibility: regenerate docs/src/COMPATIBILITY.md from golden-programs/.
 ##                Walks the bucket directories, parses each program's
 ##                `# golden:` header, and writes a user-facing markdown
-##                doc that answers "does my program work in nanopython
+##                doc that answers "does my program work in petitpy
 ##                today?". Ship under docs/ so Zensical picks it up.
 ##                ADR 009 Lane A A4 + ADR 008 §Phase 2.
 compatibility:
@@ -344,7 +344,7 @@ doc-setup:
 ##            `make compatibility` first if the golden buckets changed).
 ##            The web pages (playground, demos, games) are copied to
 ##            docs/site/play/, so the docs site serves them too.
-WEB_SITE_PARTS := index.html shared.css nanopython.wasm lib demos games gallery extensions
+WEB_SITE_PARTS := index.html shared.css petitpy.wasm lib demos games gallery extensions
 doc-build: web
 	@command -v zensical >/dev/null 2>&1 || \
 		{ echo "zensical missing — run 'make doc-setup'"; exit 2; }
@@ -361,8 +361,8 @@ doc-serve:
 	cd docs && zensical serve
 
 ## wasm-opt: post-link size optimization via binaryen's `wasm-opt -Oz`.
-##           Reads zig-out/bin/nanopython.wasm and writes
-##           zig-out/bin/nanopython.opt.wasm. Typical reduction:
+##           Reads zig-out/bin/petitpy.wasm and writes
+##           zig-out/bin/petitpy.opt.wasm. Typical reduction:
 ##           14% raw / 5% gzipped on top of Zig's ReleaseSmall. Requires
 ##           binaryen (`brew install binaryen` / `apt install binaryen`).
 ##           --all-features is required because Zig emits bulk-memory +
@@ -371,12 +371,12 @@ doc-serve:
 wasm-opt:
 	@command -v wasm-opt >/dev/null 2>&1 || \
 		{ echo "wasm-opt missing (install binaryen: brew install binaryen)"; exit 2; }
-	@test -f zig-out/bin/nanopython.wasm || \
-		{ echo "no zig-out/bin/nanopython.wasm — run 'make wasm-small' first"; exit 2; }
+	@test -f zig-out/bin/petitpy.wasm || \
+		{ echo "no zig-out/bin/petitpy.wasm — run 'make wasm-small' first"; exit 2; }
 	wasm-opt -Oz --all-features -ocimfs 1000 --strip-debug --strip-producers --converge \
-		zig-out/bin/nanopython.wasm -o zig-out/bin/nanopython.opt.wasm
-	@before=$$(wc -c < zig-out/bin/nanopython.wasm); \
-	 after=$$(wc -c < zig-out/bin/nanopython.opt.wasm); \
+		zig-out/bin/petitpy.wasm -o zig-out/bin/petitpy.opt.wasm
+	@before=$$(wc -c < zig-out/bin/petitpy.wasm); \
+	 after=$$(wc -c < zig-out/bin/petitpy.opt.wasm); \
 	 saved=$$((before - after)); \
 	 pct=$$(awk "BEGIN { printf \"%.1f\", $$saved * 100 / $$before }"); \
 	 echo ""; \
@@ -397,13 +397,13 @@ wasm-tiny: port
 	  -Dfeature-errno=false \
 	  -Dfeature-micropython=false \
 	  -Dfeature-gc-module=false
-	@ls -lh zig-out/bin/nanopython.wasm
+	@ls -lh zig-out/bin/petitpy.wasm
 
 ## gen-gallery: rebuild the playground gallery from golden-programs/works/.
 ##              Writes the index to web/demos/playground/gallery.js and copies
 ##              the sources to web/gallery/ (gitignored — they are copies).
 ##              Membership is measured: only programs whose `works-on=` header
-##              says nanopython-wasm, which `make golden` wrote after running
+##              says petitpy-wasm, which `make golden` wrote after running
 ##              them there.
 gen-gallery:
 	python3 tools/gen_gallery.py
@@ -447,15 +447,15 @@ web: freeze-modules gen-gallery
 	@if command -v wasm-opt >/dev/null 2>&1; then \
 	  wasm-opt -Oz --enable-bulk-memory --enable-nontrapping-float-to-int \
 	    -ocimfs 1000 --strip-debug --strip-producers --converge \
-	    zig-out/bin/nanopython.wasm -o web/nanopython.wasm; \
-	  before=$$(wc -c < zig-out/bin/nanopython.wasm); \
-	  after=$$(wc -c < web/nanopython.wasm); \
+	    zig-out/bin/petitpy.wasm -o web/petitpy.wasm; \
+	  before=$$(wc -c < zig-out/bin/petitpy.wasm); \
+	  after=$$(wc -c < web/petitpy.wasm); \
 	  saved=$$((before - after)); \
 	  pct=$$(awk "BEGIN { printf \"%.1f\", $$saved * 100 / $$before }"); \
 	  echo "  wasm-opt:  $$before → $$after bytes (saved $$saved = $$pct%)"; \
 	else \
 	  echo "  wasm-opt missing (install binaryen for ~14% smaller demo); shipping raw"; \
-	  cp zig-out/bin/nanopython.wasm web/nanopython.wasm; \
+	  cp zig-out/bin/petitpy.wasm web/petitpy.wasm; \
 	fi
 	@echo ""
 	@echo "Serve from the web/ directory (the demos use relative paths):"
@@ -477,9 +477,9 @@ test: test-unit test-integration test-e2e test-stdlib test-wheel-layout
 ##                    wheel's is. The frozen-tiny suites cannot see it.
 test-wheel-layout: port
 	zig build -Dconfig=full -p zig-out/wheel-layout
-	python3 tests/wheel_layout.py zig-out/wheel-layout/bin/nanopython
+	python3 tests/wheel_layout.py zig-out/wheel-layout/bin/petitpy
 
-## test-stdlib: run nanopython-lib/*'s test suite under
+## test-stdlib: run petitpy-lib/*'s test suite under
 ##              tests/stdlib/test_*.py via pytest_lite (ADR 011).
 ##              The first test file (test_pytest_lite.py) is the
 ##              bootstrap self-test; the rest are stdlib unit tests
@@ -522,7 +522,7 @@ test-integration: build-frozen
 ##                        wasm-only regressions in paths the corpus
 ##                        has already flagged.
 test-integration-wasm: wasm-small
-	python3 tests/integration.py --config nano --runner "tools/run_wasm.sh zig-out/bin/nanopython.wasm"
+	python3 tests/integration.py --config nano --runner "tools/run_wasm.sh zig-out/bin/petitpy.wasm"
 
 ## test-e2e: corpus (byte-identical vs frozen .out files) + compile-exec
 ##           (Zig frontend → vendor VM → diff stdout). The corpus is the
@@ -664,13 +664,13 @@ lint:
 
 ## clean: remove everything this repo generates. `make clean ALL=1` also drops
 ##        the expensive-to-rebuild artifacts: vendor/micropython_embed (needs
-##        `make port`), web/nanopython.wasm (needs `make web`, and `make smoke`
+##        `make port`), web/petitpy.wasm (needs `make web`, and `make smoke`
 ##        won't run without it). vendor/micropython and sandbox/ are never
 ##        touched — they are external clones.
 GENERATED := .zig-cache zig-out coverage build-frozen port/build-embed \
              dist docs/site .ruff_cache .pytest_cache .workflow-tmp \
              notes/tech-reports/TR-001.pdf
-EXPENSIVE := vendor/micropython_embed web/nanopython.wasm
+EXPENSIVE := vendor/micropython_embed web/petitpy.wasm
 
 clean:
 	rm -rf $(GENERATED)
@@ -693,7 +693,7 @@ clean:
 	fi
 ifdef ALL
 	rm -rf $(EXPENSIVE)
-	@echo "removed vendor/ and web/nanopython.wasm — next build needs \`make port\`"
+	@echo "removed vendor/ and web/petitpy.wasm — next build needs \`make port\`"
 endif
 
 ## freeze: DANGER — re-freeze corpus goldens for the active config from
@@ -718,7 +718,7 @@ freeze: build
 ##        points. The corpus and integration gates can't: a single script never
 ##        reaches a safe point. Needs node; not in the aggregate.
 wasm-gc-check: web
-	node --no-warnings tools/wasm_gc_check.mjs web/nanopython.wasm
+	node --no-warnings tools/wasm_gc_check.mjs web/petitpy.wasm
 
 ## npm-package: assemble the npm package in npm/dist/ (the web wasm, the
 ##              JS bridge and npm/'s API module), versioned from build.zig.
@@ -726,7 +726,7 @@ wasm-gc-check: web
 npm-package: web
 	rm -rf npm/dist && mkdir -p npm/dist
 	cp npm/index.js npm/index.d.ts npm/README.md LICENSE web/lib/js-bridge.js web/lib/wasi-fs.js npm/dist/
-	cp web/nanopython.wasm npm/dist/petitpy.wasm
+	cp web/petitpy.wasm npm/dist/petitpy.wasm
 	version=$$(sed -n 's/^pub const version = "\(.*\)";/\1/p' build.zig); \
 	  sed "s/\"version\": \"0.0.0\"/\"version\": \"$$version\"/" npm/package.json > npm/dist/package.json
 
@@ -744,7 +744,7 @@ RELEASE_TARGETS := aarch64-macos.11.0:macosx_11_0_arm64 \
 pypi-dist: port
 	rm -rf dist && mkdir dist
 	uv build --sdist --out-dir dist
-	for t in $(RELEASE_TARGETS); do NANOPYTHON_TARGET=$$t uv build --wheel --out-dir dist || exit 1; done
+	for t in $(RELEASE_TARGETS); do PETITPY_TARGET=$$t uv build --wheel --out-dir dist || exit 1; done
 	uv venv -q dist/.smoke
 	uv pip install -q --python dist/.smoke/bin/python --no-index --find-links dist petitpy
 	dist/.smoke/bin/petitpy -c 'import os, datetime, json; print("smoke:", os.path.join("a", "b"), datetime.date(2026, 1, 2), json.dumps([1.5]))'
@@ -806,19 +806,19 @@ smoke-flows:
 	  --assert-text "smoke-item"
 	@echo "--- todo: restore valid stored data (load path)"
 	python3 tools/browser-smoke.py --serve web --page demos/todo/ --wait 3000 \
-	  --eval "localStorage.setItem('nanopython-todos','[{\"id\":7,\"text\":\"restored-item\",\"done\":false}]'); location.reload(); 'seeded'" \
+	  --eval "localStorage.setItem('petitpy-todos','[{\"id\":7,\"text\":\"restored-item\",\"done\":false}]'); location.reload(); 'seeded'" \
 	  --sleep 3500 --assert-text "restored-item"
 	@echo "--- todo: corrupt stored data must not kill the page"
 	python3 tools/browser-smoke.py --serve web --page demos/todo/ --wait 2500 \
-	  --eval "localStorage.setItem('nanopython-todos','[{\"id\":'); location.reload(); 'seeded'" \
+	  --eval "localStorage.setItem('petitpy-todos','[{\"id\":'); location.reload(); 'seeded'" \
 	  --sleep 3500 --assert-text "No todos yet"
 	@echo "--- snake: valid high score loads"
 	python3 tools/browser-smoke.py --serve web --page games/snake/ --wait 2500 \
-	  --eval "localStorage.setItem('nanopython:snake:high','42'); location.reload(); 'seeded'" \
+	  --eval "localStorage.setItem('petitpy:snake:high','42'); location.reload(); 'seeded'" \
 	  --sleep 3000 --assert-text "HIGH42"
 	@echo "--- snake: corrupt high score falls back to 0"
 	python3 tools/browser-smoke.py --serve web --page games/snake/ --wait 2500 \
-	  --eval "localStorage.setItem('nanopython:snake:high','not-a-number'); location.reload(); 'seeded'" \
+	  --eval "localStorage.setItem('petitpy:snake:high','not-a-number'); location.reload(); 'seeded'" \
 	  --sleep 3000 --assert-text "HIGH0"
 
 ## smoke-setup: install the playwright pip package + the chromium browser

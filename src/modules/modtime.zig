@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `time` module for native POSIX.
+//! petitpy — Zig-native `time` module for native POSIX.
 //!
 //! Full-native only. Ships the subset stdlib-
 //! only daemons like `hop3-rootd` actually reach for:
@@ -7,7 +7,7 @@
 //!              perf_counter, sleep_ms, ticks_ms
 //!
 //! All wall-clock / monotonic time comes from clock_gettime(2); sleep
-//! from nanosleep(2). Floats used when nanopython's float type is on
+//! from nanosleep(2). Floats used when petitpy's float type is on
 //! (MICROPY_PY_BUILTINS_FLOAT=1 — enabled on both nano and full arms
 //! per port/mpconfigport.h:134), so the `time.monotonic() - started`
 //! subtraction hop3-rootd's server.py depends on works correctly.

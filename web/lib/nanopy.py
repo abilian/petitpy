@@ -1,4 +1,4 @@
-"""nanopy — a small browser-game library for nanopython demos.
+"""nanopy — a small browser-game library for petitpy demos.
 
 Two parallel APIs share the same primitives:
 
@@ -41,7 +41,7 @@ event handler). It does NOT inspire the architecture: there's no
 driven and we lean into that rather than poll-emulate it.
 
 Lives at `web/lib/nanopy.py`. Per-demo `*-lite/nanopy.py` is a
-symlink to this one. Eventual home is `nanopython-lib/dom.py` as a
+symlink to this one. Eventual home is `petitpy-lib/dom.py` as a
 frozen-tiny module.
 """
 

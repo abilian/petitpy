@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/modcollections.c (the `collections` module).
+//! petitpy — Zig port of py/modcollections.c (the `collections` module).
 //! Nano: DEQUE=1, ORDEREDDICT=1 → 4-entry globals dict.
 //!
 //! ADR-002 F2 — gated on build_options.feature_collections so

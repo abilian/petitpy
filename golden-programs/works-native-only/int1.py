@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native
+# golden: works-on=micropython,petitpy-native
 print(int(False))
 print(int(True))
 

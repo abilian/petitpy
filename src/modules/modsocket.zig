@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `socket` module (BSD sockets subset).
+//! petitpy — Zig-native `socket` module (BSD sockets subset).
 //!
 //! Full-native only. MVP surface for
 //! `hop3-rootd`'s AF_UNIX RPC listener:

@@ -1,10 +1,10 @@
-# nanopython examples
+# petitpy examples
 
 Small, self-contained programs that exercise different parts of the language. Each runs identically on native and WASM:
 
 ```sh
-./zig-out/bin/nanopython examples/fizzbuzz.py
-wasmtime --dir=. zig-out/bin/nanopython.wasm examples/fizzbuzz.py
+./zig-out/bin/petitpy examples/fizzbuzz.py
+wasmtime --dir=. zig-out/bin/petitpy.wasm examples/fizzbuzz.py
 ```
 
 | File | Demonstrates |

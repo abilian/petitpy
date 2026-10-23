@@ -1,4 +1,4 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 b1 = b"long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes long bytes"
 b2 = b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes" b"concatenated bytes"

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-internal; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 """Test various builtin functions: chr, ord, callable, max, min with multiple args."""
 from __future__ import annotations

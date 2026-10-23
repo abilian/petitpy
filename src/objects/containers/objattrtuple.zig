@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objattrtuple.c.
+//! petitpy — full Zig port of py/objattrtuple.c.
 //!
 //! Layout: an attrtuple is a regular `mp_obj_tuple_t` whose flex
 //! `items[]` is sized `len + 1`; the trailing slot stores the qstr-

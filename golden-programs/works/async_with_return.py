@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=async
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # test async with, escaped by a return
 
 class AContext:

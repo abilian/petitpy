@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/obj.c.
+//! petitpy — Zig port of py/obj.c.
 //!
 //! Raise-path C frames were ported to Zig so that, once the nlr
 //! longjmp transport was removed, PyError can propagate naturally via Zig

@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 KNOWN_FAILS = ROOT / "corpus" / "full-known-fails.txt"
 CORPUS = ROOT / "corpus" / "full" / "basics"
 TESTS = ROOT / "corpus" / "basics"
-BIN = ROOT / "zig-out" / "bin" / "nanopython"
+BIN = ROOT / "zig-out" / "bin" / "petitpy"
 
 
 def load_list(path: Path) -> set[str]:

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native
+# golden: works-on=micropython,petitpy-native
 # test memoryview accessing maximum values for signed/unsigned elements
 try:
     memoryview

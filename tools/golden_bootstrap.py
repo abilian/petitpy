@@ -8,7 +8,7 @@ Workflow:
 2. Filter out-of-scope programs (numpy, flask, django, ...).
 3. Dedupe by content hash.
 4. Auto-detect features each program needs (imports + grep patterns).
-5. Run each through vendor MicroPython + nanopython native + wasm.
+5. Run each through vendor MicroPython + petitpy native + wasm.
 6. Determine bucket: the minimal profile that makes the program work.
 7. Write the file into golden-programs/<bucket>/ with golden header.
 
@@ -40,8 +40,8 @@ SOURCES = {
 GOLDEN = ROOT / "golden-programs"
 
 MICROPY_REF = ROOT / "vendor/micropython/ports/unix/build-standard/micropython"
-NANO_NATIVE = ROOT / "zig-out/bin/nanopython"
-NANO_WASM = ROOT / "zig-out/bin/nanopython.wasm"
+NANO_NATIVE = ROOT / "zig-out/bin/petitpy"
+NANO_WASM = ROOT / "zig-out/bin/petitpy.wasm"
 RUN_WASM = ROOT / "tools/run_wasm.sh"
 
 TIMEOUT_SECONDS = 10
@@ -340,11 +340,11 @@ def evaluate_program(p_src: tuple[Path, str]) -> dict | None:
     was = run_under([str(RUN_WASM), str(NANO_WASM)], p)
     cpy = run_under([sys.executable], p)
 
-    # A nanopython run "passes" if its output matches EITHER MicroPython
+    # A petitpy run "passes" if its output matches EITHER MicroPython
     # (the strangler oracle) OR CPython (the language reference). The
     # latter catches programs where MP errors out (e.g. `from __future__
     # import annotations` raises ImportError in MP unix-standard) but
-    # nanopython produces CPython-correct behavior. Without this, ~40
+    # petitpy produces CPython-correct behavior. Without this, ~40
     # programs got mis-bucketed as needs-stdlib when they actually work.
     matches_mp_native = outputs_match(mp, nat) and not nat.timed_out
     matches_mp_wasm = outputs_match(mp, was) and not was.timed_out
@@ -377,9 +377,9 @@ def evaluate_program(p_src: tuple[Path, str]) -> dict | None:
     if runs_on_mp:
         works_on.append("micropython")
     if matches_mp_native or matches_cpy_native:
-        works_on.append("nanopython-native")
+        works_on.append("petitpy-native")
     if matches_mp_wasm or matches_cpy_wasm:
-        works_on.append("nanopython-wasm")
+        works_on.append("petitpy-wasm")
 
     return {
         "path": str(p),

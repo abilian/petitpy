@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gen_opcodes_js — render web/demos/playground/opcodes.js from vendor bc0.h.
 
-The playground disassembles the `.mpy` that `nanopython --emit-mpy` prints, so
+The playground disassembles the `.mpy` that `petitpy --emit-mpy` prints, so
 it needs opcode names and their operand shapes. Both come from vendor
 `py/bc0.h`, the same header
 `projects/pyfront/tests/a_unit/emit/test_bytecode_vendor.py` re-derives its

@@ -1,4 +1,4 @@
-# Known failures: mpy-cross -> nanopython-vm
+# Known failures: mpy-cross -> petitpy-vm
 #
 # Quadrant 3 (vendor bytecode + our VM) of the four-quadrant matrix: front-end (ours or
 # vendor's) by VM (ours or vendor's), split at the .mpy bytecode boundary.

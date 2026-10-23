@@ -1,11 +1,11 @@
-//! nanopython WASM entry point (Phase 1).
+//! petitpy WASM entry point (Phase 1).
 //!
 //! Thin Zig harness around the MicroPython embed C core. As the strangler
 //! progresses, C subsystems behind `mp_embed_*` get replaced by Zig; this
 //! entry point stays put.
 //!
 //! Usage (under a WASI runtime with a preopened dir):
-//!   wasmtime --dir=. nanopython.wasm script.py
+//!   wasmtime --dir=. petitpy.wasm script.py
 
 const std = @import("std");
 const builtin = @import("builtin");
@@ -96,7 +96,7 @@ comptime {
     _ = @import("modules/modstruct.zig");
     _ = @import("modules/modjson.zig");
     _ = @import("modules/modmain.zig");
-    // ADR-006 J1 — JS interop builtin module (`_nanopython_js`).
+    // ADR-006 J1 — JS interop builtin module (`_petitpy_js`).
     // Gated on build_options.feature_js; when off, the module body is `else
     // struct {}` and nothing is compiled. Force-analyze with `_ = &…` so
     // the export survives DCE under -Dfeature-js=true.

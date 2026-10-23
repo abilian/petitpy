@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# nanopython — C4 grammar-table generator.
+# petitpy — C4 grammar-table generator.
 #
 # Reads vendor/micropython_embed/py/grammar.h and emits
 # src/compiler/grammar_data.zig — the rule_act / rule_arg_combined /
@@ -15,7 +15,7 @@
 # build.
 #
 # Config: hard-coded to the "nano" preset (port/mpconfigport.h with
-# NANOPYTHON_CONFIG_FULL unset). Any change to the gating flags below
+# PETITPY_CONFIG_FULL unset). Any change to the gating flags below
 # must be matched in the parser-driving config.
 
 from __future__ import annotations

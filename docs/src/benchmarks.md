@@ -10,7 +10,7 @@ _One comparison of petitpy, MicroPython and CPython on a small benchmark suite, 
 
 | Name | Binary | Size (stripped) | Version |
 |---|---|---|---|
-| petitpy | `nanopython` | 737 KB | petitpy 0.8.0 |
+| petitpy | `petitpy` | 737 KB | petitpy 0.8.0 |
 | MicroPython | `micropython` | 807 KB | MicroPython v1.28.0-preview.80.gb14d129a16, GCC 12.2 |
 | CPython | `python3` | n/a | Python 3.14.8 |
 

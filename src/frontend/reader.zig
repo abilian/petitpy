@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/reader.c (Axis-B B1.5 W3; TRUE-ZIG).
+//! petitpy — Zig port of py/reader.c (Axis-B B1.5 W3; TRUE-ZIG).
 //!
 //! Under nano (MICROPY_READER_POSIX=0, MICROPY_HAS_FILE_READER=0)
 //! only the in-memory reader is live: 4 fns, no raises, no MP_STATE.

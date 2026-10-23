@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objmap.c.
+//! petitpy — full Zig port of py/objmap.c.
 
 const mp = @cImport({
     @cInclude("py/obj.h");

@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objclosure.c (including
+//! petitpy — full Zig port of py/objclosure.c (including
 //! mp_type_closure ROM). Nano: ERROR_REPORTING=TERSE ⇒ closure_print
 //! dead; FUNCTION_ATTRS=1 ⇒ attr slot live. n_total = n_closed +
 //! n_args + 2*n_kw; stack≤5 else heap-alloc via m_malloc.

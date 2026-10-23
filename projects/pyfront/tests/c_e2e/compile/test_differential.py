@@ -1,4 +1,4 @@
-"""Compile with pyfront, run on nanopython-vm, compare against CPython.
+"""Compile with pyfront, run on petitpy-vm, compare against CPython.
 
 This is the only test that can say the compiler is *right* rather than merely
 producing a loadable file: the bytecode is checked by what it computes.
@@ -16,10 +16,10 @@ from pyfront import Unsupported, compile_source
 from tests.programs import CLOSURES, PROGRAMS, UNSUPPORTED
 
 ROOT = Path(__file__).resolve().parents[5]
-VM = ROOT / "zig-out" / "bin" / "nanopython-vm"
+VM = ROOT / "zig-out" / "bin" / "petitpy-vm"
 
 
-@pytest.mark.skipif(not VM.exists(), reason="nanopython-vm not built")
+@pytest.mark.skipif(not VM.exists(), reason="petitpy-vm not built")
 @pytest.mark.parametrize("name", sorted(PROGRAMS))
 def test_matches_cpython(name: str, tmp_path: Path) -> None:
     source = PROGRAMS[name]
@@ -46,7 +46,7 @@ def test_unsupported_refuses_by_name(name: str) -> None:
         compile_source(UNSUPPORTED[name])
 
 
-@pytest.mark.skipif(not VM.exists(), reason="nanopython-vm not built")
+@pytest.mark.skipif(not VM.exists(), reason="petitpy-vm not built")
 @pytest.mark.parametrize("name", sorted(CLOSURES))
 def test_closures_match_cpython(name: str, tmp_path: Path) -> None:
     source = CLOSURES[name]

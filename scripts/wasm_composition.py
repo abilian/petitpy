@@ -16,7 +16,7 @@ section, which lists ~600 named functions.
 Usage:
     python3 scripts/wasm_composition.py [path/to/file.wasm]
 
-Default path is web/nanopython.wasm.
+Default path is web/petitpy.wasm.
 
 Companion doc: docs/internals/wasm-composition.md walks through the
 output and discusses opportunities for size reduction.
@@ -281,7 +281,7 @@ def report(info: dict) -> None:
 
 
 def main(argv: list[str]) -> int:
-    path = Path(argv[0]) if argv else Path("web/nanopython.wasm")
+    path = Path(argv[0]) if argv else Path("web/petitpy.wasm")
     if not path.exists():
         print(f"error: {path} not found", file=sys.stderr)
         return 1

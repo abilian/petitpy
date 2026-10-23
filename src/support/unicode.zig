@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/unicode.c. Binary-verified LIVE
+//! petitpy — Zig port of py/unicode.c. Binary-verified LIVE
 //! (unichar_isalpha/tolower used by lexer.c[Zig] + objstr.c). MICROPY_PY_BUILTINS_STR_UNICODE=0
 //! (probed) ⇒ the utf8_* fns are #if-dead; nano exports exactly the
 //! 11 ASCII unichar_* below. No nlr / no obj / no headers → shimless

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Testcase for break in a for [within bunch of other code]
 # https://github.com/micropython/micropython/issues/635
 

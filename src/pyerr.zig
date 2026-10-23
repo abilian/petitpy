@@ -1,4 +1,4 @@
-//! nanopython — the B0-pinned nlr→error-union transport convention.
+//! petitpy — the B0-pinned nlr→error-union transport convention.
 //! Shared by every B1.5-converted module (the argcheck spike proved
 //! it). Internal Zig fns return `PyError!T` and propagate
 //! a raise via `try` (real multi-frame error propagation, no

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-tryalgo; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 #!/usr/bin/env python3
 """\
 Single source shortest paths by Bellman-Ford

@@ -1,9 +1,9 @@
-//! nanopython — Zig-native low-level `_subprocess` module.
+//! petitpy — Zig-native low-level `_subprocess` module.
 //!
 //! Full-native only. Ships the C-side
 //! fork+exec+wait+pipes primitive; the Pythonic `subprocess.run`
 //! wrapper (accepting kwargs, CompletedProcess, CalledProcessError,
-//! TimeoutExpired) lives in nanopython-lib/subprocess.py.
+//! TimeoutExpired) lives in petitpy-lib/subprocess.py.
 //!
 //! Sole export: `_subprocess._spawn_and_wait`, documented at its
 //! definition. No shell, no CLOEXEC beyond the default POSIX behaviour:

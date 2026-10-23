@@ -1,6 +1,6 @@
 # pyfront
 
-An alternative front-end for nanopython: Python source in, MicroPython `.mpy` v6 out, in pure Python.
+An alternative front-end for petitpy: Python source in, MicroPython `.mpy` v6 out, in pure Python.
 
 The runtime already splits at the bytecode boundary, which makes `.mpy` an interface rather than an internal detail. `zigpy-compile` is the Zig front-end; this is a second one, written to a different design, so the boundary gets exercised by something that shares no code with it.
 
@@ -10,7 +10,7 @@ It compiles a subset, not the language. What it does not handle it refuses by na
 
 ```bash
 uv run pyfront hello.py -o hello.mpy
-../../zig-out/bin/nanopython-vm hello.mpy
+../../zig-out/bin/petitpy-vm hello.mpy
 ```
 
 Exit codes: `0` compiled, `2` refused by name (an unsupported construct, or a `SyntaxError` from CPython's parser). Anything else is a bug in pyfront.
@@ -94,7 +94,7 @@ The tree mirrors the source tree, so a package with no tests shows as an empty d
 | `a_unit/compile/test_refusals.py` | every refusal promised above, plus a supported neighbour for each so the suite cannot pass by refusing everything |
 | `a_unit/compile/test_dispatch_coverage.py` | the astero ledger: a production nobody thought about is distinguishable from one deliberately left out |
 | `a_unit/test_layering.py` | `emit/` never imports `ast` |
-| `c_e2e/compile/test_differential.py` | compile, run on `nanopython-vm`, compare against CPython — the only tier that can say the bytecode is *right* |
+| `c_e2e/compile/test_differential.py` | compile, run on `petitpy-vm`, compare against CPython — the only tier that can say the bytecode is *right* |
 | `c_e2e/test_cli.py` | the exit-code contract above |
 
 `tests/programs.py` holds the construct corpus and `tests/mpy_reader.py` a validating `.mpy` reader; both tiers use them. Line coverage is 93% from the unit tier alone, 94% overall.

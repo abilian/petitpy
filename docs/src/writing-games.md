@@ -6,7 +6,7 @@ This tutorial builds **Catch** (a paddle catching falling fruit), then shows the
 
 ## Setup
 
-Work in a checkout of the repository. `make web` builds `web/nanopython.wasm`. Copy an existing game directory, such as `web/games/catch-kid/`, to `web/games/my-game/`. It holds four files:
+Work in a checkout of the repository. `make web` builds `web/petitpy.wasm`. Copy an existing game directory, such as `web/games/catch-kid/`, to `web/games/my-game/`. It holds four files:
 
 ```
 my-game/

@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `os` module for native POSIX.
+//! petitpy — Zig-native `os` module for native POSIX.
 //!
 //! Full-native only. Ships enough surface for
 //! stdlib-only privileged daemons like `hop3-rootd`:
@@ -205,10 +205,10 @@ const Body = if (enabled) struct {
     extern fn mp_obj_new_exception_msg_varg(t: *const anyopaque, fmt: [*:0]const u8, ...) callconv(.c) Obj;
     extern const mp_type_AttributeError: anyopaque;
 
-    // PEP 562 module __getattr__: `os.path` is nanopython-lib/os_path.py,
+    // PEP 562 module __getattr__: `os.path` is petitpy-lib/os_path.py,
     // imported on first access, since the ROM globals dict cannot hold a
     // module loaded at run time. Anything else `os` lacks natively, such
-    // as `environ` and `makedirs`, comes from nanopython-lib/os_ext.py.
+    // as `environ` and `makedirs`, comes from petitpy-lib/os_ext.py.
     fn py_os_getattr(name: Obj) callconv(.c) Obj {
         const attr = mirrors.qstrValue(name);
         if (attr == mp.MP_QSTR_path) {
@@ -247,7 +247,7 @@ const Body = if (enabled) struct {
     fn pathArg(o: Obj) ?[*:0]const u8 {
         // Fast path: real str/bytes object.
         if (mp_obj_str_get_str(o)) |s| return s;
-        // Non-str fallback: nanopython doesn't ship the __fspath__
+        // Non-str fallback: petitpy doesn't ship the __fspath__
         // protocol, so anything with a meaningful __str__ (like our
         // pathlib.Path shim) needs a manual str() conversion here.
         // mp_obj_str_get_str set pyerr.pending_exc when it returned

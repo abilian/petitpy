@@ -1,4 +1,4 @@
-//! nanopython — Zig port of src/modules/file_io.c (file IO + sys.std{in,out,err})
+//! petitpy — Zig port of src/modules/file_io.c (file IO + sys.std{in,out,err})
 //! for the full config. Under nano (MICROPY_PY_IO=0), this file emits nothing:
 //! all symbols live behind `if (build_options.is_full)` so dead-code elimination
 //! drops them, and main.zig's `npy_file_io_init()` call site is itself comptime-

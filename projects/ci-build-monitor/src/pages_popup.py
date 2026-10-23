@@ -42,7 +42,7 @@ def persist_source_repos_from_jsproxy(source_id, repos_bucket):
     repositories[source_id]."""
     return _persist_repos(source_id, repos_bucket)
 
-# chrome is not pre-instantiated in nanopython-lib/js.py; fetch the global
+# chrome is not pre-instantiated in petitpy-lib/js.py; fetch the global
 # once at module load and reuse. See projects/ci-build-monitor/notes/PORTING.md.
 chrome = js.get("chrome")
 

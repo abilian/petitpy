@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""zpip — mip-compatible package installer for nanopython.
+"""zpip — mip-compatible package installer for petitpy.
 
 ADR-003 L3. Talks to the upstream MicroPython registry
 (`micropython.org/pi/v2`) using the same `package.json` + `/file/<hh>/<hash>`
 protocol that `mip` uses, but written in Python 3 stdlib only (no
 `requests`, no `micropython` shims). The on-disk shape it produces is
-flat — `<target>/<file>.py` — exactly what nanopython's L1 filesystem
+flat — `<target>/<file>.py` — exactly what petitpy's L1 filesystem
 import hook expects.
 
 Usage:
@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any
 
 _REGISTRY = "https://micropython.org/pi/v2"
-# nanopython speaks .mpy v6 (sys.implementation._mpy == 6).
+# petitpy speaks .mpy v6 (sys.implementation._mpy == 6).
 _MPY_VERSION = 6
 
 
@@ -40,7 +40,7 @@ def _default_lib_dir() -> Path:
     env = os.environ.get("PETITPY_LIB")
     if env:
         return Path(env)
-    return Path.home() / ".nanopython" / "lib"
+    return Path.home() / ".petitpy" / "lib"
 
 
 def _http_get(url: str) -> bytes:
@@ -189,7 +189,7 @@ def cmd_list(args: argparse.Namespace) -> int:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(
         prog="zpip",
-        description="mip-compatible package installer for nanopython (ADR-003 L3)",
+        description="mip-compatible package installer for petitpy (ADR-003 L3)",
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 

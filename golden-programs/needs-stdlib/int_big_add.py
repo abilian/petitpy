@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-wasm
+# golden: works-on=micropython,petitpy-wasm
 # tests transition from small to large int representation by addition
 
 # 31-bit overflow

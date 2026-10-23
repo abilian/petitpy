@@ -1,13 +1,13 @@
-# nanopython differential-test corpus
+# petitpy differential-test corpus
 
 This corpus is the **regression safety net** for the strangler migration. The
-invariant it enforces: *every nanopython build must produce byte-identical
+invariant it enforces: *every petitpy build must produce byte-identical
 output to the frozen reference.*
 
 ## Reference
 
 The strangler reference is the **nano-C build** itself:
-`zig-out/bin/nanopython` (the embed C package built by `build.zig` with
+`zig-out/bin/petitpy` (the embed C package built by `build.zig` with
 `port/mpconfigport.h`). Its own output — including errors from
 deliberately-disabled nano features — is the contract every C→Zig replacement
 must reproduce exactly. This gives a baseline the strangler can hold at 100%.
@@ -37,7 +37,7 @@ another reference.)
 One tool, `tools/corpus.py`:
 
 ```sh
-python3 tools/corpus.py gen ./zig-out/bin/nanopython   # freeze reference
+python3 tools/corpus.py gen ./zig-out/bin/petitpy   # freeze reference
 python3 tools/corpus.py verify <binary>     # diff a build against goldens
 python3 tools/corpus.py stats               # corpus / exclusion counts
 ```
@@ -54,7 +54,7 @@ goldens were frozen.
 
 ```sh
 python3 tools/progress.py <command...>       # how to invoke the candidate
-python3 tools/progress.py wasmtime zig-out/bin/nanopython.wasm --
+python3 tools/progress.py wasmtime zig-out/bin/petitpy.wasm --
 python3 tools/progress.py --json <command...>          # CI / badge
 python3 tools/progress.py --show 10 <command...>        # list first failures
 ```

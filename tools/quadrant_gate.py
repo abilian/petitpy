@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """quadrant_gate.py — strict gate for the split (compiler/VM) configuration.
 
-nanopython splits at the bytecode boundary, and the payoff is this: in one
+petitpy splits at the bytecode boundary, and the payoff is this: in one
 combined binary a compiler bug and a VM bug can compensate for each other invisibly. Splitting gives four quadrants,
 and a divergence localises to one of them.
 
@@ -9,7 +9,7 @@ and a divergence localises to one of them.
 | our bytecode        | Q1 - this gate      | Q2 - tools/compile-exec-test |
 | vendor bytecode     | Q3 - this gate      | Q4 - upstream's baseline     |
 
-Q1 exercises `zigpy-compile` -> `nanopython-vm`. Q3 runs vendor `mpy-cross`
+Q1 exercises `zigpy-compile` -> `petitpy-vm`. Q3 runs vendor `mpy-cross`
 bytecode through our VM, which is the only check that validates the VM against
 a front-end we did not write.
 
@@ -38,7 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT / "corpus" / "full" / "basics"
 TESTS = ROOT / "corpus" / "basics"
-VM = ROOT / "zig-out" / "bin" / "nanopython-vm"
+VM = ROOT / "zig-out" / "bin" / "petitpy-vm"
 ZIGPY = ROOT / "zig-out" / "bin" / "zigpy-compile"
 MPY_CROSS = ROOT / "vendor" / "micropython" / "mpy-cross" / "build" / "mpy-cross"
 

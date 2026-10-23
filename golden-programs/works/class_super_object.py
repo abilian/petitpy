@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Calling object.__init__() via super().__init__
 try:
     # If we don't expose object.__init__ (small ports), there's

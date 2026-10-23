@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/ringbuf.c (Axis-B B1 W6; TRUE-ZIG).
+//! petitpy — Zig port of py/ringbuf.c (Axis-B B1 W6; TRUE-ZIG).
 //! Pure ring buffer: 5 exported fns over `ringbuf_t` (a stable
 //! non-config struct: u8* + 3×u16). No nlr/obj/MP_STATE/config —
 //! the genuine-algorithm bar. The header's `static inline`

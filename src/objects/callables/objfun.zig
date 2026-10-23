@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objfun.c (Axis-B B1.5 W4 + ROM lift).
+//! petitpy — Zig port of py/objfun.c (Axis-B B1.5 W4 + ROM lift).
 //!
 //! Under nano + full (EMIT_NATIVE=0, EMIT_INLINE_ASM=0, STACKLESS=0,
 //! FUNCTION_ATTRS_CODE=0, STACK_CHECK=0): everything live in vendor

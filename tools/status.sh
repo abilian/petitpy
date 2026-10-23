@@ -60,10 +60,10 @@ ls -t notes/*.md 2>/dev/null | head -5 | sed 's|^|  |'
 run_corpus() {
     cfg=$1
     echo "  building CONFIG=$cfg..."
-    if make -s build CONFIG="$cfg" >/tmp/nanopython-build.log 2>&1; then
-        python3 tools/progress.py --config "$cfg" ./zig-out/bin/nanopython | sed 's/^/  /'
+    if make -s build CONFIG="$cfg" >/tmp/petitpy-build.log 2>&1; then
+        python3 tools/progress.py --config "$cfg" ./zig-out/bin/petitpy | sed 's/^/  /'
     else
-        echo "  BUILD FAILED for CONFIG=$cfg (see /tmp/nanopython-build.log)"
+        echo "  BUILD FAILED for CONFIG=$cfg (see /tmp/petitpy-build.log)"
     fi
 }
 
@@ -90,11 +90,11 @@ make -s unit 2>&1 | tail -8 | sed 's/^/  /'
 
 # ── Lint ────────────────────────────────────────────────────────────
 sec "Lint"
-if make -s lint >/tmp/nanopython-lint.log 2>&1; then
+if make -s lint >/tmp/petitpy-lint.log 2>&1; then
     echo "  clean"
 else
     echo "  FAILED:"
-    tail -10 /tmp/nanopython-lint.log | sed 's/^/    /'
+    tail -10 /tmp/petitpy-lint.log | sed 's/^/    /'
 fi
 
 bar

@@ -1,10 +1,10 @@
-# A piped REPL session — feed this on stdin to ./nanopython (no args)
+# A piped REPL session — feed this on stdin to ./petitpy (no args)
 # to demonstrate multi-line input.
 #
-#   ./zig-out/bin/nanopython < examples/repl_session.py
+#   ./zig-out/bin/petitpy < examples/repl_session.py
 #
 # This file is itself runnable as a script too:
-#   ./zig-out/bin/nanopython examples/repl_session.py
+#   ./zig-out/bin/petitpy examples/repl_session.py
 
 def greet(name):
     return f"Hello, {name}!"

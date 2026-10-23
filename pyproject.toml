@@ -1,4 +1,4 @@
-# petitpy (developed as nanopython): wheels and sdist via ziglang + hatchling.
+# petitpy: wheels and sdist via ziglang + hatchling.
 #
 # `make release-dist` cross-builds the four wheels and the sdist; on other
 # platforms `pip install petitpy` builds the sdist with ziglang in pip's
@@ -61,7 +61,7 @@ only-include = [
     "port/gate_moduledefs.py",
     "vendor/micropython_embed",
     "build.zig",
-    "nanopython-lib",
+    "petitpy-lib",
     "python",
     "scripts/hatch_build.py",
     "README.md",
@@ -210,20 +210,20 @@ path = "scripts/hatch_build.py"
 # ---------------------------------------------------------------------------
 # Ruff. No `select` on purpose — the project tracks ruff's defaults. The only
 # configuration here turns OFF rules that are actively wrong for the trees
-# that run ON nanopython rather than on CPython; host-side code under tools/, tests/,
+# that run ON petitpy rather than on CPython; host-side code under tools/, tests/,
 # port/ and scripts/ is held to the full default set.
 # ---------------------------------------------------------------------------
 [tool.ruff.lint.per-file-ignores]
-# FURB188: rewrites to str.removeprefix()/removesuffix(), which nanopython
+# FURB188: rewrites to str.removeprefix()/removesuffix(), which petitpy
 #          does not implement — applying it produces a dead page. Pinned by
 #          the `str_removeprefix_absent` case in tests/test_integration_core.py.
 # PLR1730: rewrites `if a > b: b = a` to max()/min(). Correct, but measured
-#          1.80x slower on nanopython (298ms vs 537ms over 300k iterations),
+#          1.80x slower on petitpy (298ms vs 537ms over 300k iterations),
 #          and nearly every site is inside a per-frame game loop.
 # RUF013:  the fix adds a `typing` import to satisfy an annotation the nano
 #          runtime never evaluates.
 "web/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
-"nanopython-lib/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
+"petitpy-lib/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
 "projects/ci-build-monitor/src/**/*.py" = ["FURB188", "PLR1730", "RUF013"]
 
 [dependency-groups]

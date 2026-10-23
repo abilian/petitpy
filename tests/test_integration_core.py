@@ -887,7 +887,7 @@ CASES = [
         ),
         "a\napi-key\n",
     ),
-    # re.IGNORECASE (and DOTALL/MULTILINE/VERBOSE) — nanopython-lib/re.py
+    # re.IGNORECASE (and DOTALL/MULTILINE/VERBOSE) — petitpy-lib/re.py
     # shim adds the constants (all 0, no-op flags). Prevents AttributeError
     # on `import re; re.compile(pat, re.IGNORECASE)` in downstream code
     # like hop3-rootd's audit-log secret scrubber. Surfaced via
@@ -1155,7 +1155,7 @@ CASES = [
         "{'b': 2} 4 ['b', 'a']\n",
     ),
     # collections.abc as a frozen submodule of the collections package.
-    # Enabled by (a) converting nanopython-lib/collections.py to a
+    # Enabled by (a) converting petitpy-lib/collections.py to a
     # package + adding collections/abc.py, (b) teaching the freezer to
     # accept dotted names ("collections.abc" → build-frozen/collections.abc.mpy),
     # (c) extending import_search.tryLoadComponent to try frozen lookup
@@ -1212,7 +1212,7 @@ CASES = [
             "try:\n"
             "    from dataclasses import dataclass\n"
             "except ImportError:\n"
-            "    print('x 5')  # nanopython-lib not on sys.path; skip-passthrough\n"
+            "    print('x 5')  # petitpy-lib not on sys.path; skip-passthrough\n"
             "else:\n"
             "    @dataclass(frozen=True, slots=True, kw_only=True, order=True,\n"
             "               unsafe_hash=True, match_args=True)\n"
@@ -1471,7 +1471,7 @@ CASES = [
         "importlib_metadata_version",
         (
             "from importlib.metadata import version, PackageNotFoundError\n"
-            "print(version('nanopython'))\n"
+            "print(version('petitpy'))\n"
             "try:\n"
             "    version('definitely-not-a-package')\n"
             "except PackageNotFoundError:\n"
@@ -1533,7 +1533,7 @@ CASES = [
     #
     # These exist because a linter "fix" is the realistic way they break:
     # ruff's FURB188 wanted to rewrite a demo to str.removeprefix(), which
-    # nanopython does not have, and nothing in the gate would have caught
+    # petitpy does not have, and nothing in the gate would have caught
     # the resulting dead page (make never touches web/). Pin the behaviour
     # on both arms instead of rediscovering it in a browser.
     # ---------------------------------------------------------------

@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objrange.c (drops objrange_shim).
+//! petitpy — full Zig port of py/objrange.c (drops objrange_shim).
 //!
 //! Config:
 //!   nano: SLICE=1, RANGE_BINOP=1 (binop live), RANGE_ATTRS=0 (no attr)

@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/map.c (full).
+//! petitpy — Zig port of py/map.c (full).
 //!
 //! Ports all of map.c: mp_map_init/_init_fixed_table/_deinit/_clear,
 //! mp_map_lookup (+ private rehash), and (under MICROPY_PY_BUILTINS_SET)
@@ -338,7 +338,7 @@ fn mapRehash(map: *MpMap) void {
 // found for a key, indexed by the key's bits and shared by all maps. A
 // hit is validated by comparing the slot's key, so a stale or colliding
 // entry is only a miss. A plain global rather than MP_STATE_VM, like
-// pyerr.pending_exc: nanopython has no threads.
+// pyerr.pending_exc: petitpy has no threads.
 var lookup_cache = [_]u8{0} ** 128;
 inline fn cacheEntry(index: Obj) *u8 {
     return &lookup_cache[(index >> 2) % lookup_cache.len];

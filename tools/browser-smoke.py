@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Headless-Chromium browser smoke harness for nanopython demos.
+"""Headless-Chromium browser smoke harness for petitpy demos.
 
 Launches a page in headless Chromium, captures every console message
 (log / warn / error / info / debug) plus uncaught page errors, and

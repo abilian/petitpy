@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/parsenum.c.
+//! petitpy — Zig port of py/parsenum.c.
 //!
 //! Nano config (probed): MICROPY_LONGINT_IMPL=NONE,
 //! MICROPY_PY_BUILTINS_FLOAT=0, MICROPY_PY_BUILTINS_COMPLEX=0,

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # object.__new__(cls) is the only way in Python to allocate empty
 # (non-initialized) instance of class.
 # See e.g. http://infohost.nmt.edu/tcc/help/pubs/python/web/new-new-method.html

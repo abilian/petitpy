@@ -14,7 +14,7 @@ walk a JsProxy chain.
 
 import js
 
-STORAGE_KEY = "nanopython-todos"
+STORAGE_KEY = "petitpy-todos"
 
 
 # ---------------------------------------------------------------------------

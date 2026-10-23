@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objbool.c (incl. mp_type_bool ROM).
+//! petitpy — full Zig port of py/objbool.c (incl. mp_type_bool ROM).
 //! Nano: IMMEDIATE_OBJS=1 (mp_obj_bool_t / const false/true obj #if-dead),
 //! PY_JSON=0 (bool_print → True/False always).
 const mp = @cImport({

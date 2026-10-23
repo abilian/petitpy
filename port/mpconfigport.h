@@ -1,15 +1,15 @@
-/* nanopython — MicroPython configuration for the embed port.
+/* petitpy — MicroPython configuration for the embed port.
  *
  * Two presets, selected at build time:
  *   default                    → frozen nano slice (the strangler corpus
  *                                is calibrated against this — changing
  *                                non-FULL-gated values invalidates goldens).
- *   -DNANOPYTHON_CONFIG_FULL=1 → full features (everything available).
+ *   -DPETITPY_CONFIG_FULL=1 → full features (everything available).
  *
  * The build.zig `-Dconfig=nano|full` option drives the define above.
  * Phase 1
  * wires the toggle, subsequent phases add the actual feature flips
- * inside the #ifdef NANOPYTHON_CONFIG_FULL arm.
+ * inside the #ifdef PETITPY_CONFIG_FULL arm.
  */
 
 // Common MicroPython embed configuration (types, alloca, mphalport path).
@@ -38,9 +38,9 @@
 #define MICROPY_ENABLE_COMPILER                 (1)
 #define MICROPY_ENABLE_GC                       (1)
 // ADR-002 F2: MICROPY_PY_GC is the Python-facing `gc` module; gated on
-// NANOPYTHON_FEATURE_GC_MODULE. This is independent of MICROPY_ENABLE_GC
+// PETITPY_FEATURE_GC_MODULE. This is independent of MICROPY_ENABLE_GC
 // (the GC subsystem itself, which stays on regardless).
-#ifdef NANOPYTHON_FEATURE_GC_MODULE
+#ifdef PETITPY_FEATURE_GC_MODULE
 #define MICROPY_PY_GC                           (1)
 #else
 #define MICROPY_PY_GC                           (0)
@@ -93,14 +93,14 @@
 #define MICROPY_PY_BUILTINS_INPUT                (1)
 #define MICROPY_HELPER_REPL                      (1)
 // ADR-002 F2 — feature-gated modules. Same pattern as MICROPY_PY_MATH (F1):
-// the NANOPYTHON_FEATURE_<X> macro emitted by build.zig drives whether the
+// the PETITPY_FEATURE_<X> macro emitted by build.zig drives whether the
 // vendor module compiles in. Preset defaults: on for both nano and full.
-#ifdef NANOPYTHON_FEATURE_ERRNO
+#ifdef PETITPY_FEATURE_ERRNO
 #define MICROPY_PY_ERRNO                         (1)
 #else
 #define MICROPY_PY_ERRNO                         (0)
 #endif
-#ifdef NANOPYTHON_FEATURE_STRUCT
+#ifdef PETITPY_FEATURE_STRUCT
 #define MICROPY_PY_STRUCT                        (1)
 #else
 #define MICROPY_PY_STRUCT                        (0)
@@ -109,13 +109,13 @@
 // lib/re1.5/. The MATCH_GROUPS / SPAN / SUB sub-features ship
 // together because turning them off saves only a few KB and the
 // API contract docs them as part of `re`.
-#ifdef NANOPYTHON_FEATURE_RE
+#ifdef PETITPY_FEATURE_RE
 #define MICROPY_PY_RE                            (1)
 #define MICROPY_PY_RE_MATCH_GROUPS               (1)
 #define MICROPY_PY_RE_MATCH_SPAN_START_END       (1)
 #define MICROPY_PY_RE_SUB                        (1)
 #endif
-#ifdef NANOPYTHON_FEATURE_COLLECTIONS
+#ifdef PETITPY_FEATURE_COLLECTIONS
 #define MICROPY_PY_COLLECTIONS                   (1)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT         (1)
 #define MICROPY_PY_COLLECTIONS_DEQUE              (1)
@@ -128,30 +128,30 @@
 #define MICROPY_PY_COLLECTIONS_DEQUE_ITER         (0)
 #define MICROPY_PY_COLLECTIONS_DEQUE_SUBSCR       (0)
 #endif
-#ifdef NANOPYTHON_FEATURE_MICROPYTHON
+#ifdef PETITPY_FEATURE_MICROPYTHON
 #define MICROPY_PY_MICROPYTHON                    (1)
 #else
 #define MICROPY_PY_MICROPYTHON                    (0)
 #endif
-// ADR-006 J1 — JS interop bridge. Gates the `_nanopython_js` builtin
-// module (the wasm-imports + Python-callable shim that nanopython-lib/js.py
+// ADR-006 J1 — JS interop bridge. Gates the `_petitpy_js` builtin
+// module (the wasm-imports + Python-callable shim that petitpy-lib/js.py
 // fronts). Default: off (the scanner sees the qstrs unconditionally, but
 // the gate keeps the module pointer out of moduledefs.h's table when
-// the feature is off, so `import _nanopython_js` raises ImportError under
+// the feature is off, so `import _petitpy_js` raises ImportError under
 // native + wasmtime-CLI).
-#ifdef NANOPYTHON_FEATURE_JS
-#define MICROPY_PY_NANOPYTHON_JS                  (1)
+#ifdef PETITPY_FEATURE_JS
+#define MICROPY_PY_PETITPY_JS                  (1)
 #else
-#define MICROPY_PY_NANOPYTHON_JS                  (0)
+#define MICROPY_PY_PETITPY_JS                  (0)
 #endif
 // MICROPY_PY_IO requires open()/file builtins; deferred (needs mp_hal
 // open/read/seek + a file type).
 #define MICROPY_PY_BUILTINS_FLOAT                (1)
 #define MICROPY_FLOAT_IMPL                       (MICROPY_FLOAT_IMPL_DOUBLE)
 #define MICROPY_PY_BUILTINS_COMPLEX              (0)
-// ADR-002 F1 — MICROPY_PY_MATH is now gated on the NANOPYTHON_FEATURE_MATH
+// ADR-002 F1 — MICROPY_PY_MATH is now gated on the PETITPY_FEATURE_MATH
 // macro emitted by build.zig (preset default: on for both nano and full).
-#ifdef NANOPYTHON_FEATURE_MATH
+#ifdef PETITPY_FEATURE_MATH
 #define MICROPY_PY_MATH                          (1)
 #else
 #define MICROPY_PY_MATH                          (0)
@@ -167,7 +167,7 @@
 #define MICROPY_PY_DESCRIPTORS                   (1)
 #define MICROPY_PY_BUILTINS_RANGE_BINOP          (1)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW           (1)
-#ifdef NANOPYTHON_FEATURE_ARRAY
+#ifdef PETITPY_FEATURE_ARRAY
 #define MICROPY_PY_ARRAY                         (1)
 #else
 #define MICROPY_PY_ARRAY                         (0)
@@ -230,7 +230,7 @@
 // On 64-bit nano targets, keep vendor's default (NONE) — corpus
 // goldens were frozen there. Under -Dconfig=full the MPZ define in the
 // full arm wins regardless.
-#if __SIZEOF_POINTER__ == 4 && !defined(NANOPYTHON_CONFIG_FULL)
+#if __SIZEOF_POINTER__ == 4 && !defined(PETITPY_CONFIG_FULL)
 #undef  MICROPY_LONGINT_IMPL
 #define MICROPY_LONGINT_IMPL                  (MICROPY_LONGINT_IMPL_LONGLONG)
 // wasi-libc doesn't expose SSIZE_MAX (POSIX-only). On wasm32 ssize_t is
@@ -242,13 +242,13 @@
 // Unicode str: str indexes, slices and iterates by code point. On when
 // build.zig's str-unicode option is (default: the full config), which also
 // sets the lexer's mode, so compiler and runtime agree.
-#ifdef NANOPYTHON_STR_UNICODE
+#ifdef PETITPY_STR_UNICODE
 #define MICROPY_PY_BUILTINS_STR_UNICODE        (1)
 #endif
 
 // ─── Full-features arm ────────────────────────────────────────────────
 //
-// When NANOPYTHON_CONFIG_FULL is defined (via build.zig's -Dconfig=full),
+// When PETITPY_CONFIG_FULL is defined (via build.zig's -Dconfig=full),
 // override the nano defaults above to enable every available feature.
 // Phase 1 just wires the toggle —
 // the actual feature flips land in subsequent phases as the Zig ports
@@ -256,7 +256,7 @@
 //
 // Each line below is commented-out today; un-comment in Phase 2+ as the
 // corresponding Zig-side restoration lands.
-#ifdef NANOPYTHON_CONFIG_FULL
+#ifdef PETITPY_CONFIG_FULL
 // Phase 2 (Category A — Zig comptime restoration):
 // MICROPY_PY_DELATTR_SETATTR is now (1) for both arms (was full-only;
 // flipped in v0.7). Redefine kept here
@@ -320,7 +320,7 @@
 // oracle's "SKIP" path in the gated tests; nano keeps them ON to stay
 // byte-identical to the frozen nano-C reference.
 // (ALL_INPLACE_SPECIAL_METHODS can't be turned off here — the qstr scanner
-// runs once with -DNANOPYTHON_CONFIG_FULL and won't generate __imul__ etc
+// runs once with -DPETITPY_CONFIG_FULL and won't generate __imul__ etc
 // qstrs that the nano-side shim references. Accept class_inplace_op2 as a
 // benign config mismatch.)
 #undef MICROPY_PY_BUILTINS_MEMORYVIEW_ITEMSIZE
@@ -331,11 +331,11 @@
 #define MICROPY_PY_BUILTINS_RANGE_BINOP (0)
 #undef MICROPY_PY_COLLECTIONS_NAMEDTUPLE__ASDICT
 #define MICROPY_PY_COLLECTIONS_NAMEDTUPLE__ASDICT (0)
-// ADR-002 F1 — MICROPY_WARNINGS is now gated on NANOPYTHON_FEATURE_WARNING
+// ADR-002 F1 — MICROPY_WARNINGS is now gated on PETITPY_FEATURE_WARNING
 // (preset default: on under full). MICROPY_PY_STR_BYTES_CMP_WARN follows
 // the same gate because the warning it emits is a no-op when MICROPY_WARNINGS
 // is 0 (see py/runtime.h: mp_warning(...) becomes empty).
-#ifdef NANOPYTHON_FEATURE_WARNING
+#ifdef PETITPY_FEATURE_WARNING
 #define MICROPY_WARNINGS                       (1)
 #define MICROPY_PY_STR_BYTES_CMP_WARN          (1)
 extern const struct _mp_print_t mp_stderr_print;
@@ -343,34 +343,34 @@ extern const struct _mp_print_t mp_stderr_print;
 #define MICROPY_ERROR_PRINTER                  (&mp_stderr_print)
 #endif
 // `os` module (Zig-native).
-// Also defined under NANOPYTHON_CONFIG_FULL below (unconditionally, so the
+// Also defined under PETITPY_CONFIG_FULL below (unconditionally, so the
 // qstr scanner sees the module qstrs even when the runtime feature is off).
-#ifdef NANOPYTHON_FEATURE_OS
+#ifdef PETITPY_FEATURE_OS
 #define MICROPY_PY_OS                          (1)
 #endif
 // `time` module (Zig-native).
-#ifdef NANOPYTHON_FEATURE_TIME
+#ifdef PETITPY_FEATURE_TIME
 #define MICROPY_PY_TIME                        (1)
 #endif
 // `socket` module (Zig-native).
-#ifdef NANOPYTHON_FEATURE_SOCKET
+#ifdef PETITPY_FEATURE_SOCKET
 #define MICROPY_PY_SOCKET                      (1)
 #endif
 // `select` module (Zig-native).
-#ifdef NANOPYTHON_FEATURE_SELECT
+#ifdef PETITPY_FEATURE_SELECT
 #define MICROPY_PY_SELECT                      (1)
 #endif
 // `signal` module (Zig-native, MVP).
-#ifdef NANOPYTHON_FEATURE_SIGNAL
+#ifdef PETITPY_FEATURE_SIGNAL
 #define MICROPY_PY_SIGNAL                      (1)
 #endif
 // `pwd` + `grp` modules.
-#ifdef NANOPYTHON_FEATURE_PWD_GRP
+#ifdef PETITPY_FEATURE_PWD_GRP
 #define MICROPY_PY_PWD                         (1)
 #define MICROPY_PY_GRP                         (1)
 #endif
 // `_subprocess` low-level module.
-#ifdef NANOPYTHON_FEATURE_SUBPROCESS
+#ifdef PETITPY_FEATURE_SUBPROCESS
 #define MICROPY_PY__SUBPROCESS                 (1)
 #endif
 // MICROPY_PY_IO_BUFFEREDWRITER not enabled here: the corpus/full oracle

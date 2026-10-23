@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 //
-// nanopython patch (2026-07-20): jump offsets widened to int16 so
+// petitpy patch (2026-07-20): jump offsets widened to int16 so
 // long alternation groups compile without overflow. Every Jmp/
 // Split/RSplit instruction is now 3 bytes (opcode + 2-byte signed
 // little-endian offset) instead of 2. Save/Class counts stay 1-byte

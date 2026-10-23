@@ -14,7 +14,7 @@ _json_parse_or_null = js.get("eval")(
     "(function(s){try{return JSON.parse(s);}catch(e){return null;}})"
 )
 
-# chrome is not pre-instantiated in nanopython-lib/js.py; fetch the global
+# chrome is not pre-instantiated in petitpy-lib/js.py; fetch the global
 # once at module load and reuse. See projects/ci-build-monitor/notes/PORTING.md.
 chrome = js.get("chrome")
 
@@ -123,7 +123,7 @@ def show_status(message, is_error):
     status_el.style.set("display", "block")
 
     # Hide after 3 seconds. `js.setTimeout` is not a pre-instantiated global
-    # in nanopython-lib/js.py and MICROPY_MODULE_GETATTR is disabled, so
+    # in petitpy-lib/js.py and MICROPY_MODULE_GETATTR is disabled, so
     # attribute access raises AttributeError (silently swallowed by the
     # callback dispatcher). Route through js.get().
     def hide_status():
@@ -414,7 +414,7 @@ def test_connection():
     def handle_error(error):
         show_status("Connection error: " + error.to_str(), True)
 
-    # `js.fetch` is not a pre-instantiated global in nanopython-lib/js.py and
+    # `js.fetch` is not a pre-instantiated global in petitpy-lib/js.py and
     # MICROPY_MODULE_GETATTR is disabled, so attribute access raises
     # AttributeError (silently swallowed by the callback dispatcher). Route
     # through js.get() — same pattern as providers_sourcehut.py.

@@ -75,7 +75,7 @@ COLORS = {
 
 LINE_SCORES = [0, 40, 100, 300, 1200]  # NES-style scoring
 
-STORAGE_KEY = "nanopython:tetris_lite:high"
+STORAGE_KEY = "petitpy:tetris_lite:high"
 
 
 # ---------------------------------------------------------------------------

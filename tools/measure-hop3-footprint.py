@@ -17,7 +17,7 @@ dispatch loop) N times per cell, reports median peak RSS + wall time.
 Usage:
     python3 tools/measure-hop3-footprint.py \\
         --hop3-src ~/projects/hop3/hop3/packages/hop3-rootd/src \\
-        --interpreter "nanopython=zig-out/bin/nanopython" \\
+        --interpreter "petitpy=zig-out/bin/petitpy" \\
         --interpreter "python3=/usr/bin/python3" \\
         --dispatches 100 --runs 5
 
@@ -26,7 +26,7 @@ The label convention matters for one thing only: labels containing "nano"
 everything else gets PYTHONPATH pointing at the raw hop3-rootd source.
 Rename the interpreter labels accordingly if you have unusual paths.
 
-No interpreter args? Defaults to zig-out/bin/nanopython and $(which python3).
+No interpreter args? Defaults to zig-out/bin/petitpy and $(which python3).
 """
 
 from __future__ import annotations
@@ -155,7 +155,7 @@ def measure(label: str, argv: list[str], env: dict[str, str], runs: int) -> dict
 
 # Version-injection prelude. hop3_rootd/__init__.py does
 # ``version("hop3-rootd")`` at import time; that has to succeed under both
-# interpreters. Nanopython path uses the frozen module's _VERSIONS dict;
+# interpreters. petitpy path uses the frozen module's _VERSIONS dict;
 # CPython path monkey-patches importlib.metadata.version. Whichever
 # branch matches the running interpreter fires; the other silently
 # passes through.
@@ -247,7 +247,7 @@ def parse_interpreter_arg(spec: str) -> tuple[str, str]:
     return os.path.basename(spec), spec
 
 
-def is_nanopython(label: str) -> bool:
+def is_petitpy(label: str) -> bool:
     return "nano" in label.lower()
 
 
@@ -257,7 +257,7 @@ def env_for(label: str, shim_dir: Path, hop3_src: Path) -> dict[str, str]:
     the variable it recognises. Setting both keeps this script agnostic
     to the interpreter's specific import protocol."""
     env = os.environ.copy()
-    if is_nanopython(label):
+    if is_petitpy(label):
         env["PETITPY_LIB"] = str(shim_dir)
     else:
         pypath = env.get("PYTHONPATH", "")
@@ -306,7 +306,7 @@ def main() -> int:
         metavar="LABEL=PATH",
         help="Interpreter to measure — repeatable. Labels containing "
         "'nano' get PETITPY_LIB; others get PYTHONPATH. "
-        "Defaults: zig-out/bin/nanopython and $(which python3).",
+        "Defaults: zig-out/bin/petitpy and $(which python3).",
     )
     parser.add_argument(
         "--dispatches",
@@ -336,9 +336,9 @@ def main() -> int:
     # Default interpreter list.
     if not args.interpreter:
         cands = []
-        nano = REPO / "zig-out/bin/nanopython"
+        nano = REPO / "zig-out/bin/petitpy"
         if nano.exists():
-            cands.append(f"nanopython={nano}")
+            cands.append(f"petitpy={nano}")
         py = shutil.which("python3")
         if py:
             cands.append(f"python3={py}")
@@ -366,10 +366,10 @@ def main() -> int:
     print(f"Runs per cell:  {args.runs}   Dispatches per run: {args.dispatches}")
     print()
 
-    # Build the nanopython shim tree — reuses build_shim() from the smoke
+    # Build the petitpy shim tree — reuses build_shim() from the smoke
     # tool so the patched sources match what the runner produces. CPython
     # workloads don't touch this tree.
-    print("Building nanopython shim tree…", flush=True)
+    print("Building petitpy shim tree…", flush=True)
     shim_dir = Path(tempfile.mkdtemp(prefix="hop3-footprint-"))
     shim_ok = True
     try:
@@ -409,7 +409,7 @@ def main() -> int:
     results: dict[tuple[str, str], dict | None] = {}
     for spec in args.interpreter:
         label, path = parse_interpreter_arg(spec)
-        if is_nanopython(label) and not shim_ok:
+        if is_petitpy(label) and not shim_ok:
             print(f"Skipping {label}: no shim tree available.")
             continue
         print(f"Measuring {label}  ({path})")

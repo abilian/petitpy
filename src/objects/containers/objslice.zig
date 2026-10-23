@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objslice.c.
+//! petitpy — Zig port of py/objslice.c.
 //!
 //! Config (under both nano and full): SLICE=1, SLICE_INDICES=1.
 //! SLICE_ATTRS: 0 under nano (locals_dict with indices method only),

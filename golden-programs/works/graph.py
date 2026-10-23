@@ -1,5 +1,5 @@
 # golden: source=prescrypt-tryalgo; needs=fs.open
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 #!/usr/bin/env python3
 """\
 Reading graphs from files and writing into files

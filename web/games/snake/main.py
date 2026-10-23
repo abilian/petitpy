@@ -31,7 +31,7 @@ APPLE = "#f7768e"
 TEXT = "#e6e6e6"
 DIM = "#94a3b8"
 
-STORAGE_KEY = "nanopython:snake:high"
+STORAGE_KEY = "petitpy:snake:high"
 
 
 # ---------------------------------------------------------------------------

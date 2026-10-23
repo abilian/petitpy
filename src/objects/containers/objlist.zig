@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objlist.c (drops objlist_shim).
+//! petitpy — full Zig port of py/objlist.c (drops objlist_shim).
 //!
 //! Nano config: JSON=0 (print branch dead), SLICE=1 (live), SYS_GETSIZEOF=0
 //! (sizeof branch dead). The flexible-array hazard is milder than tuple

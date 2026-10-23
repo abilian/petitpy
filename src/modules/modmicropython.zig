@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/modmicropython.c (the `micropython`
+//! petitpy — Zig port of py/modmicropython.c (the `micropython`
 //! builtin module).
 //!
 //! Under nano + full the live surface is the same 5 entries:

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 print("foobar".endswith("bar"))
 print("foobar".endswith("baR"))
 print("foobar".endswith("bar1"))

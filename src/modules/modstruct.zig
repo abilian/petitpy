@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/modstruct.c (the `struct` builtin module).
+//! petitpy — Zig port of py/modstruct.c (the `struct` builtin module).
 //!
 //! Faithful translation: get_fmt_type, get_fmt_num, calc_size_items,
 //! struct_calcsize, struct_unpack_from, struct_pack, struct_pack_into.

@@ -1,4 +1,4 @@
-//! nanopython-vm — VM-only entry point.
+//! petitpy-vm — VM-only entry point.
 //!
 //! Reads argv[1] as a .mpy file and executes it. The compiler track
 //! (`src/compiler/*`, `src/runtime/zig_compile_bridge.zig`,
@@ -144,7 +144,7 @@ export fn npy_zig_eval_exec(
     locals: ?*anyopaque,
 ) callconv(.c) usize {
     _ = .{ src, src_len, source_file, parse_input_kind, globals, locals };
-    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_NotImplementedError, "compiler not linked in nanopython-vm");
+    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_NotImplementedError, "compiler not linked in petitpy-vm");
     return 0;
 }
 
@@ -155,7 +155,7 @@ export fn npy_zig_compile_to_code(
     parse_input_kind: c_int,
 ) callconv(.c) usize {
     _ = .{ src, src_len, source_file, parse_input_kind };
-    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_NotImplementedError, "compiler not linked in nanopython-vm");
+    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_NotImplementedError, "compiler not linked in petitpy-vm");
     return 0;
 }
 
@@ -172,7 +172,7 @@ export fn npy_zig_compile_to_mpy(
     out_len: *usize,
 ) callconv(.c) c_int {
     _ = .{ src, src_len, src_name, parse_input_kind, out_buf, out_len };
-    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_NotImplementedError, "compiler not linked in nanopython-vm");
+    pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_NotImplementedError, "compiler not linked in petitpy-vm");
     return 2; // NPY_ZIG_SYNTAX (any non-zero suffices)
 }
 
@@ -188,12 +188,12 @@ var mp_gc_heap: [512 * 1024]u8 align(16) = undefined;
 
 fn printUsage(io: std.Io) void {
     const msg =
-        \\nanopython-vm — VM-only runtime (loads pre-compiled .mpy files).
+        \\petitpy-vm — VM-only runtime (loads pre-compiled .mpy files).
         \\
         \\Usage:
-        \\  nanopython-vm <script.mpy>   run a compiled bytecode file
-        \\  nanopython-vm --version      print version
-        \\  nanopython-vm --help         this message
+        \\  petitpy-vm <script.mpy>   run a compiled bytecode file
+        \\  petitpy-vm --version      print version
+        \\  petitpy-vm --help         this message
         \\
     ;
     std.Io.File.stderr().writeStreamingAll(io, msg) catch {};
@@ -212,7 +212,7 @@ pub fn main(init: std.process.Init) !void {
         return;
     }
     if (std.mem.eql(u8, argv[1], "--version") or std.mem.eql(u8, argv[1], "-V")) {
-        const banner = "nanopython-vm " ++ build_options.version ++ "\n";
+        const banner = "petitpy-vm " ++ build_options.version ++ "\n";
         try std.Io.File.stdout().writeStreamingAll(io, banner);
         return;
     }

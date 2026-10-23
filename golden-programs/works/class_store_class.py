@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Inspired by urlparse.py from CPython 3.3 stdlib
 # There was a bug in MicroPython that under some conditions class stored
 # in instance attribute later was returned "bound" as if it was a method,

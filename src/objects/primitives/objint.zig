@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objint.c (drops objint_shim).
+//! petitpy — full Zig port of py/objint.c (drops objint_shim).
 //!
 //! Nano config: LONGINT_IMPL=NONE, FLOAT=1, COMPLEX=0, OBJ_REPR=A.
 //! Under LONGINT_NONE every "int" is a tagged small-int (no heap

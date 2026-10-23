@@ -1,4 +1,4 @@
-//! nanopython — Zig partial port of py/objstr.c (Axis-B B1.5 W5; seam 1).
+//! petitpy — Zig partial port of py/objstr.c (Axis-B B1.5 W5; seam 1).
 //!
 //! objstr.c is the last raise-path-bearing C file blocking B2: ~2473 LOC
 //! source, ~91 top-level decls, ~45 raise sites. Multi-session port.

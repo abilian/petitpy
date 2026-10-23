@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nanopython differential-test corpus harness.
+"""petitpy differential-test corpus harness.
 
 The strangler invariant is: every build must produce byte-identical output to
 the MicroPython reference oracle. This tool freezes the oracle's output for the

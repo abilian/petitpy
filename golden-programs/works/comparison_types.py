@@ -1,5 +1,5 @@
 # golden: source=prescrypt-internal; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 """Test comparison operators with different types.
 
 This tests that comparisons work correctly regardless of how the operands

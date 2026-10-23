@@ -52,7 +52,7 @@ def resolve_runner_argv(
             for a in argv
         ]
         return argv, f"runner: {' '.join(argv)}"
-    bin_path = binary or os.path.join(root, "zig-out", "bin", "nanopython")
+    bin_path = binary or os.path.join(root, "zig-out", "bin", "petitpy")
     bin_path = os.path.abspath(bin_path)
     if not os.path.exists(bin_path):
         raise SystemExit(

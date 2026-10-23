@@ -45,7 +45,7 @@ BOMB_SPEED = 4
 
 ALIEN_ROW_COLORS = ("pink", "purple", "blue", "green")
 
-STORAGE_KEY = "nanopython:invaders_lite:high"
+STORAGE_KEY = "petitpy:invaders_lite:high"
 
 
 # ---------------------------------------------------------------------------

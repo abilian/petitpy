@@ -1,5 +1,5 @@
 # golden: source=prescrypt-internal; needs=grammar.match
-# golden: works-on=nanopython-native,nanopython-wasm
+# golden: works-on=petitpy-native,petitpy-wasm
 """Test match statements (structural pattern matching)."""
 from __future__ import annotations
 

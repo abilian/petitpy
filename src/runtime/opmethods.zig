@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/opmethods.c. The 4 slot-dispatch
+//! petitpy — full Zig port of py/opmethods.c. The 4 slot-dispatch
 //! fns are now expressed via `mirrors.MpObjType` (callSubscr +
 //! callBinaryOp); the 4 ROM const fun-objects (mp_op_getitem_obj /
 //! setitem / delitem / contains) live here as `pub export const`

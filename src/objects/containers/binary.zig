@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/binary.c.
+//! petitpy — Zig port of py/binary.c.
 //! 8 class-A exports, 0 nlr-hosts. Binary-verified LIVE (array/struct
 //! backends). Nano-specialised (probed): MP_ENDIANNESS_LITTLE=1,
 //! MP_BYTES_PER_OBJ_WORD=8, FLOAT=0 (half-float + e/f/d *value*

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-tryalgo; needs=grammar.walrus
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 #!/usr/bin/env python3
 """\
 Maximum profit bipartite matching by Kuhn-Munkres

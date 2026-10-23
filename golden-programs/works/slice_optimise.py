@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Test that the slice-on-stack optimisation does not break various uses of slice
 # (see MP_TYPE_FLAG_SUBSCR_ALLOWS_STACK_SLICE type option).
 #

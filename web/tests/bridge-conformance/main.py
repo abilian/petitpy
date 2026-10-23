@@ -3,7 +3,7 @@
 These cannot live in tests/integration.py: that suite runs under wasmtime,
 which cannot instantiate the demo artifact at all (no JS host to satisfy
 `env::js_create_callback`). So they are gated here instead, in a browser,
-against the same web/nanopython.wasm the demos load.
+against the same web/petitpy.wasm the demos load.
 
 Only the NON-trapping half is assertable. Calling through a null handle and
 JSON.parse on malformed input both trap at the host level and kill the

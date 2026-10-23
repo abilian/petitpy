@@ -1,7 +1,5 @@
 # petitpy
 
-*Published on PyPI as petitpy; developed as nanopython.*
-
 **Python where CPython doesn't fit.** petitpy is a small Python runtime written in [Zig](https://ziglang.org/). It runs in a browser tab, as a small Linux daemon, and as a native scripting target on macOS or Linux. It is meant for places where a CPython install or a Pyodide download is too much, but you still want real Python: floats, dicts, classes, comprehensions, `match`, `dataclasses` and the everyday stdlib.
 
 ```sh

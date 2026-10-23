@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Case 1: Immutable object (e.g. number-like)
 # __iadd__ should not be defined, will be emulated using __add__
 

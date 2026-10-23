@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""metrics — record + report nanopython size, coverage, and perf over time.
+"""metrics — record + report petitpy size, coverage, and perf over time.
 
 Subcommands:
     record           Measure current state, append a row to history.
@@ -22,9 +22,9 @@ minutes; opt in with `record --with-perf`.
 
 Column meanings (used by `report` and `latest`):
 
-    wasm-raw          web/nanopython.wasm — the production ship artifact
+    wasm-raw          web/petitpy.wasm — the production ship artifact
     wasm-opt          wasm post `wasm-opt -Oz`; only present after `make wasm-opt`
-    native-release    zig-out/bin/nanopython after `make build-release`
+    native-release    zig-out/bin/petitpy after `make build-release`
                       (ReleaseFast — what a user would actually run on a host)
     corpus            corpus/nano/basics/*.out byte-exact gate, native side
                       (538/541 today; 541/541 is the strangler invariant target)
@@ -65,27 +65,27 @@ import timing
 
 # The "ship" artifact — what a user actually downloads. Built by `make web`
 # (ReleaseSmall + frozen-tiny + wasm32-wasi).
-WASM_SHIP = ROOT / "web" / "nanopython.wasm"
+WASM_SHIP = ROOT / "web" / "petitpy.wasm"
 
 # Optional post-wasm-opt artifact. Produced by `make wasm-opt`. Tracked
 # separately so ADR 007 P1's progress is visible row-by-row.
-WASM_OPT = ROOT / "zig-out" / "bin" / "nanopython.opt.wasm"
+WASM_OPT = ROOT / "zig-out" / "bin" / "petitpy.opt.wasm"
 
 # Native binary used for measurement. `make build-release` produces this
 # as ReleaseFast — what a user would actually run. Debug-build size
 # isn't a useful longitudinal metric (it doesn't ship anywhere).
-NATIVE_BIN = ROOT / "zig-out" / "bin" / "nanopython"
+NATIVE_BIN = ROOT / "zig-out" / "bin" / "petitpy"
 
 # Frozen-tiny .mpy total — the bundled stdlib baked into the wasm.
 FROZEN_DIR = ROOT / "build-frozen"
 
 # Wasm runner + corpus gate inputs.
-WASM_BIN = ROOT / "zig-out" / "bin" / "nanopython.wasm"
+WASM_BIN = ROOT / "zig-out" / "bin" / "petitpy.wasm"
 RUN_WASM = ROOT / "tools" / "run_wasm.sh"
 WASM_KNOWN_FAILS = ROOT / "corpus" / "wasm-known-fails.txt"
 
 # p2w benchmark programs — reused per the user's direction. Each is a
-# pure-Python program runnable on any interpreter; nanopython native +
+# pure-Python program runnable on any interpreter; petitpy native +
 # wasm + MicroPython unix-standard + CPython all accept them.
 BENCH_DIR = ROOT / "sandbox" / "p2w" / "programs" / "benchmarks"
 MP_BIN = (
@@ -558,13 +558,13 @@ def cmd_report(args) -> int:
     print()
     print("Column key:")
     print(
-        "  wasm-raw      — web/nanopython.wasm (ReleaseSmall + frozen-tiny + wasm32-wasi)."
+        "  wasm-raw      — web/petitpy.wasm (ReleaseSmall + frozen-tiny + wasm32-wasi)."
     )
     print(
         "  wasm-opt      — same, post `wasm-opt -Oz`. Empty until `make wasm-opt` ran."
     )
     print(
-        "  native        — zig-out/bin/nanopython after `make build-release` (ReleaseFast)."
+        "  native        — zig-out/bin/petitpy after `make build-release` (ReleaseFast)."
     )
     print("  native-corpus — `make check` count: byte-exact corpus, native arm.")
     print(

@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `select` module (select(2) wrapper).
+//! petitpy — Zig-native `select` module (select(2) wrapper).
 //!
 //! Full-native only. Minimal surface for the
 //! accept loop pattern hop3-rootd uses:

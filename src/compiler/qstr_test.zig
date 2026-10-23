@@ -100,7 +100,7 @@ pub fn main(init: std.process.Init) !void {
     const input_py: []const u8 = if (argv.len >= 2) argv[1] else DEFAULT_FIXTURE;
 
     // Place the .mpy in /tmp so we don't pollute the source tree.
-    const out_mpy = "/tmp/nanopython_qstr_test.mpy";
+    const out_mpy = "/tmp/petitpy_qstr_test.mpy";
 
     print_line("qstr_test: compiling {s} -> {s}\n", .{ input_py, out_mpy });
 

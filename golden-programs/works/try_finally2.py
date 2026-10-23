@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # check that the Python stack does not overflow when the finally
 # block itself uses more stack than the rest of the function
 def f1(a, b):

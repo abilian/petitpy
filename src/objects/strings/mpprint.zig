@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/mpprint.c.
+//! petitpy — full Zig port of py/mpprint.c.
 //! mp_print_str / mp_print_strn (the pad/fill/group state machine),
 //! mp_print_int (uint→string base conversion), mp_print_mp_int
 //! (objint-coupled), mp_print_float (FLOAT=1 in both nano and full),

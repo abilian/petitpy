@@ -1,4 +1,4 @@
-//! nanopython — shimless port of MicroPython's `qstr_compute_hash`.
+//! petitpy — shimless port of MicroPython's `qstr_compute_hash`.
 //!
 //! Mirrors vendor `py/qstr.c:qstr_compute_hash` (djb2, `hash * 33 ^ data`)
 //! byte-for-byte. Used by `src/modules/modos.zig` for ROM string
@@ -7,7 +7,7 @@
 //! without a MICROPY_MODULE_BUILTIN_INIT hook.
 //!
 //! The hash bit-width comes from `MICROPY_QSTR_BYTES_IN_HASH`:
-//!   0 → mask 0xFFFF (nanopython's default under ROM_LEVEL_MINIMUM)
+//!   0 → mask 0xFFFF (petitpy's default under ROM_LEVEL_MINIMUM)
 //!   1 → mask 0xFF
 //!   2 → mask 0xFFFF
 //!

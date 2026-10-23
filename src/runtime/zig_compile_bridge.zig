@@ -1,4 +1,4 @@
-//! nanopython — Zig port of `src/runtime/zig_compile_bridge.c`.
+//! petitpy — Zig port of `src/runtime/zig_compile_bridge.c`.
 //!
 //! This is the architectural pivot of NX-3: replaces the
 //! `nlr_push_jump_callback` globals/locals swap (which fired on NLR

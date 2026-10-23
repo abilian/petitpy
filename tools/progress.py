@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nanopython progress meter.
+"""petitpy progress meter.
 
 Reports what fraction of the frozen corpus the candidate interpreter runs
 *byte-identically to the MicroPython oracle*. This is the single number that
@@ -16,8 +16,8 @@ Usage:
 `<command...>` is how to invoke the candidate interpreter. The test script path
 replaces a literal `{script}` token if present, else it is appended:
 
-  python3 tools/progress.py ./zig-out/bin/nanopython
-  python3 tools/progress.py wasmtime zig-out/bin/nanopython.wasm --
+  python3 tools/progress.py ./zig-out/bin/petitpy
+  python3 tools/progress.py wasmtime zig-out/bin/petitpy.wasm --
   python3 tools/progress.py node tools/run.mjs {script}
 
 Options:
@@ -103,7 +103,7 @@ def main(args: list[str]) -> int:
         return 0
 
     pct = r["percent"]
-    print(f"nanopython progress: {pct:5.1f}%  {_bar(pct / 100.0)}")
+    print(f"petitpy progress: {pct:5.1f}%  {_bar(pct / 100.0)}")
     print(
         f"  passing {r['passed']}/{r['total']} corpus tests "
         f"(byte-identical to the frozen reference)"

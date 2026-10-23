@@ -2,11 +2,11 @@
 """ADR-003 L2 — frozen-tiny module compiler.
 
 Walks the frozen-tiny module list, locates each module's `.py` source
-(in `nanopython-lib/`), and compiles it to
+(in `petitpy-lib/`), and compiles it to
 `.mpy` via `./zig-out/bin/zigpy-compile`. Output lands in `build-frozen/`.
 
 Driven by `make freeze`. After this runs, `zig build -Dfrozen-tiny=true`
-bakes the bytes into the nanopython binary via `@embedFile`.
+bakes the bytes into the petitpy binary via `@embedFile`.
 
 The module list is hard-coded here for L1+L2. It will move to
 `frozen.zon` or an equivalent build-time data file when the set grows.
@@ -28,27 +28,27 @@ OUT_DIR = ROOT / "build-frozen"
 # (module_name, relative_path_from_root) — order matches the table in
 # src/runtime/frozen_modules.zig. Sources picked for L1+L2:
 #
-#   json       — nanopython-lib (micropython-lib has no python-stdlib json;
+#   json       — petitpy-lib (micropython-lib has no python-stdlib json;
 #                upstream MicroPython exposes json as a C extension module).
-#                See ADR-003 §D1 — local additions go under nanopython-lib/.
-#   types      — nanopython-lib/types.py, a verbatim copy from micropython-lib.
+#                See ADR-003 §D1 — local additions go under petitpy-lib/.
+#   types      — petitpy-lib/types.py, a verbatim copy from micropython-lib.
 #   __future__ — REMOVED. `from __future__ import …` is a directive, not an
 #                import, and compile.zig consumes the statement now, so the
 #                module was only carrying `import __future__` and attribute
 #                introspection — which nothing here does. Put it back from
 #                micropython-lib if that changes.
-#   _thread    — nanopython-lib stub (single-thread runtime). Many stdlib
+#   _thread    — petitpy-lib stub (single-thread runtime). Many stdlib
 #                modules import it conditionally; the stub keeps those
 #                imports working. ADR-003 §D6.
 MODULES = [
-    ("json", "nanopython-lib/json.py"),
-    ("types", "nanopython-lib/types.py"),
-    ("_thread", "nanopython-lib/_thread.py"),
+    ("json", "petitpy-lib/json.py"),
+    ("types", "petitpy-lib/types.py"),
+    ("_thread", "petitpy-lib/_thread.py"),
     # ADR-006 J2/Q4 — JS interop Python front. The frozen .mpy is baked
     # into every binary (size impact ~2-3 KB compiled); whether `import
-    # js` succeeds depends on the runtime having the `_nanopython_js`
+    # js` succeeds depends on the runtime having the `_petitpy_js`
     # builtin (-Dfeature-js=true at build time).
-    ("js", "nanopython-lib/js.py"),
+    ("js", "petitpy-lib/js.py"),
     # Algorithm/data-science stdlib slice — the modules ~200 programs
     # in golden-programs/needs-stdlib/ depend on. heapq, bisect,
     # functools have no upstream deps and copy straight from
@@ -56,68 +56,68 @@ MODULES = [
     # and ucollections is always live under nano (PY_COLLECTIONS=1).
     # random is a local pure-Python LCG — micropython-lib's relies
     # on `urandom` which we don't ship.
-    ("heapq", "nanopython-lib/heapq.py"),
-    ("bisect", "nanopython-lib/bisect.py"),
-    # nanopython-lib supersedes vendor: adds lru_cache + cache on top of
+    ("heapq", "petitpy-lib/heapq.py"),
+    ("bisect", "petitpy-lib/bisect.py"),
+    # petitpy-lib supersedes vendor: adds lru_cache + cache on top of
     # partial/wraps/reduce. tests/stdlib/test_functools.py pins the full
     # surface (ADR 011 Phase 2). The vendor file has only 4 functions.
-    ("functools", "nanopython-lib/functools.py"),
-    ("collections", "nanopython-lib/collections/__init__.py"),
+    ("functools", "petitpy-lib/functools.py"),
+    ("collections", "petitpy-lib/collections/__init__.py"),
     # collections.abc — dotted-name frozen entry. The import machinery's
     # frozen lookup was extended to try the full dotted name (not just
     # the current level), so `from collections.abc import Callable`
     # resolves. Surfaced by tools/hop3_rootd_smoke.py (finding A.1).
-    ("collections.abc", "nanopython-lib/collections/abc.py"),
-    ("random", "nanopython-lib/random.py"),
-    # nanopython-lib supersedes vendor: micropython-lib's itertools plus
+    ("collections.abc", "petitpy-lib/collections/abc.py"),
+    ("random", "petitpy-lib/random.py"),
+    # petitpy-lib supersedes vendor: micropython-lib's itertools plus
     # permutations, combinations, product, groupby, zip_longest and the
     # other CPython functions it lacks, and a tee() whose copies are
     # independent. No external deps.
-    ("itertools", "nanopython-lib/itertools.py"),
+    ("itertools", "petitpy-lib/itertools.py"),
     # ADR 010 §A3a slice 2 — string (ctype constants + list-based
     # translate + capwords). Adapted from micropython-lib (the upstream
     # translate uses io.StringIO which is full-only). ~40 LOC compiled
     # to <1 KB. No external deps.
-    ("string", "nanopython-lib/string.py"),
-    # nanopython-lib/re.py — thin shim that adds CPython flag constants
+    ("string", "petitpy-lib/string.py"),
+    # petitpy-lib/re.py — thin shim that adds CPython flag constants
     # (IGNORECASE / DOTALL / MULTILINE / VERBOSE) to the C-side `ure`
     # module. Vendor re1.5 doesn't honor these flags; the shim lets
     # CPython idioms like `re.compile(pat, re.IGNORECASE)` import and
     # run (case-sensitive under the hood). Registered as `re` — wins
     # over the extensible C `re` per MicroPython's search order.
     # Surfaced by tools/hop3_rootd_smoke.py (finding A.2).
-    ("re", "nanopython-lib/re.py"),
-    # nanopython-lib/subprocess.py — Python wrapper on top of the C-side
+    ("re", "petitpy-lib/re.py"),
+    # petitpy-lib/subprocess.py — Python wrapper on top of the C-side
     # low-level `_subprocess._spawn_and_wait` primitive. Exposes
     # CompletedProcess, CalledProcessError, TimeoutExpired, and the
     # kwargs-accepting run() function.
-    ("subprocess", "nanopython-lib/subprocess.py"),
+    ("subprocess", "petitpy-lib/subprocess.py"),
     # Pure-Python shims.
-    ("typing", "nanopython-lib/typing.py"),
-    ("uuid", "nanopython-lib/uuid.py"),
-    ("shutil", "nanopython-lib/shutil.py"),
-    ("pathlib", "nanopython-lib/pathlib.py"),
-    ("datetime", "nanopython-lib/datetime.py"),
+    ("typing", "petitpy-lib/typing.py"),
+    ("uuid", "petitpy-lib/uuid.py"),
+    ("shutil", "petitpy-lib/shutil.py"),
+    ("pathlib", "petitpy-lib/pathlib.py"),
+    ("datetime", "petitpy-lib/datetime.py"),
     # Dotted-name entries — resolved via the frozen full-name lookup in
     # runtime/import_search.zig (works for both `import pkg.sub` and
     # `from pkg import sub`).
-    ("importlib", "nanopython-lib/importlib/__init__.py"),
-    ("importlib.metadata", "nanopython-lib/importlib/metadata.py"),
+    ("importlib", "petitpy-lib/importlib/__init__.py"),
+    ("importlib.metadata", "petitpy-lib/importlib/metadata.py"),
     # enum — @enum decorator (real member semantics) + Enum/IntEnum/StrEnum
     # base-class stubs so CPython `class X(str, Enum):` idiom parses. See
     # module docstring for the (deliberate) semantic mismatch under
     # subclass form. Unblocks hop3-rootd's protocol.ErrorCode (finding A.10).
-    ("enum", "nanopython-lib/enum.py"),
+    ("enum", "petitpy-lib/enum.py"),
     # ipaddress — minimal PEP 3144 subset for CIDR validation.
     # hop3-rootd's validation.py imports it for IPv4Address/IPv4Network
     # isinstance checks + ip_network(strict=False). IPv6 stored as 8-group
     # tuple so this imports under nano (no bignum).
-    ("ipaddress", "nanopython-lib/ipaddress.py"),
+    ("ipaddress", "petitpy-lib/ipaddress.py"),
     # os.path — deferred. Needs a mutable os globals dict so
     # mp_store_attr(os, "path", …) can wire the loaded submodule as an
     # attribute; the current fixed-ROM dict rejects the store. Requires
     # MICROPY_MODULE_BUILTIN_INIT + a runtime-allocated globals dict.
-    # File nanopython-lib/os_path.py stays as reference implementation.
+    # File petitpy-lib/os_path.py stays as reference implementation.
 ]
 
 

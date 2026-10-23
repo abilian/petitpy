@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # Check optional byteorder argument (CPython 3.11+)
 print((10).to_bytes(1))
 print((100).to_bytes(10))

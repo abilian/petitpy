@@ -1,11 +1,11 @@
 // ADR-006 J3 — JS-side bridge.
 //
 // Maintains a handle table mapping wasm-side u32 IDs to JS object references.
-// Provides the imports object that nanopython.wasm expects under the
-// `nanopython_js` namespace alongside the WASI `wasi_snapshot_preview1`
+// Provides the imports object that petitpy.wasm expects under the
+// `petitpy_js` namespace alongside the WASI `wasi_snapshot_preview1`
 // imports. The Zig side declares the externs in js_bridge.zig with the
 // default `env` module-name convention; the playground loader merges them
-// into both `env` and `nanopython_js` namespaces so either resolution
+// into both `env` and `petitpy_js` namespaces so either resolution
 // path works depending on how the compiler emitted the wasm import.
 //
 // Handle 0 is reserved for null / undefined; allocation starts at 1.
@@ -158,7 +158,7 @@ export function makeJsBridge() {
           // negligible leak for not having to export m_free here.
           //
           // Until this landed, the bridge probed for `malloc`/`free` (not
-          // exported by nanopython) and fell through to dropping args,
+          // exported by petitpy) and fell through to dropping args,
           // which made Promise.then(cb) callbacks appear to never fire —
           // the dispatch ran but Python's `cb` raised TypeError "missing
           // 1 required argument" (the resolved value) and the dispatcher's

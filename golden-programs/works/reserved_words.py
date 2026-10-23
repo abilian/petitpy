@@ -1,5 +1,5 @@
 # golden: source=prescrypt-internal; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 """Test JavaScript reserved word auto-renaming.
 
 Python allows variable names like 'default', 'switch', 'case' which are

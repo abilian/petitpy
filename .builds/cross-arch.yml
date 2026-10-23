@@ -63,7 +63,7 @@ tasks:
       cd ~/nanopython
       zig build -Dconfig=nano
       # Tiny runtime smoke — confirm the host binary actually executes.
-      echo 'print(1 + 1)' | ./zig-out/bin/nanopython
+      echo 'print(1 + 1)' | ./zig-out/bin/petitpy
   - build_x86_64_macos: |
       cd ~/nanopython
       zig build -Dtarget=x86_64-macos -Dconfig=nano
@@ -82,7 +82,7 @@ tasks:
       # a binary wasmtime cannot instantiate.
       make wasm
       if command -v wasmtime >/dev/null 2>&1; then
-        echo 'print(1 + 1)' | wasmtime zig-out/bin/nanopython.wasm
+        echo 'print(1 + 1)' | wasmtime zig-out/bin/petitpy.wasm
       else
         echo "wasmtime not available — build-only for wasm"
       fi

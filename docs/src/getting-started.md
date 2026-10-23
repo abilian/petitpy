@@ -55,10 +55,10 @@ You need [Zig](https://ziglang.org/) 0.16, Python 3, GNU Make and git. [wasmtime
 
 ```sh
 git clone https://github.com/abilian/petitpy && cd petitpy
-make build           # Debug binary at zig-out/bin/nanopython
+make build           # Debug binary at zig-out/bin/petitpy
 make build-release   # optimized for speed
 make build-small     # optimized for size
-make web             # browser build at web/nanopython.wasm
+make web             # browser build at web/petitpy.wasm
 ```
 
 The first build clones MicroPython into `vendor/micropython` at the revision the Makefile pins (`MICROPY_REV`). To use a checkout you already have, put it at that revision and symlink it there before building. The first build takes a minute or two; later builds take seconds. The Debug binary is several megabytes because it keeps debug symbols; use a release build to ship.

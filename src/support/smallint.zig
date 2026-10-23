@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/smallint.c (the first unit of the
+//! petitpy — Zig port of py/smallint.c (the first unit of the
 //! object-model strangle).
 //!
 //! Two pure `mp_int_t` arithmetic functions: no mp_obj, no nlr, no

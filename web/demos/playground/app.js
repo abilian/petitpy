@@ -1,6 +1,6 @@
-// nanopython — browser demo
+// petitpy — browser demo
 //
-// Loads zig-out/bin/nanopython.wasm (wasm32-wasi, ReleaseSmall) and runs it
+// Loads zig-out/bin/petitpy.wasm (wasm32-wasi, ReleaseSmall) and runs it
 // against a virtual filesystem where /source.py holds the user's textarea.
 // stdin (fd 0) is fed from a second textarea; stdout + stderr are captured.
 //
@@ -47,7 +47,7 @@ const $bcSize = document.getElementById("bc-size");
 const $hl = document.getElementById("hl");
 const $gutter = document.getElementById("gutter");
 
-const STORAGE_KEY = "nanopython:scripts:v1";
+const STORAGE_KEY = "petitpy:scripts:v1";
 
 let wasmModule = null;
 
@@ -142,10 +142,10 @@ function populateExamples() {
 // ---- run loop ---------------------------------------------------------------
 
 async function loadWasm() {
-  setStatus("Fetching nanopython.wasm…");
+  setStatus("Fetching petitpy.wasm…");
   // Cache-buster on wasm so dev iteration always picks up a fresh build.
   const _v = Date.now();
-  const resp = await fetch(`../../nanopython.wasm?v=${_v}`, { cache: "no-store" });
+  const resp = await fetch(`../../petitpy.wasm?v=${_v}`, { cache: "no-store" });
   if (!resp.ok) throw new Error(`fetch failed: ${resp.status}`);
   const blob = await resp.clone().blob();
   $size.textContent = `${Math.round(blob.size / 1024)} KB`;
@@ -170,7 +170,7 @@ function parsePackages() {
 }
 
 // Inject a small preamble so /lib is on sys.path before any user import.
-// (sys.path is consulted on every import in nanopython's L1 hook.)
+// (sys.path is consulted on every import in petitpy's L1 hook.)
 function withLibPreamble(source) {
   return `import sys\nif "/lib" not in sys.path: sys.path.insert(0, "/lib")\n${source}`;
 }
@@ -192,7 +192,7 @@ async function runOnce(flags = []) {
   // Mount each requested package under /lib/<file-path>. Package metadata
   // already names files with the right on-disk layout (e.g. "abc.py" or
   // "urllib/parse.py"), so we prepend "lib/" and the WASI shim plus
-  // nanopython's filesystem importer (PETITPY_LIB / sys.path) reach them.
+  // petitpy's filesystem importer (PETITPY_LIB / sys.path) reach them.
   for (const pkg of packages) {
     try {
       // The compile-only pass (--emit-mpy) runs after the status says
@@ -215,7 +215,7 @@ async function runOnce(flags = []) {
   fsMap.set("source.py", new File(encoder.encode(source), { readonly: true }));
 
   // Virtual FS: a single preopen at "/" with source.py + mounted /lib/* inside.
-  // argv[1] = "/source.py" — nanopython reads it with std.Io.Dir.cwd().readFileAllocOptions.
+  // argv[1] = "/source.py" — petitpy reads it with std.Io.Dir.cwd().readFileAllocOptions.
   const fs = new PreopenDirectory("/", fsMap);
 
   // stdin is fd 0. We back it with an OpenFile wrapping a readonly File holding
@@ -235,7 +235,7 @@ async function runOnce(flags = []) {
   });
 
   const wasi = new WASI(
-    ["nanopython", ...flags, "/source.py"], // argv
+    ["petitpy", ...flags, "/source.py"], // argv
     [], // env
     [
       stdinFd, // fd 0 — stdin
@@ -469,7 +469,7 @@ function loadFromFragment() {
 // ---- gallery ----------------------------------------------------------------
 //
 // The curated examples stay inline and instant. The gallery is the measured
-// corpus — every entry carries a `works-on=…nanopython-wasm` header that
+// corpus — every entry carries a `works-on=…petitpy-wasm` header that
 // `make golden` wrote after running it there — and its source is fetched on
 // selection rather than baked in, which would add ~608 KB to the page.
 

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-micropython; needs=
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 # add a bytearray to itself
 # This is not supported by CPython as of 3.11.18.

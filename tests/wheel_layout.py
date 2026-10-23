@@ -2,13 +2,13 @@
 
 The wheel installs the binary, built without frozen modules, as
 `bin/petitpy` (and `bin/ppy`), and the stdlib that scripts/hatch_build.py collects
-from nanopython-lib/ at `share/petitpy/lib/`,
+from petitpy-lib/ at `share/petitpy/lib/`,
 where the binary finds it next to itself. This lays out the same tree
 from the hook's own `stdlib_files()`, then imports every module with the
 copied binary and no PETITPY_LIB. The frozen-tiny integration suite
 cannot see this layout: frozen modules win over files on disk.
 
-Usage: python3 tests/wheel_layout.py <nanopython binary built without -Dfrozen-tiny>
+Usage: python3 tests/wheel_layout.py <petitpy binary built without -Dfrozen-tiny>
 """
 
 from __future__ import annotations

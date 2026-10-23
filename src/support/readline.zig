@@ -1,4 +1,4 @@
-//! nanopython — Zig port of support/readline_shim.c.
+//! petitpy — Zig port of support/readline_shim.c.
 //! Simple line reader for input() + REPL line reader for main.zig.
 
 const builtin = @import("builtin");

@@ -7,9 +7,9 @@ Write validation rules ONCE in Python, use on BOTH:
 This eliminates the duplication of validation logic across frontend and backend.
 
 Ported from sandbox/prescrypt/demos/validation-library/src/validators.py.
-Two adjustments for the nanopython build of MicroPython:
+Two adjustments for the petitpy build of MicroPython:
   - `from __future__ import annotations` removed (not bundled).
-  - `re` use replaced by small hand-rolled character checks — the nanopython
+  - `re` use replaced by small hand-rolled character checks — the petitpy
     port doesn't enable `MICROPY_PY_RE`. The original regexes were:
       EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     which is easier to express directly with `str` operations.

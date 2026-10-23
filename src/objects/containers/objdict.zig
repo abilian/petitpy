@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/objdict.c (drops objdict_shim).
+//! petitpy — full Zig port of py/objdict.c (drops objdict_shim).
 //!
 //! Nano config (probed):
 //!   - ORDEREDDICT=1 (mp_type_ordereddict live, used by collections)
@@ -272,7 +272,7 @@ fn dictSubscrImpl(self_in: Obj, index: Obj, value: Obj) PyError!Obj {
             // and call it with the failing key. If found, return its
             // result; otherwise raise KeyError as before. Unlocks
             // Counter[absent_key] → 0 and defaultdict default-factory.
-            // Vendor MicroPython's objdict.c skips this; nanopython
+            // Vendor MicroPython's objdict.c skips this; petitpy
             // intentionally matches CPython here per the cheatsheet's
             // user-experience principle.
             // CPython would dispatch through `__missing__` on dict

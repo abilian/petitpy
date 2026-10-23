@@ -8,7 +8,7 @@
 //! L1+L2 scope: a small frozen set (`json`, `types`) sufficient to
 //! unblock the smoke test from ADR-003 §8. `os` (proposed in ADR-003
 //! §D6) is deferred — the micropython-lib version of `os` is a package
-//! that re-exports from the builtin `uos`, which nanopython doesn't
+//! that re-exports from the builtin `uos`, which petitpy doesn't
 //! ship; a clean port needs its own stub source.
 //!
 //! When `MICROPY_FROZEN_TINY_ENABLED=0` (the default until `make freeze`

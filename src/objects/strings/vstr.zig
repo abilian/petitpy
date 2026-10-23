@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/vstr.c (drops vstr_shim).
+//! petitpy — full Zig port of py/vstr.c (drops vstr_shim).
 //! `vstr_t` layout mirrored directly (was via accessor shim — verified
 //! plain bool, no bitfield → size 32 on 64-bit).
 //! MICROPY_PY_BUILTINS_STR_UNICODE=0 ⇒ nano-corpus vstr_add_char is the

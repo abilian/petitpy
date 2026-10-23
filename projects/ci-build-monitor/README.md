@@ -1,26 +1,26 @@
-# Nano Build Monitor (nanopython port of ci-build-monitor)
+# Nano Build Monitor (petitpy port of ci-build-monitor)
 
-A Chrome/Firefox extension that monitors CI builds across Sourcehut, GitHub, and GitLab. Originally written in Python and compiled to JavaScript with Prescrypt under the name "CI Build Monitor"; this directory is the in-progress port to nanopython, renamed "Nano Build Monitor" so both extensions can be loaded side-by-side. The same Python sources run unmodified (well, almost — see `notes/PORTING.md`) on top of the nanopython wasm runtime via the J5 js bridge.
+A Chrome/Firefox extension that monitors CI builds across Sourcehut, GitHub, and GitLab. Originally written in Python and compiled to JavaScript with Prescrypt under the name "CI Build Monitor"; this directory is the in-progress port to petitpy, renamed "Nano Build Monitor" so both extensions can be loaded side-by-side. The same Python sources run unmodified (well, almost — see `notes/PORTING.md`) on top of the petitpy wasm runtime via the J5 js bridge.
 
-Upstream Prescrypt-targeted source lives at `sandbox/ci-build-monitor/` (symlink into the user's working tree of the original extension). The nanopython port lives here.
+Upstream Prescrypt-targeted source lives at `sandbox/ci-build-monitor/` (symlink into the user's working tree of the original extension). The petitpy port lives here.
 
 ## Status — HTML pages live; per-page wasm loaders boot Python sources
 
-Sessions 1 and 2 of the Python port landed `core/` + `ui/` + `providers/` + `services/` + `pages/options.py` + `pages/status.py` (since flattened — see below). The current session lands the HTML entry-points + per-page wasm loaders: a shared `dist/bootstrap.js` helper fetches `wasm/nanopython.wasm` + every `src/*.py`, mounts them flat under a `PreopenDirectory` at `/src`, wires the ADR-006 js bridge, and runs the entry-point under WASI. Each HTML page bootstraps a different entry (`/src/pages_popup.py`, `pages_options.py`, `pages_status.py`) via a one-line per-page loader.
+Sessions 1 and 2 of the Python port landed `core/` + `ui/` + `providers/` + `services/` + `pages/options.py` + `pages/status.py` (since flattened — see below). The current session lands the HTML entry-points + per-page wasm loaders: a shared `dist/bootstrap.js` helper fetches `wasm/petitpy.wasm` + every `src/*.py`, mounts them flat under a `PreopenDirectory` at `/src`, wires the ADR-006 js bridge, and runs the entry-point under WASI. Each HTML page bootstraps a different entry (`/src/pages_popup.py`, `pages_options.py`, `pages_status.py`) via a one-line per-page loader.
 
-Layout note: nanopython's import machinery is flat-only (no packages, no dotted module names — see `src/runtime/import_search.zig` in the parent repo). Each former `src/<pkg>/<mod>.py` is now `src/<pkg>_<mod>.py`, and `from <pkg>.<mod> import …` was rewritten to `from <pkg>_<mod> import …`.
+Layout note: petitpy's import machinery is flat-only (no packages, no dotted module names — see `src/runtime/import_search.zig` in the parent repo). Each former `src/<pkg>/<mod>.py` is now `src/<pkg>_<mod>.py`, and `from <pkg>.<mod> import …` was rewritten to `from <pkg>_<mod> import …`.
 
 ### Works
 
 - Directory skeleton (`src/`, `wasm/`, `dist/`, `styles/`, `icons/`, `notes/`).
-- `wasm/nanopython.wasm` and `wasm/js-bridge.js` mirror the canonical pair from `web/`.
+- `wasm/petitpy.wasm` and `wasm/js-bridge.js` mirror the canonical pair from `web/`.
 - `make sync-wasm` re-copies the wasm pair from `../../web/`.
 - `make serve` runs `python3 -m http.server -d . 8000` so the pages can be loaded in a browser.
 - HTML pages (`popup.html`, `options.html`, `status.html`) are copied verbatim from sandbox, with Prescrypt `<script src="dist/helpers.js">` + `<script src="dist/X.js">` replaced by a single `<script type="module" src="dist/X-loader.js">`.
 - `dist/bootstrap.js` shared loader + three per-page loaders (`popup-loader.js`, `options-loader.js`, `status-loader.js`).
 - `manifest.json`, `styles/common.css`, and `icons/icon{16,48,128}.png` copied from sandbox.
 - Smoke test: served via `make serve`, all 16 URLs (3 HTML pages, manifest, 3 loaders, bootstrap.js, wasm pair, css, one icon, 4 .py samples) return 200.
-- The full Prescrypt → nanopython transformation catalog is documented in `notes/PORTING.md`.
+- The full Prescrypt → petitpy transformation catalog is documented in `notes/PORTING.md`.
 - `STATUS.md` lists every source file (19 .py + 3 HTML + manifest + 4 loader JS + assets) with a porting checkbox.
 
 ### In progress / next
@@ -49,7 +49,7 @@ projects/ci-build-monitor/
 ├── icons/                ← icon{16,48,128}.png
 ├── styles/common.css
 ├── notes/
-│   └── PORTING.md        ← canonical Prescrypt → nanopython transformation table
+│   └── PORTING.md        ← canonical Prescrypt → petitpy transformation table
 ├── src/                  ← Python port (15 flat .py files; pages_*, providers_*, services_*, ui_*, core_*)
 ├── dist/
 │   ├── bootstrap.js      ← shared wasm + Python + bridge loader
@@ -57,7 +57,7 @@ projects/ci-build-monitor/
 │   ├── options-loader.js ← bootstrap("/src/pages_options.py")
 │   └── status-loader.js  ← bootstrap("/src/pages_status.py")
 └── wasm/
-    ├── nanopython.wasm   ← copy from ../../web/nanopython.wasm
+    ├── petitpy.wasm   ← copy from ../../web/petitpy.wasm
     └── js-bridge.js      ← copy from ../../web/lib/js-bridge.js
 ```
 

@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/scheduler.c.
+//! petitpy — Zig port of py/scheduler.c.
 //!
 //! Under nano (probed): SCHEDULER=0, KBD_EXCEPTION=0, VM_ABORT=0,
 //! PY_THREAD=0, the SCHEDULER_STATIC_NODES + EVENT_POLL_HOOK families

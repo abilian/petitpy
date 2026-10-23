@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Run hop3-rootd's own unit test suite (tests/a_unit/*.py) under
-nanopython, module-by-module, and report a punch list.
+petitpy, module-by-module, and report a punch list.
 
 Reuses the smoke tool's shim-tree approach: build a temp dir combining
-hop3-rootd source + nanopython-lib + stubs, then also drop the a_unit
+hop3-rootd source + petitpy-lib + stubs, then also drop the a_unit
 test files (test_*.py + _fakes.py) into it. For each test file, launch
-nanopython on a small driver that runs the file's `test_*` functions
+petitpy on a small driver that runs the file's `test_*` functions
 via pytest_lite.
 
 The output is per-file:
@@ -32,7 +32,7 @@ import hop3_rootd_smoke as smoke
 
 def parse_test_fixtures(test_file):
     """Return {name: [param_name, …]} for every ``def`` in the source
-    file — both test_* functions AND fixture helpers. Nanopython has no
+    file — both test_* functions AND fixture helpers. petitpy has no
     ``inspect`` so pytest_lite can't read the parameter list at run
     time; the runner extracts it here (real CPython, via ``ast``) and
     hands the map into the driver so the resolver can recurse into
@@ -51,7 +51,7 @@ def parse_test_fixtures(test_file):
 def parse_test_parametrize(test_file):
     """Return {test_name: [(param_names_tuple, [value, …]), …]} for
     every ``def test_…`` carrying an ``@pytest.mark.parametrize(...)``.
-    Nanopython's pytest_lite treats @pytest.mark as a no-op decorator
+    petitpy's pytest_lite treats @pytest.mark as a no-op decorator
     so we hoist the value list into the driver script — pytest_lite
     then runs the test once per row.
 
@@ -231,11 +231,11 @@ def build_test_shim(shim_dir: Path, hop3_src: Path) -> None:
 def run_test_file(
     binary: Path, shim_dir: Path, test_name: str, timeout: float = 30
 ) -> tuple[int, str, str]:
-    """Run a single test_*.py under nanopython + pytest_lite. Returns
+    """Run a single test_*.py under petitpy + pytest_lite. Returns
     (returncode, stdout, stderr)."""
     # Parse the file source with Python's ast to build the fixture-param
     # map — pytest_lite consumes it to resolve tmp_path / monkeypatch /
-    # user fixtures for each test function. Nanopython lacks
+    # user fixtures for each test function. petitpy lacks
     # `__code__.co_varnames` so run-time introspection is off the table.
     test_path = shim_dir / (test_name + ".py")
     fixtures_map = parse_test_fixtures(test_path)
@@ -317,7 +317,7 @@ def collect_failures(stdout: str) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument(
-        "binary", nargs="?", default=str(REPO / "zig-out/bin/nanopython")
+        "binary", nargs="?", default=str(REPO / "zig-out/bin/petitpy")
     )
     parser.add_argument(
         "hop3_src",
@@ -394,7 +394,7 @@ def main() -> int:
                     if sline.startswith(("File ", "Traceback")) or "Error" in sline:
                         crash_line = sline
             # If the driver caught a NameError with the "isn't defined"
-            # signature, that's nanopython's silent SyntaxError-inside-
+            # signature, that's petitpy's silent SyntaxError-inside-
             # imported-module conversion. Re-run the file as a script
             # to surface the real cause.
             if crash_line.startswith("NameError:") and "isn't defined" in crash_line:

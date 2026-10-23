@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `_json` module, the fast paths of `json.dumps`
+//! petitpy — Zig-native `_json` module, the fast paths of `json.dumps`
 //! and `json.loads`.
 //!
 //!   _json.encode(obj, item_sep, kv_sep, ensure_ascii) → str
@@ -7,7 +7,7 @@
 //!
 //! Encodes None, bool, int, finite float, str, list, tuple and dict of
 //! exactly those types, with the output of the pure-Python encoder in
-//! nanopython-lib/json.py. Anything else (a subclass, a non-str key, NaN,
+//! petitpy-lib/json.py. Anything else (a subclass, a non-str key, NaN,
 //! very deep nesting) raises TypeError, and json.py reruns its own
 //! encoder, which either handles the value or raises CPython's error.
 //!

@@ -1,5 +1,5 @@
 # golden: source=prescrypt-internal; needs=grammar.walrus
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 """Test walrus operator (:=) with pre-declared variables."""
 from __future__ import annotations

@@ -1,4 +1,4 @@
-//! nanopython — Zig-native `grp` module (getgrnam/getgrgid).
+//! petitpy — Zig-native `grp` module (getgrnam/getgrgid).
 //!
 //! Full-native only. Thin libc wrapper.
 //!

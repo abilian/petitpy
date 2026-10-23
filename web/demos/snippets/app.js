@@ -1,10 +1,10 @@
-// Playground demo — run preset Python snippets in nanopython.wasm.
+// Playground demo — run preset Python snippets in petitpy.wasm.
 //
 // This is a leaner cousin of the top-level web/app.js: no Packages pane, no
 // localStorage, no share URLs. The point is to showcase the example library
 // ported from Prescrypt's python-playground demo. The original needed a
 // server-side compile (it transpiled Python to JavaScript); ours runs the
-// nanopython interpreter directly in WebAssembly, so there's no server at all.
+// petitpy interpreter directly in WebAssembly, so there's no server at all.
 
 import {
   WASI,
@@ -32,10 +32,10 @@ function setStatus(text, kind = "") {
 }
 
 async function loadWasm() {
-  setStatus("Loading nanopython.wasm…");
+  setStatus("Loading petitpy.wasm…");
   // Cache-buster on wasm so dev iteration always picks up a fresh build.
   const _v = Date.now();
-  const resp = await fetch(`../../nanopython.wasm?v=${_v}`, { cache: "no-store" });
+  const resp = await fetch(`../../petitpy.wasm?v=${_v}`, { cache: "no-store" });
   if (!resp.ok) throw new Error(`fetch failed: ${resp.status}`);
   wasmModule = await WebAssembly.compileStreaming(resp);
   setStatus("Ready.", "ok");
@@ -58,7 +58,7 @@ async function runPython(source) {
   fsMap.set("source.py", new File(enc.encode(source), { readonly: true }));
   const fs = new PreopenDirectory("/", fsMap);
 
-  const wasi = new WASI(["nanopython", "/source.py"], [], [stdinFd, stdoutFd, stderrFd, fs]);
+  const wasi = new WASI(["petitpy", "/source.py"], [], [stdinFd, stdoutFd, stderrFd, fs]);
 
   // ADR-006 J3 — JS interop bridge. The wasm has env::js_* extern imports
   // (feature-js defaults to on for wasm builds), so the imports object must

@@ -6,13 +6,13 @@ _For contributors, and for embedded or systems developers who want a binary tail
 
 | Target | What it builds |
 |---|---|
-| `make build` | Debug build of `zig-out/bin/nanopython` and `zigpy-compile` |
+| `make build` | Debug build of `zig-out/bin/petitpy` and `zigpy-compile` |
 | `make build-release` | ReleaseFast: use it for benchmarks |
 | `make build-small` | ReleaseSmall: the native shipping size |
 | `make build-frozen` | Bakes the frozen stdlib modules (`json`, `random`, ...) into the binary |
 | `make wasm` | Debug wasm32-wasi binary, for wasmtime |
 | `make wasm-small` | ReleaseSmall wasm with the frozen modules |
-| `make web` | The browser artifact `web/nanopython.wasm`, shrunk with `wasm-opt -Oz` when binaryen is installed |
+| `make web` | The browser artifact `web/petitpy.wasm`, shrunk with `wasm-opt -Oz` when binaryen is installed |
 | `make port` | Regenerates `vendor/micropython_embed/` from `vendor/micropython`. Runs automatically before a build |
 | `make rebuild` | `clean` then `build`, after a config change |
 
@@ -26,7 +26,7 @@ Each gate answers a different question, and passing one says nothing about the o
 |---|---|
 | `make check` | Does the full build match the corpus, apart from the failures listed in `corpus/full-known-fails.txt`? |
 | `make check CONFIG=nano` | Does the nano build match the frozen MicroPython reference byte for byte? |
-| `make check-all` | Both of the above, plus the split check: `nanopython-vm` running bytecode from `zigpy-compile` and from MicroPython's `mpy-cross` |
+| `make check-all` | Both of the above, plus the split check: `petitpy-vm` running bytecode from `zigpy-compile` and from MicroPython's `mpy-cross` |
 | `make wasm-check` | Does the wasm build match the corpus, apart from `corpus/wasm-known-fails.txt`? |
 | `make test-integration` | Does the native binary start and run real Python correctly? |
 | `make test-integration-wasm` | The same suite, run under wasmtime |
@@ -105,7 +105,7 @@ Put a `.py` file in the right `golden-programs/<bucket>/` directory with a heade
 
 ```python
 # golden: source=mysource; needs=heapq,recursion
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 """What this program demonstrates."""
 ```
 

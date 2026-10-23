@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objdeque.c (collections.deque).
+//! petitpy — Zig port of py/objdeque.c (collections.deque).
 //!
 //! Nano config (all =1 at lines 76-78 of port/mpconfigport.h):
 //!   MICROPY_PY_COLLECTIONS_DEQUE, _DEQUE_ITER, _DEQUE_SUBSCR.

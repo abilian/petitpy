@@ -21,7 +21,7 @@ notes/scratch/
 .workflow-tmp/
 coverage/
 notes/tech-reports/TR-001.pdf
-web/nanopython.wasm
+web/petitpy.wasm
 # Copied from golden-programs/works/ by tools/gen_gallery.py.
 web/gallery/
 

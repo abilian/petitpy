@@ -2,11 +2,11 @@
 
 Per-file porting state. Update as each file lands.
 
-Legend: **no** = not started · **partial** = in progress · **yes** = ported and verified loadable under nanopython wasm.
+Legend: **no** = not started · **partial** = in progress · **yes** = ported and verified loadable under petitpy wasm.
 
 ## Python sources
 
-Flat layout: nanopython's import machinery is flat-only (no packages, no dotted module names — see `src/runtime/import_search.zig`). Each former `src/<pkg>/<mod>.py` is now `src/<pkg>_<mod>.py`, and `from <pkg>.<mod> import …` was rewritten to `from <pkg>_<mod> import …`. The empty `__init__.py` package markers were dropped — they had no content.
+Flat layout: petitpy's import machinery is flat-only (no packages, no dotted module names — see `src/runtime/import_search.zig`). Each former `src/<pkg>/<mod>.py` is now `src/<pkg>_<mod>.py`, and `from <pkg>.<mod> import …` was rewritten to `from <pkg>_<mod> import …`. The empty `__init__.py` package markers were dropped — they had no content.
 
 | File                                | Ported  | LOC  | Notes                                                                                          |
 | ----------------------------------- | ------- | ---: | ---------------------------------------------------------------------------------------------- |

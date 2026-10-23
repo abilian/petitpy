@@ -1,6 +1,6 @@
 // Decode and disassemble a MicroPython `.mpy` v6 container.
 //
-// The playground compiles by running `nanopython --emit-mpy` in the same
+// The playground compiles by running `petitpy --emit-mpy` in the same
 // one-shot WASI flow it uses to run programs, then decodes the base64 that
 // lands on stdout. Doing the decoding here rather than in Zig keeps it out of
 // the wasm binary, which has a size budget; JS does not.

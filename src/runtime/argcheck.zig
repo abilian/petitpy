@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/argcheck.c.
+//! petitpy — Zig port of py/argcheck.c.
 //! 4 class-A exports, 0 nlr-hosts. Struct access goes through the
 //! `mirrors.MpArg` / `MpArgVal` mirrors (no C-shim trip). Nano
 //! ERROR_REPORTING<=TERSE ⇒ every error path is the single terse

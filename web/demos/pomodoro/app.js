@@ -30,11 +30,11 @@ function setStatus(text, kind = "") {
   if (kind) $status.classList.add(kind);
 }
 
-setStatus("Loading nanopython.wasm + main.py…");
+setStatus("Loading petitpy.wasm + main.py…");
 // Cache-buster — stale wasm or main.py masquerades as a runtime bug.
 const _v = Date.now();
 const [wasmResp, mainResp] = await Promise.all([
-  fetch(`../../nanopython.wasm?v=${_v}`, { cache: "no-store" }),
+  fetch(`../../petitpy.wasm?v=${_v}`, { cache: "no-store" }),
   fetch(`./main.py?v=${_v}`, { cache: "no-store" }),
 ]);
 const wasmModule = await WebAssembly.compileStreaming(wasmResp);
@@ -50,7 +50,7 @@ const stdoutFd = rawConsoleFd("[py]", (tag, t) => console.log(tag, t));
 const stderrFd = rawConsoleFd("[stderr]", (tag, t) => console.error(tag, t));
 
 const bridge = makeJsBridge();
-const wasi = new WASI(["nanopython", "/main.py"], [], [stdinFd, stdoutFd, stderrFd, fs]);
+const wasi = new WASI(["petitpy", "/main.py"], [], [stdinFd, stdoutFd, stderrFd, fs]);
 try {
   const inst = await WebAssembly.instantiate(wasmModule, {
     wasi_snapshot_preview1: wasi.wasiImport,

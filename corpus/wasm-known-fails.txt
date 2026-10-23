@@ -76,7 +76,7 @@ struct1_intbig
 
 # --- misc per-test gaps ---
 # Added 2026-06-11 with the CPython-friendly collections.deque (frozen-tiny
-# nanopython-lib/collections.py).
+# petitpy-lib/collections.py).
 #
 # These two tests are literally named deque_micropython — they pin MP's
 # strict deque semantics, not standard Python's:

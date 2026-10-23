@@ -1,4 +1,4 @@
-/* nanopython — bc.h-free API for src/objects/objtype/objmodule.zig.
+/* petitpy — bc.h-free API for src/objects/objtype/objmodule.zig.
  *
  * Cleanup pass 2: inlined the MP_STATE_VM / symbol-address / mp_printf
  * wrappers into the Zig consumer via mp_mirrors + extern decls. What

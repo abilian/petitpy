@@ -5,7 +5,7 @@
 // corpus and integration gates run single scripts, which never reach a
 // safe point before they end.
 //
-// Usage: node tools/wasm_gc_check.mjs [web/nanopython.wasm]   (make wasm-gc-check)
+// Usage: node tools/wasm_gc_check.mjs [web/petitpy.wasm]   (make wasm-gc-check)
 
 import { closeSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { WASI } from "node:wasi";
 import { makeJsBridge } from "../web/lib/js-bridge.js";
 
-const wasmPath = process.argv[2] ?? new URL("../web/nanopython.wasm", import.meta.url).pathname;
+const wasmPath = process.argv[2] ?? new URL("../web/petitpy.wasm", import.meta.url).pathname;
 const module = await WebAssembly.compile(readFileSync(wasmPath));
 
 // Runs `source` as /main.py, fires `n` callbacks with id 1 and one with
@@ -27,7 +27,7 @@ async function run(source, n) {
     const out = openSync(outPath, "w");
     const wasi = new WASI({
       version: "preview1",
-      args: ["nanopython", "/main.py"],
+      args: ["petitpy", "/main.py"],
       preopens: { "/": dir },
       stdout: out,
       returnOnExit: true,
@@ -55,7 +55,7 @@ async function run(source, n) {
 // Each callback drops ~400 KB. Without collection 2000 of them took
 // 1362 MB; with it the heap stays at its first 1 MB area.
 const GARBAGE = `
-from _nanopython_js import _set_dispatcher
+from _petitpy_js import _set_dispatcher
 import gc
 
 def d(cid, args):
@@ -70,7 +70,7 @@ _set_dispatcher(d)
 // closure, a suspended generator, a list of strings, a bytearray; and
 // gc.collect() called from inside callbacks (deferred to the safe point).
 const STATE = `
-from _nanopython_js import _set_dispatcher
+from _petitpy_js import _set_dispatcher
 import gc
 
 class Node:

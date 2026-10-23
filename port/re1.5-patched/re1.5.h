@@ -136,7 +136,7 @@ struct Subject {
 };
 
 
-// nanopython patch (2026-07-20): jumps use 2-byte signed offsets so
+// petitpy patch (2026-07-20): jumps use 2-byte signed offsets so
 // long alternation groups (e.g. hop3-rootd's 13-alt secret-scrub
 // regex) don't overflow the original int8 limit. Non-anchored prefix
 // grows from 5 → 7 bytes: RSplit(3B) + Any(1B) + Jmp(3B).

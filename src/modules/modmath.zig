@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/modmath.c (the `math` builtin module).
+//! petitpy — Zig port of py/modmath.c (the `math` builtin module).
 //!
 //! Nano config: MICROPY_PY_BUILTINS_FLOAT=1, MICROPY_PY_MATH=1,
 //! MICROPY_PY_MATH_CONSTANTS=1. FACTORIAL/ISCLOSE/SPECIAL_FUNCTIONS/

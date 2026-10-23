@@ -26,7 +26,7 @@ THE SOFTWARE.
 petitpy builds on MicroPython (https://micropython.org/), whose code is under
 the MIT license above.
 
-The modules heapq, bisect and types (nanopython-lib/heapq.py, bisect.py and
+The modules heapq, bisect and types (petitpy-lib/heapq.py, bisect.py and
 types.py) are verbatim copies from micropython-lib
 (https://github.com/micropython/micropython-lib, commit 381ac746), which
 derives them from CPython. They are under the Python license below, as

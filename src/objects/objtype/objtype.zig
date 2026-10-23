@@ -1,4 +1,4 @@
-//! nanopython — Zig partial port of py/objtype.c (Axis-B B1.5 W4; seam 1).
+//! petitpy — Zig partial port of py/objtype.c (Axis-B B1.5 W4; seam 1).
 //!
 //! objtype.c is the metaclass machinery: 967 LOC live under nano, 14 live
 //! raises, 7 exports + 33 statics. **Multi-session port.** This first seam

@@ -15,7 +15,7 @@ A live preview powered by Python running in **WebAssembly**.
 
 - Headers (one to three `#`)
 - **Bold** and *italic* and `inline code`
-- [Links](https://nanopython.dev) to anywhere
+- [Links](https://example.com) to anywhere
 - Ordered and unordered lists
 - Blockquotes and fenced code blocks
 

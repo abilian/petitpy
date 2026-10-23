@@ -1,5 +1,5 @@
 # golden: source=prescrypt-tryalgo; needs=stdlib.collections.Counter
-# golden: works-on=micropython,nanopython-native,nanopython-wasm
+# golden: works-on=micropython,petitpy-native,petitpy-wasm
 # golden: micropython-cpython-divergence=true
 #!/usr/bin/env python3
 """\

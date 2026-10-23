@@ -1,4 +1,4 @@
-//! nanopython runtime — Zig port of py/runtime.c (Phase 2.4.2 strangle).
+//! petitpy runtime — Zig port of py/runtime.c (Phase 2.4.2 strangle).
 //!
 //! __qstr_shadow_begin__
 //! MP_QSTR___path__

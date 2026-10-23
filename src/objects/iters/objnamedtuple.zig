@@ -1,4 +1,4 @@
-//! nanopython — Zig port of py/objnamedtuple.c.
+//! petitpy — Zig port of py/objnamedtuple.c.
 //!
 //! Builds the `collections.namedtuple` factory: `mp_namedtuple_obj` is a
 //! 2-arg builtin that allocates a per-call `mp_obj_namedtuple_type_t`

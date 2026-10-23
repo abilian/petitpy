@@ -1,4 +1,4 @@
-//! nanopython — full Zig port of py/modgc.c (the `gc` builtin module).
+//! petitpy — full Zig port of py/modgc.c (the `gc` builtin module).
 //!
 //! Builds the ROM data (fn-obj defs + globals dict + module struct) in
 //! Zig. The `MP_REGISTER_MODULE(MP_QSTR_gc, mp_module_gc)` marker stays

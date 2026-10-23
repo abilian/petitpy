@@ -41,8 +41,8 @@ class_inplace_op2
 
 # --- PORT-SPECIFIC MODULES (4) ------------------------------------------
 # uctypes.bytearray_at is a MicroPython unix/stm32-port extension.
-# Not in nanopython per ADR 012 §4 (the unix-port-specific surface is
-# explicitly out of scope; nanopython targets the web).
+# Not in petitpy per ADR 012 §4 (the unix-port-specific surface is
+# explicitly out of scope; petitpy targets the web).
 memoryview_slice_size
 
 # machine.PinBase / machine.Signal — MicroPython port-specific. Same.
@@ -63,7 +63,7 @@ subclass_native_call
 #  AttributeError" behavior the byte-exact golden was frozen against.)
 
 # --- ARCHITECTURAL (1) --------------------------------------------------
-# Test detects OBJ_REPR_D nan-boxing; nanopython uses OBJ_REPR_C
+# Test detects OBJ_REPR_D nan-boxing; petitpy uses OBJ_REPR_C
 # (LONGLONG/MPZ). Architectural choice; would not pass without an
 # OBJ_REPR_D port.
 nanbox_smallint
@@ -78,7 +78,7 @@ nanbox_smallint
 #  globals/locals.)
 
 # Vendor builtinhelp.c module list expects unix-port modules (btree,
-# cmath, socket, ssl, _thread, machine, …) that nanopython doesn't
+# cmath, socket, ssl, _thread, machine, …) that petitpy doesn't
 # ship. "Make help match vendor's module set" is a large surface.
 builtin_help
 
@@ -102,7 +102,7 @@ builtin_help
 
 # --- DEQUE CPYTHON-COMPAT DIVERGENCE (2) --------------------------------
 # Same deque-shim story that's tracked under corpus/wasm-known-fails.txt.
-# nanopython-lib/collections.py ships a CPython-compatible deque(iterable)
+# petitpy-lib/collections.py ships a CPython-compatible deque(iterable)
 # — deque(()) works, no size arg required. Vendor MP's C-level deque is
 # stricter (deque(iterable, maxlen) required; d[i] TypeErrors on slice).
 # We chose CPython-compat because BFS / real-world algorithms use it.
