@@ -19,17 +19,36 @@ extern fn mp_obj_get_type(o: Obj) callconv(.c) ?*const mirrors.MpObjType;
 extern const mp_type_fun_builtin_2: anyopaque;
 extern const mp_type_fun_builtin_3: anyopaque;
 
-export fn npy_op_fn_getitem(self_in: Obj, key_in: Obj) Obj {
+extern fn instance_count_native_bases(type_in: ?*const anyopaque, last_native_base: *?*const anyopaque) callconv(.c) c_int;
+
+/// The native base object of an instance of a Python subclass of a native
+/// type (the `dict` inside an instance of `class E(dict)`); any other
+/// object is returned as it is.
+pub fn nativeBase(self_in: Obj) Obj {
     const t = mp_obj_get_type(self_in).?;
-    return t.callSubscr(self_in, key_in, mirrors.OBJ_SENTINEL);
+    if (!t.flagInstanceType()) return self_in;
+    var native: ?*const anyopaque = null;
+    if (instance_count_native_bases(t, &native) == 0) return self_in;
+    return mirrors.MpObjInstance.fromObj(self_in).subobjPtr()[0];
+}
+
+// These functions are the `__getitem__`/`__setitem__`/`__delitem__` of
+// native types such as dict. Called on an instance of a Python subclass,
+// as in `dict.__setitem__(self, k, v)`, they act on its native base
+// object: the instance's own subscr would call the subclass's override,
+// which calls them again, until the stack runs out.
+
+export fn npy_op_fn_getitem(self_in: Obj, key_in: Obj) Obj {
+    const self = nativeBase(self_in);
+    return mp_obj_get_type(self).?.callSubscr(self, key_in, mirrors.OBJ_SENTINEL);
 }
 export fn npy_op_fn_setitem(self_in: Obj, key_in: Obj, value_in: Obj) Obj {
-    const t = mp_obj_get_type(self_in).?;
-    return t.callSubscr(self_in, key_in, value_in);
+    const self = nativeBase(self_in);
+    return mp_obj_get_type(self).?.callSubscr(self, key_in, value_in);
 }
 export fn npy_op_fn_delitem(self_in: Obj, key_in: Obj) Obj {
-    const t = mp_obj_get_type(self_in).?;
-    return t.callSubscr(self_in, key_in, mirrors.OBJ_NULL);
+    const self = nativeBase(self_in);
+    return mp_obj_get_type(self).?.callSubscr(self, key_in, mirrors.OBJ_NULL);
 }
 export fn npy_op_fn_contains(lhs_in: Obj, rhs_in: Obj) Obj {
     const t = mp_obj_get_type(lhs_in).?;

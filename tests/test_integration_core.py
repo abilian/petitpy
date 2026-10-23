@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 125. Coverage for `os` lives in test_integration_os.py.
+Cases: 126. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -924,6 +924,29 @@ CASES = [
             ),
             "nano": None,
         },
+    ),
+    # dict.__setitem__(self, ...) from a dict subclass's own __setitem__
+    # acts on the dict; it used to call the override again until the
+    # stack overflowed.
+    (
+        "dict_subclass_calls_dict_methods",
+        (
+            "log = []\n"
+            "class E(dict):\n"
+            "    def __setitem__(self, k, v):\n"
+            "        log.append(k)\n"
+            "        dict.__setitem__(self, k, v)\n"
+            "    def __getitem__(self, k):\n"
+            "        return dict.__getitem__(self, k) * 2\n"
+            "    def __delitem__(self, k):\n"
+            "        log.append(k)\n"
+            "        dict.__delitem__(self, k)\n"
+            "e = E(a=1)\n"
+            "e['b'] = 2\n"
+            "del e['a']\n"
+            "print(e, e['b'], log)\n"
+        ),
+        "{'b': 2} 4 ['b', 'a']\n",
     ),
     # collections.abc as a frozen submodule of the collections package.
     # Enabled by (a) converting nanopython-lib/collections.py to a

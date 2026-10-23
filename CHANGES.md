@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use 
 ### Fixed
 
 - **`subprocess.run` no longer hangs on a child that writes more than a pipe holds** (64 KB on Linux): output is read while the child runs. `env=` is honoured, where it was ignored; output that is not captured goes to the parent's stdout and stderr, where it was dropped; and `run()` gains `cwd=`, `text=` (with `encoding`, `errors`, `universal_newlines`), `stdout`/`stderr`/`stdin` as `PIPE`, `STDOUT`, `DEVNULL`, a descriptor or a file, and the child no longer gets an empty stdin when no `input` is given. `check_output()` captures stdout only, as in CPython.
+- **`dict.__setitem__(self, k, v)` and `dict.__delitem__` called from a `dict` subclass's own override** recursed until the stack overflowed. They now act on the dict itself, as `super()` already did.
 
 ## [0.8.0] - 2026-10-21
 
