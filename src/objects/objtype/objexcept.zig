@@ -249,6 +249,7 @@ export fn mp_obj_exception_print(print: ?*const anyopaque, o_in: Obj, kind: c_in
 // is None and __suppress_context__ False.
 // __qstr_shadow_begin__
 // MP_QSTR___cause__
+// MP_QSTR_ModuleNotFoundError
 // MP_QSTR___context__
 // MP_QSTR___suppress_context__
 // __qstr_shadow_end__
@@ -531,6 +532,8 @@ pub export const mp_type_AssertionError: MpObjTypeFull = excType(mp.MP_QSTR_Asse
 pub export const mp_type_AttributeError: MpObjTypeFull = excType(mp.MP_QSTR_AttributeError, &mp_type_Exception);
 pub export const mp_type_EOFError: MpObjTypeFull = excType(mp.MP_QSTR_EOFError, &mp_type_Exception);
 pub export const mp_type_ImportError: MpObjTypeFull = excType(mp.MP_QSTR_ImportError, &mp_type_Exception);
+// CPython's, for a module that cannot be found (full).
+pub export const mp_type_ModuleNotFoundError: MpObjTypeFull = excType(mp.MP_QSTR_ModuleNotFoundError, &mp_type_ImportError);
 pub export const mp_type_LookupError: MpObjTypeFull = excType(mp.MP_QSTR_LookupError, &mp_type_Exception);
 pub export const mp_type_IndexError: MpObjTypeFull = excType(mp.MP_QSTR_IndexError, &mp_type_LookupError);
 pub export const mp_type_KeyError: MpObjTypeFull = excType(mp.MP_QSTR_KeyError, &mp_type_LookupError);

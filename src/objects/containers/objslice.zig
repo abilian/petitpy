@@ -22,6 +22,7 @@ const Qstr = usize;
 extern const mp_type_type: anyopaque;
 extern const mp_type_dict: anyopaque;
 extern const mp_type_ValueError: anyopaque;
+extern const mp_type_TypeError: anyopaque;
 extern const mp_type_fun_builtin_2: anyopaque;
 extern fn mp_obj_malloc_helper(num_bytes: usize, type_in: *const anyopaque) callconv(.c) ?*anyopaque;
 extern fn mp_obj_get_int(arg: Obj) callconv(.c) isize;
@@ -182,13 +183,25 @@ pub export fn mp_obj_slice_indices(self_in: Obj, length: isize, result: *MpBound
     pyerr.bridge(void, mpObjSliceIndicesImpl(self_in, length, result));
 }
 
-// mp_type_slice: slot order unary_op=1, locals_dict|attr=2, print=3.
+// `slice(stop)`, `slice(start, stop[, step])` (full; MicroPython has no
+// constructor).
+fn slice_make_new(_: ?*const anyopaque, n_args: usize, n_kw: usize, args: [*c]const Obj) callconv(.c) Obj {
+    if (n_kw != 0 or n_args < 1 or n_args > 3) {
+        pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_TypeError, "slice expected 1 to 3 arguments");
+        return mirrors.OBJ_NULL;
+    }
+    if (n_args == 1) return mp_obj_new_slice(mirrors.OBJ_NONE, args[0], mirrors.OBJ_NONE);
+    return mp_obj_new_slice(args[0], args[1], if (n_args == 3) args[2] else mirrors.OBJ_NONE);
+}
+
+// mp_type_slice: slot order unary_op=1, locals_dict|attr=2, print=3,
+// and make_new=4 on full.
 pub export const mp_type_slice: types.MpObjTypeFull = if (build_options.is_full) .{
     .header = .{
         .base = .{ .type = &mp_type_type },
         .flags = 0,
         .name = mp.MP_QSTR_slice,
-        .slot_index_make_new = 0,
+        .slot_index_make_new = 4,
         .slot_index_print = 3,
         .slot_index_call = 0,
         .slot_index_unary_op = 1,
@@ -205,7 +218,8 @@ pub export const mp_type_slice: types.MpObjTypeFull = if (build_options.is_full)
         @ptrCast(&slice_unary_op),
         @ptrCast(&slice_attr),
         @ptrCast(&slice_print),
-        null, null, null, null, null, null, null, null,
+        @ptrCast(&slice_make_new),
+        null, null, null, null, null, null, null,
     },
 } else .{
     .header = .{

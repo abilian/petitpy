@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 132. Coverage for `os` lives in test_integration_os.py.
+Cases: 133. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -484,6 +484,50 @@ CASES = [
             'TypeError keys must be str, int, float, bool or None, not tuple\n'
             'ValueError Out of range float values are not JSON compliant: inf\n'
         ),
+    ),
+    # sys.platform, ModuleNotFoundError, slice() and the C3 method order
+    # (lookup, super() and __mro__) on full, as in CPython. MicroPython
+    # searches bases depth-first.
+    (
+        "cpython_platform_import_slice_mro",
+        (
+            'import sys\n'
+            "print(sys.platform in ('linux', 'darwin'))\n"
+            "for m in ['nope', 'os.nope']:\n"
+            '    try:\n'
+            '        __import__(m)\n'
+            '    except ModuleNotFoundError as e:\n'
+            '        print(type(e).__name__, e, isinstance(e, ImportError))\n'
+            's = slice(1, 9, 2)\n'
+            'print(slice(5), s, s.start, s.stop, s.step, list(range(10))[s], s.indices(5))\n'
+            'class A:\n'
+            "    def f(self): return 'A'\n"
+            "    def g(self): return ['A']\n"
+            'class B(A):\n'
+            "    def g(self): return ['B'] + super().g()\n"
+            'class C(A):\n'
+            "    def f(self): return 'C'\n"
+            "    def g(self): return ['C'] + super().g()\n"
+            'class D(B, C):\n'
+            "    def g(self): return ['D'] + super().g()\n"
+            'class E(D): pass\n'
+            'print(E().f(), E().g(), [k.__name__ for k in E.__mro__])\n'
+            'try:\n'
+            '    class Z(A, B): pass\n'
+            'except TypeError as e:\n'
+            '    print(e)\n'
+        ),
+        {
+            "full": (
+                'True\n'
+                "ModuleNotFoundError No module named 'nope' True\n"
+                "ModuleNotFoundError No module named 'os.nope'; 'os' is not a package True\n"
+                'slice(None, 5, None) slice(1, 9, 2) 1 9 2 [1, 3, 5, 7] (1, 5, 2)\n'
+                "C ['D', 'B', 'C', 'A'] ['E', 'D', 'B', 'C', 'A', 'object']\n"
+                'Cannot create a consistent method resolution order (MRO) for bases A, B\n'
+            ),
+            "nano": None,
+        },
     ),
     # @enum decorator — the full-featured path retains .name/.value.
     (

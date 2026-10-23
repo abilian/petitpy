@@ -994,6 +994,7 @@ extern const mp_type_AttributeError: anyopaque;
 extern const mp_type_Exception: anyopaque;
 extern const mp_type_GeneratorExit: anyopaque;
 extern const mp_type_ImportError: anyopaque;
+extern const mp_type_ModuleNotFoundError: anyopaque;
 extern const mp_type_IndentationError: anyopaque;
 extern const mp_type_IndexError: anyopaque;
 extern const mp_type_KeyError: anyopaque;
@@ -1217,6 +1218,10 @@ const mp_module_builtins_globals_table = blk: {
     n += 1;
     entries[n] = re(mq.MP_QSTR_ImportError, &mp_type_ImportError);
     n += 1;
+    if (build_options.is_full) {
+        entries[n] = re(mq.MP_QSTR_ModuleNotFoundError, &mp_type_ModuleNotFoundError);
+        n += 1;
+    }
     entries[n] = re(mq.MP_QSTR_IndentationError, &mp_type_IndentationError);
     n += 1;
     entries[n] = re(mq.MP_QSTR_IndexError, &mp_type_IndexError);

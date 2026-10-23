@@ -143,8 +143,12 @@ pub export const mp_sys_implementation_machine_obj: StrObj = .{
 // MICROPY_PERSISTENT_CODE_LOAD readers.
 const MPY_FILE_HEADER_INT: isize = 'M' | ('P' << 8) | (6 << 16);
 
-// sys.platform — "petitpy" (per MICROPY_PY_SYS_PLATFORM in port config).
-const PLATFORM_STR = "petitpy";
+// sys.platform — CPython's name for the OS ("linux", "darwin", "wasi").
+// MICROPY_PY_SYS_PLATFORM in the port config only names the REPL banner.
+const PLATFORM_STR = switch (@import("builtin").os.tag) {
+    .macos => "darwin",
+    else => |tag| @tagName(tag),
+};
 
 pub export const mp_sys_platform_obj: StrObj = .{
     .base = .{ .type = &mp_type_str },

@@ -36,6 +36,9 @@ extern const mp_type_module: anyopaque;
 
 extern const mp_type_NotImplementedError: anyopaque;
 extern const mp_type_ImportError: anyopaque;
+extern const mp_type_ModuleNotFoundError: anyopaque;
+extern fn mp_obj_new_exception_msg_varg(t: TypePtr, fmt: [*:0]const u8, ...) callconv(.c) Obj;
+const build_options = @import("build_options");
 extern const mp_type_fun_builtin_var: anyopaque;
 
 // Under nano REPR_A + MICROPY_OBJ_IMMEDIATE_OBJS=1, mp_const_none is the
@@ -108,6 +111,21 @@ fn processComponent(
         if (dest[0] != 0 and dest[1] == 0 and mirrors.isExactType(dest[0], &mp_type_module)) return dest[0];
     }
 
+    if (build_options.is_full) {
+        const n: c_int = @intCast(full_slice.len);
+        if (parent_obj != mirrors.OBJ_NULL) {
+            var dest: [2]Obj = .{ 0, 0 };
+            import_search.loadAttrMaybe(parent_obj, mp.MP_QSTR___path__, &dest);
+            pyerr.pending_exc = 0;
+            if (dest[0] == 0) {
+                const parent_len: c_int = @intCast(full_slice.len - level_slice.len - 1);
+                pyerr.pending_exc = mp_obj_new_exception_msg_varg(&mp_type_ModuleNotFoundError, "No module named '%.*s'; '%.*s' is not a package", n, full_slice.ptr, parent_len, full_slice.ptr);
+                return error.PyRaise;
+            }
+        }
+        pyerr.pending_exc = mp_obj_new_exception_msg_varg(&mp_type_ModuleNotFoundError, "No module named '%.*s'", n, full_slice.ptr);
+        return error.PyRaise;
+    }
     try raiseExcMsg(&mp_type_ImportError, "module not found");
     unreachable;
 }

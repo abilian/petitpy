@@ -9,6 +9,7 @@
 //! MP_QSTR___missing__
 //! MP_QSTR___args__
 //! MP_QSTR___origin__
+//! MP_QSTR___mro__
 //! __qstr_shadow_end__
 //!
 //! Fns ported here:
@@ -322,6 +323,10 @@ inline fn superObjOf(super_obj: Obj) Obj {
 // CPython-compat externs (full only — gated by `comptime build_options.is_full`).
 extern fn mp_obj_dict_copy(self_in: Obj) callconv(.c) Obj;
 extern fn mp_obj_new_tuple(n: usize, items: [*c]const Obj) callconv(.c) Obj;
+extern fn mp_obj_new_list(n: usize, items: ?[*]const Obj) callconv(.c) Obj;
+extern fn mp_obj_list_append(list: Obj, item: Obj) callconv(.c) Obj;
+extern fn mp_obj_dict_store(dict: Obj, key: Obj, value: Obj) callconv(.c) Obj;
+extern fn mp_obj_new_exception_msg_varg(t: *const anyopaque, fmt: [*:0]const u8, ...) callconv(.c) Obj;
 extern const mp_const_empty_tuple_obj: anyopaque;
 extern const mp_const_empty_dict_obj: anyopaque;
 
@@ -843,49 +848,22 @@ export fn npy_ty_class_lookup(
     const object_type_ptr = @as(?*const anyopaque, &mp_type_object);
     var t: ?*const anyopaque = type_in;
     while (true) {
-        // 1. Native-type slot fast path: special-method lookup via slot offset.
-        if (slot_offset != 0 and typeIsNative(t)) {
-            if (typeHasSlotByOffset(t, slot_offset) or
-                (slot_offset == SLOT_OFFSET_ITER and typeFlagIterIsStream(t)))
-            {
-                dest[0] = MP_OBJ_SENTINEL;
-                return;
-            }
-        }
+        if (lookupIn(obj_in, attr, slot_offset, dest, is_type, t)) return;
 
-        // 2. locals_dict (methods/attrs) search.
-        if (typeHasLocalsDict(t)) {
-            const locals_map = typeLocalsMap(t);
-            const elem = mirrors.mp_map_lookup(locals_map, mirrors.objFromQstr(attr), mirrors.MP_MAP_LOOKUP);
-            if (elem) |e| {
-                const elem_value = e.value;
-                if (is_type != 0) {
-                    // Class method: return the *original* type, not the (base) type the
-                    // method was found in. lookup->obj is the original type ptr here.
-                    mp_convert_member_lookup(MP_OBJ_NULL, obj_in, elem_value, dest);
-                } else {
-                    var obj_obj: Obj = MP_OBJ_NULL;
-                    if (obj_in != null and typeIsNative(t) and t != object_type_ptr) {
-                        // Native base class: applies to the native subobj.
-                        obj_obj = instancePtrSubobj0(obj_in);
-                        // MICROPY_BUILTIN_METHOD_CHECK_SELF_ARG=0 under nano → no init-check raise.
-                    } else {
-                        obj_obj = instancePtrAsObj(obj_in);
-                    }
-                    mp_convert_member_lookup(obj_obj, t, elem_value, dest);
+        // 4. Parent walk.
+        if (!typeHasParent(t)) return;
+        if (comptime build_options.is_full) {
+            // Several bases: the C3 order. A class with one base reaches
+            // such a class by the plain walk, and C3 then continues as
+            // that class's order.
+            if (if (parentIsTuple(t)) cachedMro(t) else null) |m| {
+                for (tupleItems(m)[1..]) |u| {
+                    const ut = objToTypePtr(u);
+                    if (ut != object_type_ptr and lookupIn(obj_in, attr, slot_offset, dest, is_type, ut)) return;
                 }
                 return;
             }
         }
-
-        // 3. Native load_attr fallback for attributes not in locals_dict.
-        if (obj_in != null and is_type == 0 and typeIsNative(t) and t != object_type_ptr) {
-            mp_load_method_maybe(instancePtrSubobj0(obj_in), attr, dest);
-            if (dest[0] != MP_OBJ_NULL) return;
-        }
-
-        // 4. Parent walk.
-        if (!typeHasParent(t)) return;
         if (comptime build_options.multiple_inheritance) {
             // MI: if parent is a tuple, recurse into each base.
             if (parentIsTuple(t)) {
@@ -911,6 +889,152 @@ export fn npy_ty_class_lookup(
         t = typeParent(t);
         if (t == object_type_ptr) return;
     }
+}
+
+/// Steps 1-3 of a lookup, in type `t` alone. True when it is done.
+inline fn lookupIn(
+    obj_in: ?*const anyopaque,
+    attr: usize,
+    slot_offset: usize,
+    dest: [*c]Obj,
+    is_type: c_int,
+    t: ?*const anyopaque,
+) bool {
+    const object_type_ptr = @as(?*const anyopaque, &mp_type_object);
+    {
+        // 1. Native-type slot fast path: special-method lookup via slot offset.
+        if (slot_offset != 0 and typeIsNative(t)) {
+            if (typeHasSlotByOffset(t, slot_offset) or
+                (slot_offset == SLOT_OFFSET_ITER and typeFlagIterIsStream(t)))
+            {
+                dest[0] = MP_OBJ_SENTINEL;
+                return true;
+            }
+        }
+
+        // 2. locals_dict (methods/attrs) search.
+        if (typeHasLocalsDict(t)) {
+            const locals_map = typeLocalsMap(t);
+            const elem = mirrors.mp_map_lookup(locals_map, mirrors.objFromQstr(attr), mirrors.MP_MAP_LOOKUP);
+            if (elem) |e| {
+                const elem_value = e.value;
+                if (is_type != 0) {
+                    // Class method: return the *original* type, not the (base) type the
+                    // method was found in. lookup->obj is the original type ptr here.
+                    mp_convert_member_lookup(MP_OBJ_NULL, obj_in, elem_value, dest);
+                } else {
+                    var obj_obj: Obj = MP_OBJ_NULL;
+                    if (obj_in != null and typeIsNative(t) and t != object_type_ptr) {
+                        // Native base class: applies to the native subobj.
+                        obj_obj = instancePtrSubobj0(obj_in);
+                        // MICROPY_BUILTIN_METHOD_CHECK_SELF_ARG=0 under nano → no init-check raise.
+                    } else {
+                        obj_obj = instancePtrAsObj(obj_in);
+                    }
+                    mp_convert_member_lookup(obj_obj, t, elem_value, dest);
+                }
+                return true;
+            }
+        }
+
+        // 3. Native load_attr fallback for attributes not in locals_dict.
+        if (obj_in != null and is_type == 0 and typeIsNative(t) and t != object_type_ptr) {
+            mp_load_method_maybe(instancePtrSubobj0(obj_in), attr, dest);
+            if (dest[0] != MP_OBJ_NULL) return true;
+        }
+    }
+    return false;
+}
+
+// ── C3 method resolution order (full) ──
+//
+// A class with several bases, or with such a class among its ancestors,
+// keeps its C3 order as a `__mro__` tuple in its locals dict, computed
+// once at creation; lookup and super() then follow it. Any other class's
+// order is its chain of single parents, which the plain walk follows.
+
+fn tupleItems(t: Obj) []const Obj {
+    const tup = mirrors.MpObjTuple.fromObj(t);
+    return tup.itemsPtr()[0..tup.len];
+}
+
+fn cachedMro(t: ?*const anyopaque) ?Obj {
+    if (!typeHasLocalsDict(t)) return null;
+    const e = mirrors.mp_map_lookup(typeLocalsMap(t), mirrors.objFromQstr(mp.MP_QSTR___mro__), mirrors.MP_MAP_LOOKUP) orelse return null;
+    return if (isTypeTuple(e.value)) e.value else null;
+}
+
+/// `t.__mro__`.
+fn mroOf(t: ?*const anyopaque) Obj {
+    const object_type_ptr = @as(?*const anyopaque, &mp_type_object);
+    const l = mp_obj_new_list(0, null);
+    var u = t;
+    while (true) {
+        if (cachedMro(u)) |m| {
+            for (tupleItems(m)) |x| _ = mp_obj_list_append(l, x);
+            break;
+        }
+        _ = mp_obj_list_append(l, mirrors.objFromPtr(u));
+        if (u == object_type_ptr) break;
+        if (!typeHasParent(u)) {
+            _ = mp_obj_list_append(l, mirrors.objFromPtr(object_type_ptr));
+            break;
+        }
+        u = typeParent(u);
+    }
+    const list = mirrors.MpObjList.fromObj(l);
+    return mp_obj_new_tuple(list.len, list.items);
+}
+
+// ponytail: a fixed bound on bases; raise it if a real class needs more.
+const max_bases = 15;
+
+fn c3Mro(t: Obj, bases: []const Obj) PyError!Obj {
+    if (bases.len > max_bases) {
+        pyerr.pending_exc = typeErrorMsg("too many base classes");
+        return error.PyRaise;
+    }
+    // The bases' orders, then the bases themselves. `keep` holds each
+    // order's tuple, which the slices point into, for the collector.
+    var keep: [max_bases]Obj = undefined;
+    var seqs: [max_bases + 1][]const Obj = undefined;
+    for (bases, 0..) |b, i| {
+        keep[i] = mroOf(objToTypePtr(b));
+        seqs[i] = tupleItems(keep[i]);
+    }
+    seqs[bases.len] = bases;
+    const all = seqs[0 .. bases.len + 1];
+    const out = mp_obj_new_list(0, null);
+    _ = mp_obj_list_append(out, t);
+    while (true) {
+        var head: ?Obj = null;
+        var left = false;
+        find: for (all) |sq| {
+            if (sq.len == 0) continue;
+            left = true;
+            for (all) |other| {
+                if (other.len > 1 and std.mem.indexOfScalar(Obj, other[1..], sq[0]) != null) continue :find;
+            }
+            head = sq[0];
+            break;
+        }
+        if (!left) break;
+        const h = head orelse {
+            var buf: [256]u8 = undefined;
+            var w: std.Io.Writer = .fixed(&buf);
+            w.writeAll("Cannot create a consistent method resolution order (MRO) for bases") catch {};
+            for (bases, 0..) |b, i| w.print("{s} {s}", .{ if (i == 0) "" else ",", qstr_str(typeNameQstr(objToTypePtr(b))) }) catch {};
+            pyerr.pending_exc = mp_obj_new_exception_msg_varg(&mp_type_TypeError, "%.*s", @as(c_int, @intCast(w.end)), &buf);
+            return error.PyRaise;
+        };
+        _ = mp_obj_list_append(out, h);
+        for (all) |*sq| {
+            if (sq.len > 0 and sq.*[0] == h) sq.* = sq.*[1..];
+        }
+    }
+    const list = mirrors.MpObjList.fromObj(out);
+    std.mem.doNotOptimizeAway(&keep);
+    return mp_obj_new_tuple(list.len, list.items);
 }
 
 // ── seam 6: mp_obj_instance_getiter (public; 0 live raises) ──
@@ -1452,8 +1576,19 @@ export fn super_attr(self_in: Obj, attr: u32, dest: [*c]Obj) callconv(.c) void {
     else
         0;
 
-    // Parent walk: single-parent direct lookup, or MI tuple-walk.
-    if (typeHasParent(type_ptr)) {
+    // Under multiple inheritance, the classes after this one in the C3
+    // order of the object's type.
+    const mro: ?Obj = if (comptime build_options.is_full)
+        cachedMro(if (isTypeType(self_obj)) objToTypePtr(self_obj) else mp_obj_get_type(self_obj))
+    else
+        null;
+    if (mro != null and std.mem.indexOfScalar(Obj, tupleItems(mro.?), self_type) != null) {
+        const items = tupleItems(mro.?);
+        for (items[std.mem.indexOfScalar(Obj, items, self_type).? + 1 ..]) |u| {
+            const ut = objToTypePtr(u);
+            if (ut != @as(?*const anyopaque, &mp_type_object) and lookupIn(obj_ptr, attr, slot_offset, dest, 0, ut)) break;
+        }
+    } else if (typeHasParent(type_ptr)) {
         var did_tuple_walk = false;
         if (comptime build_options.multiple_inheritance) {
             if (parentIsTuple(type_ptr)) {
@@ -1585,6 +1720,10 @@ export fn type_attr(self_in: Obj, attr: usize, dest: [*c]Obj) callconv(.c) void 
             }
             if (attr == @as(usize, @intCast(mp.MP_QSTR___bases__))) {
                 dest[0] = typeBasesTuple(type_ptr);
+                return;
+            }
+            if (attr == @as(usize, @intCast(mp.MP_QSTR___mro__))) {
+                dest[0] = mroOf(type_ptr);
                 return;
             }
         }
@@ -1793,6 +1932,13 @@ fn newTypeImpl(name: usize, bases_tuple: Obj, locals_dict: Obj) PyError!Obj {
         // Slot 11: inherit base's protocol (single-parent only — see above).
         if (base_protocol != null) {
             typeSetSlotByOffset(o, SLOT_OFFSET_PROTOCOL, 11, base_protocol);
+        }
+    }
+
+    if (comptime build_options.is_full) {
+        if (bases_len >= 2 or (bases_len == 1 and cachedMro(objToTypePtr(bases_items[0])) != null)) {
+            const mro = try c3Mro(@intFromPtr(o), bases_items[0..bases_len]);
+            _ = mp_obj_dict_store(locals_dict, mirrors.objFromQstr(mp.MP_QSTR___mro__), mro);
         }
     }
 
