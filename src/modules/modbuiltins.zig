@@ -373,6 +373,7 @@ export fn mp_builtin___repl_print__(o: Obj) callconv(.c) Obj {
 // C qstr is size_t (qstr.h:60); usize matches that on every target.
 const Qstr = usize;
 extern fn mp_load_method(base: Obj, attr: Qstr, dest: [*c]Obj) callconv(.c) void;
+extern fn mp_load_method_maybe(base: Obj, attr: Qstr, dest: *[2]Obj) callconv(.c) void;
 extern fn mp_load_method_protected(obj: Obj, attr: Qstr, dest: [*c]Obj, catch_all_exc: bool) callconv(.c) void;
 extern fn mp_store_attr(base: Obj, attr: Qstr, value: Obj) callconv(.c) void;
 
@@ -560,11 +561,31 @@ export fn mp_builtin___build_class__(n_args: usize, args: [*c]const Obj) callcon
         class_locals,
     };
     const new_class = mp_call_function_n_kw(meta, 3, 0, &meta_args);
+    if (pyerr.pending_exc != 0) return 0;
 
     if (cell != mirrors.OBJ_NONE) {
         mirrors.MpObjCell.cellSet(cell, new_class);
     }
+    if (build_options.is_full) initSubclass(new_class, args[2..n_args]);
     return new_class;
+}
+
+// __qstr_shadow_begin__
+// MP_QSTR___init_subclass__
+// __qstr_shadow_end__
+
+/// PEP 487: the first base with an `__init_subclass__` is called with the
+/// new class, as a class method. MicroPython does not call it.
+fn initSubclass(new_class: Obj, bases: []const Obj) void {
+    for (bases) |base| {
+        var dest: [2]Obj = .{ mirrors.OBJ_NULL, mirrors.OBJ_NULL };
+        mp_load_method_maybe(base, mq.MP_QSTR___init_subclass__, &dest);
+        if (dest[0] == mirrors.OBJ_NULL) continue;
+        // A plain function or a classmethod bound to the base: either
+        // way, the new class is `cls`.
+        _ = mp_call_function_1(dest[0], new_class);
+        return;
+    }
 }
 
 // ── W6 #4 cluster F (continued): mp_builtin_dir ──

@@ -20,6 +20,7 @@ There are two builds:
 | `slice(a, b)` | The constructor is unavailable; slice syntax, including steps, works. | Available. |
 | Implicit exception chaining | `__context__` is always `None`; `raise ... from` works, with `__cause__` and a chained traceback. | Recorded and printed. |
 | Class `__annotations__` | An `OrderedDict` of the annotations' source text, as under `from __future__ import annotations`. | Evaluated objects (or lazy, 3.14). |
+| Enum classes (native) | Members are real (`.name`, `.value`, `Color(1)`, `Color.__members__`), but the class itself cannot be iterated, measured or subscripted: `for c in Color`, `len(Color)` and `Color["RED"]` fail. There are no metaclasses. | Supported. |
 | `__mro__` | Not available on classes; multiple inheritance works. | Available. |
 | Exception text | MicroPython's: `ValueError('x',)` as repr, `KeyError: x` unquoted, `divide by zero`. | `ValueError('x')`, `KeyError: 'x'`, `division by zero`. |
 | Tracebacks | File names and functions, no line numbers or source lines. | Line numbers and source. |

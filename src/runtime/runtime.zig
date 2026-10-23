@@ -27,6 +27,7 @@ const mp = @cImport({
 });
 const pyerr = @import("../pyerr.zig");
 const mirrors = @import("../mp_mirrors.zig");
+const opmethods = @import("opmethods.zig");
 const build_options = @import("build_options");
 const PyError = pyerr.PyError;
 
@@ -448,6 +449,7 @@ fn binopZeroDiv() PyError!void {
 
 extern fn mp_obj_get_float(o: Obj) callconv(.c) f64;
 extern const mp_type_int: anyopaque;
+extern const mp_type_str: anyopaque;
 extern const mp_type_bool: anyopaque;
 
 // The value of a float, int or bool operand; null for anything else.
@@ -491,6 +493,43 @@ noinline fn floatOpPrecheck(op: c_int, lhs: Obj, rhs: Obj) PyError!void {
         return binopZeroDiv();
     }
 }
+/// `1 + R(2)`, `1 < R(2)` or `"a" + S("b")` for a Python subclass R of
+/// int or float, or S of str, with a native value of that kind on the
+/// left. As in CPython, the subclass's reflected method (`__radd__`,
+/// `__gt__`, ...) goes first if it defines one; otherwise the operation
+/// uses its native value. MicroPython's int and str only take exactly an
+/// int or str, and it has no reflected comparisons. Null when this does
+/// not apply.
+fn isNativeScalar(o: Obj) bool {
+    return mirrors.isSmallInt(o) or isFloat(o) or mirrors.isExactType(o, &mp_type_int) or mirrors.isQstr(o) or mirrors.isExactType(o, &mp_type_str);
+}
+
+fn nativeSubclassOp(op: c_int, lhs: Obj, rhs: Obj) PyError!?Obj {
+    if (!isNativeScalar(lhs)) return null;
+    const native = opmethods.nativeBase(rhs);
+    if (native == rhs or !isNativeScalar(native)) return null;
+    var fwd = op;
+    if (fwd >= mp.MP_BINARY_OP_INPLACE_OR and fwd <= mp.MP_BINARY_OP_INPLACE_POWER) fwd += mp.MP_BINARY_OP_OR - mp.MP_BINARY_OP_INPLACE_OR;
+    const reflected: ?c_int = switch (fwd) {
+        mp.MP_BINARY_OP_LESS => mp.MP_BINARY_OP_MORE,
+        mp.MP_BINARY_OP_MORE => mp.MP_BINARY_OP_LESS,
+        mp.MP_BINARY_OP_LESS_EQUAL => mp.MP_BINARY_OP_MORE_EQUAL,
+        mp.MP_BINARY_OP_MORE_EQUAL => mp.MP_BINARY_OP_LESS_EQUAL,
+        else => if (fwd >= mp.MP_BINARY_OP_OR and fwd <= mp.MP_BINARY_OP_POWER) fwd + (mp.MP_BINARY_OP_REVERSE_OR - mp.MP_BINARY_OP_OR) else null,
+    };
+    if (reflected) |rop| {
+        var dest: [3]Obj = .{ mirrors.OBJ_NULL, mirrors.OBJ_NULL, lhs };
+        mp_load_method_maybe(rhs, @intCast(mp_binary_op_method_name[@intCast(rop)]), @ptrCast(&dest));
+        if (pyerr.pending_exc != 0) return error.PyRaise;
+        if (dest[0] != mirrors.OBJ_NULL) {
+            const res = mp_call_method_n_kw(1, 0, &dest);
+            if (pyerr.pending_exc != 0) return error.PyRaise;
+            return res;
+        }
+    }
+    return try mpBinaryOpImpl(op, lhs, native);
+}
+
 fn mpBinaryOpImpl(op_in: c_int, lhs_in: Obj, rhs_in: Obj) PyError!Obj {
     var op = op_in;
     var lhs = lhs_in;
@@ -516,6 +555,9 @@ fn mpBinaryOpImpl(op_in: c_int, lhs_in: Obj, rhs_in: Obj) PyError!Obj {
                 return mirrors.OBJ_FALSE;
             }
             try binopUnsupported(op, lhs, rhs);
+        }
+        if (comptime build_options.is_full) {
+            if (try nativeSubclassOp(op, lhs, rhs)) |res| return res;
         }
         if (mirrors.isSmallInt(lhs)) {
             var lhs_val = mirrors.smallIntValue(lhs);

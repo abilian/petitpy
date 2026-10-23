@@ -1,12 +1,11 @@
-"""enum — minimal enumerations for nanopython.
+"""enum — enumerations for nanopython.
 
-Use the ``@enum`` *decorator*, not subclassing, because nano lacks
-``__init_subclass__`` and metaclass support that CPython's ``class
-Color(Enum):`` form would require. The decorator walks the class
-dict at decoration time, replaces each non-dunder non-callable
-class attribute with a member instance.
+`class Color(Enum):`, `IntEnum`, `StrEnum`, `auto()` and `@unique` follow
+CPython on the full build, except that the class itself cannot be
+iterated, measured or subscripted (no metaclasses): use
+`Color.__members__`. See the comment above `Enum` below.
 
-Example::
+The older `@enum` decorator works on every build, nano included::
 
     from enum import enum, members, lookup
 
@@ -14,27 +13,10 @@ Example::
     class Color:
         RED = 1
         GREEN = 2
-        BLUE = 3
 
-    Color.RED              # <Color.RED: 1>
-    Color.RED.name         # "RED"
-    Color.RED.value        # 1
-    Color.RED == Color.RED # True (identity)
-    Color.RED == 1         # False — members compare by identity, not value
-    members(Color)         # [<Color.RED: 1>, <Color.GREEN: 2>, <Color.BLUE: 3>]
-    lookup(Color, 1)       # <Color.RED: 1>  — by value; None if not found
-
-What's NOT supported (vs CPython enum):
-
-  - ``class Color(Enum):`` subclass syntax (requires ``__init_subclass__``)
-  - ``IntEnum``, ``StrEnum``, ``Flag``, ``IntFlag``
-  - ``auto()``
-  - ``@unique`` decorator (no aliasing check)
-  - Aliasing (defining two members with the same value)
-  - ``Color(1)`` for lookup-by-value — use ``lookup(Color, 1)`` instead
-  - ``Color["RED"]`` for lookup-by-name — use ``getattr(Color, "RED")``
-  - ``_missing_`` hook
-  - Mixin types
+    Color.RED.name, Color.RED.value   # "RED", 1
+    members(Color)                    # [<Color.RED: 1>, <Color.GREEN: 2>]
+    lookup(Color, 1)                  # <Color.RED: 1>; None if not found
 """
 
 
@@ -115,38 +97,131 @@ def lookup(cls, value):
     return cls._value2member_map_.get(value)
 
 
-# ── CPython-compat stub — `class X(Enum):` subclass form ─────────────────
+# ── `class Color(Enum):` ──────────────────────────────────────────────
 #
-# nanopython lacks the `__init_subclass__` / metaclass hooks CPython's
-# real Enum needs to walk the class body, so subclassing does NOT convert
-# class attributes to member instances. What you get:
-#
-#     class ErrorCode(str, Enum):
-#         KERNEL_ERROR = "kernel_error"
-#     ErrorCode.KERNEL_ERROR   # → "kernel_error" (plain string, since
-#                              #   str is the first base in MRO)
-#
-# The whole `class Enum: pass` body is intentional — the class exists so
-# imports like `from enum import Enum` work and `class X(str, Enum):`
-# parses, but the enum-transform behaviour is opt-in via the `@enum`
-# decorator above. Use `@enum class X:` for real member semantics
-# (.name, .value, identity equality, `members()` / `lookup()`).
-#
-# For str-valued enums used only as opaque tokens (hop3-rootd pattern),
-# the stub is enough — `ErrorCode.KERNEL_ERROR == "kernel_error"` and
-# any code that just passes members around gets the right string.
+# On full, `Enum.__init_subclass__` turns the class body's plain
+# attributes into members, instances of the class, as CPython does. There
+# are no metaclasses, so the class itself cannot be iterated, measured or
+# subscripted: `Color.__members__` stands in for `list(Color)` and
+# `Color["RED"]`. Nano has neither `__init_subclass__` nor class
+# `__dict__`, so there the attributes stay plain values.
+
+
+class auto:
+    """A member value chosen for you: the next integer (from 1), or for a
+    StrEnum the member's name in lower case."""
+
+
+def _lookup_new(cls, value):
+    # Installed as `__new__` once the members exist: `Color(1)` looks a
+    # member up by value.
+    member = cls._value2member_map_.get(value)
+    if member is None:
+        member = cls._missing_(value)
+    if member is None:
+        raise ValueError(repr(value) + " is not a valid " + cls.__name__)
+    return member
+
 
 class Enum:
-    """CPython-compat stub. Members become plain class attributes;
-    for real enum semantics, use the ``@enum`` decorator instead."""
-    pass
+    """Base class for enumerations, written `class Color(Enum):`."""
+
+    def __init_subclass__(cls, **kwargs):
+        mixin = None
+        for t in (int, str, float):
+            if issubclass(cls, t):
+                mixin = t
+                break
+        cls._member_names_ = []
+        cls._member_map_ = {}
+        cls._value2member_map_ = {}
+        last = 0
+        for name, value in list(cls.__dict__.items()):
+            if name.startswith("_") or callable(value) or isinstance(value, (property, classmethod, staticmethod)):
+                continue
+            if isinstance(value, auto):
+                value = name.lower() if issubclass(cls, StrEnum) else last + 1
+            if isinstance(value, int):
+                last = value
+            member = cls._value2member_map_.get(value)
+            if member is None:
+                args = value if isinstance(value, tuple) else (value,)
+                if mixin is not None:
+                    member = cls(*args)
+                else:
+                    member = object.__new__(cls)
+                    if "__init__" in cls.__dict__:
+                        member.__init__(*args)
+                member._name_ = name
+                member._value_ = value
+                cls._member_names_.append(name)
+                cls._value2member_map_[value] = member
+            cls._member_map_[name] = member
+            setattr(cls, name, member)
+        cls.__members__ = cls._member_map_
+        if mixin is not None:
+            # The mixin's methods come first in the MRO; members print as
+            # the enum does, as in CPython.
+            for name in ("__repr__", "__str__", "__format__"):
+                if name not in cls.__dict__:
+                    for base in cls.__bases__:
+                        if issubclass(base, Enum):
+                            setattr(cls, name, getattr(base, name))
+                            break
+        if cls._member_names_:
+            cls.__new__ = _lookup_new
+
+    @classmethod
+    def _missing_(cls, value):
+        return None
+
+    @property
+    def name(self):
+        return self._name_
+
+    @property
+    def value(self):
+        return self._value_
+
+    def __repr__(self):
+        return "<" + type(self).__name__ + "." + self._name_ + ": " + repr(self._value_) + ">"
+
+    def __str__(self):
+        return type(self).__name__ + "." + self._name_
+
+    def __format__(self, spec):
+        return format(str(self), spec)
+
+    def __hash__(self):
+        return hash(self._name_)
+
+    def __reduce__(self):
+        return (type(self), (self._value_,))
 
 
 class IntEnum(int, Enum):
-    """Same as Enum — attribute values are ints via int base."""
-    pass
+    """Members are ints, and print as their value."""
+
+    def __str__(self):
+        return repr(self._value_)
+
+    def __format__(self, spec):
+        return format(self._value_, spec)
 
 
 class StrEnum(str, Enum):
-    """Same as Enum — attribute values are strings via str base."""
-    pass
+    """Members are strings, and print as their value."""
+
+    def __str__(self):
+        return self._value_
+
+    def __format__(self, spec):
+        return format(self._value_, spec)
+
+
+def unique(cls):
+    """Class decorator: refuse members that are aliases of another."""
+    aliases = [name for name, m in cls.__members__.items() if m._name_ != name]
+    if aliases:
+        raise ValueError("duplicate values found in " + repr(cls) + ": " + ", ".join(aliases))
+    return cls

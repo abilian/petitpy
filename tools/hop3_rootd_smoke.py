@@ -594,26 +594,6 @@ def build_shim(shim_dir: Path, hop3_src: Path) -> None:
         if ": TypeAlias =" in src:
             src = _erase_type_aliases(src)
             changed = True
-        if ".value" in src and ("ErrorCode" in src or ".code.value" in src):
-            # Nanopython has no Enum metaclass, so `class X(str, Enum)`
-            # members stay as raw strings (see nanopython-lib/enum.py).
-            # `ErrorCode.KERNEL.value` fails because strings don't
-            # carry a .value; same for `e.code.value` where `e.code`
-            # is an ErrorCode instance. For the str-Enum idiom, the
-            # member IS the value — drop the `.value` suffix.
-            import re as _re
-
-            src = _re.sub(
-                r"(ErrorCode\.[A-Z_][A-Z0-9_]*)\.value",
-                r"\1",
-                src,
-            )
-            src = _re.sub(
-                r"\.code\.value\b",
-                ".code",
-                src,
-            )
-            changed = True
         if changed:
             py.write_text(src)
 

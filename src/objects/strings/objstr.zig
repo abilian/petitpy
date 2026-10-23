@@ -23,6 +23,9 @@ const mp = @cImport({
 
 const mirrors = @import("../../mp_mirrors.zig");
 const argcheck = @import("../../runtime/argcheck.zig");
+const opmethods = @import("../../runtime/opmethods.zig");
+extern fn mp_load_method_maybe(base: Obj, attr: usize, dest: *[3]Obj) callconv(.c) void;
+extern fn mp_call_method_n_kw(n_args: usize, n_kw: usize, args: [*c]const Obj) callconv(.c) Obj;
 const pyerr = @import("../../pyerr.zig");
 const PyError = pyerr.PyError;
 
@@ -1225,6 +1228,7 @@ export fn str_zfill(self_in: Obj, width_obj: Obj) callconv(.c) Obj {
 // MP_QSTR_encoding
 // MP_QSTR_errors
 // MP_QSTR_source
+// MP_QSTR___format__
 // __qstr_shadow_end__
 
 fn strUniIstype(f: PredFn, self_in: Obj) Obj {
@@ -1402,6 +1406,11 @@ fn raiseRsplitNone() PyError!void {
     return error.PyRaise;
 }
 
+// On full, an instance of a str subclass joins as its str, as in CPython.
+inline fn joinItem(o: Obj) Obj {
+    return if (comptime build_options.is_full) opmethods.nativeBase(o) else o;
+}
+
 fn strJoinImpl(self_in: Obj, arg_in: Obj) PyError!Obj {
     check_is_str_or_bytes(self_in);
     const self_type = mp_obj_get_type(self_in);
@@ -1428,14 +1437,15 @@ fn strJoinImpl(self_in: Obj, arg_in: Obj) PyError!Obj {
     var norm_self_t = self_type;
     if (norm_self_t == bytearray_type) norm_self_t = bytes_type;
     while (i < seq_len) : (i += 1) {
-        var seq_type = mp_obj_get_type(seq_items[i]);
+        const item = joinItem(seq_items[i]);
+        var seq_type = mp_obj_get_type(item);
         if (seq_type == bytearray_type) seq_type = bytes_type;
         if (seq_type != norm_self_t) {
             try raiseJoinType();
             unreachable;
         }
         if (i > 0) required_len += sep_len;
-        required_len += npyStrObjStrLen(seq_items[i]);
+        required_len += npyStrObjStrLen(item);
     }
 
     var vstr_storage: [64]u8 align(16) = undefined;
@@ -1449,7 +1459,7 @@ fn strJoinImpl(self_in: Obj, arg_in: Obj) PyError!Obj {
             data += sep_len;
         }
         var s: [*]const u8 = undefined;
-        const l = npyStrObjStrDataLen(seq_items[i], @ptrCast(&s));
+        const l = npyStrObjStrDataLen(joinItem(seq_items[i]), @ptrCast(&s));
         @memcpy(data[0..l], s[0..l]);
         data += l;
     }
@@ -2401,9 +2411,12 @@ export fn arg_looks_numeric(arg: Obj) callconv(.c) bool {
 }
 
 // Under nano FLOAT=0 → identity (the float→int conversion branch is dead).
+// `"%d" % 3.0` formats the float's int value (vendor objstr.c).
 export fn arg_as_int(arg: Obj) callconv(.c) Obj {
+    if (objIsFloat(arg)) return mp_obj_new_int_from_float(@as(*const mirrors.MpObjFloat, @ptrFromInt(arg)).value);
     return arg;
 }
+extern fn mp_obj_new_int_from_float(val: f64) callconv(.c) Obj;
 
 /// NX-3 N4a: polled-sentinel. Sets pending_exc + returns. Was noreturn
 /// (longjmp via npy_pyerr_nlr_jump); callers now MUST check pending_exc.
@@ -2588,6 +2601,12 @@ fn strModuloFormatImpl(pattern: Obj, n_args: usize, args: [*c]const Obj, dict: O
         }
 
         const conv = p[0];
+        // On full, an instance of an int, float or str subclass formats as
+        // its native value, except under %s, %r and %a, which call its
+        // own __str__ or __repr__.
+        if (comptime build_options.is_full) {
+            if (conv != 's' and conv != 'r' and conv != 'a') arg = opmethods.nativeBase(arg);
+        }
         switch (conv) {
             'c' => {
                 if (objIsStr(arg)) {
@@ -2848,6 +2867,21 @@ fn formatHelperInto(
             const s_len = vspLen(@ptrCast(&inner_storage));
             var s_ptr = s_buf;
             const stop_ptr: [*]const u8 = s_buf + s_len;
+            if (comptime build_options.is_full) {
+                // A Python `__format__` gets the spec, and its result is
+                // printed as it is. An instance of an int, float or str
+                // subclass is formatted as its native value.
+                var dest: [3]Obj = .{ MP_OBJ_NULL, MP_OBJ_NULL, MP_OBJ_NULL };
+                mp_load_method_maybe(arg, mq.MP_QSTR___format__, &dest);
+                if (dest[0] != MP_OBJ_NULL) {
+                    dest[2] = mp_obj_new_str(s_buf, s_len);
+                    arg = mp_call_method_n_kw(1, 0, &dest);
+                    if (pyerr.pending_exc != 0) return error.PyRaise;
+                    s_ptr = stop_ptr; // the spec is used up
+                } else {
+                    arg = opmethods.nativeBase(arg);
+                }
+            }
 
             // [[fill]align][sign][#][0][width][,_][.precision][type]
             if (isalignment(s_ptr[0])) {

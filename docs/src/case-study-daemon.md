@@ -8,10 +8,7 @@ Measured in October 2026 with the petitpy 0.8.0 development tree. The tests ran 
 
 The daemon and its tests run from their own source, unedited in the hop3-rootd repository. A runner (`tools/hop3-rootd-tests.py`) copies them into a temporary tree next to petitpy's stdlib, laid out as `pip install petitpy` installs it, and runs each test file with petitpy's small `pytest`. It reads fixtures and `parametrize` rows with CPython's `ast` module, since petitpy has no `inspect`.
 
-The copies get a few text rewrites, for things petitpy does not do yet:
-
-- `ErrorCode.X.value` becomes `ErrorCode.X`: a petitpy `Enum` member is its raw value.
-- The one `TypeAlias` assignment gets `object` as its value, since petitpy does not evaluate `list[str]` or `int | None` at run time yet.
+The copies get one text rewrite, for something petitpy does not do yet: the one `TypeAlias` assignment gets `object` as its value, since petitpy does not evaluate `list[str]` or `int | None` at run time.
 
 The petitpy binary is the one `pip install petitpy` installs on Linux (ReleaseFast, stdlib as `.py` files). Memory is the peak resident set size, read by GNU `time` in a Debian 12 container against Debian's CPython 3.11, median of five runs (`tools/measure-hop3-footprint.py`). CPU time per request is the difference between 10,000 and 100 requests, divided by 9,900. A request is what the daemon's accept loop does for one client, minus the socket: build the request, find the handler, run `daemon.health`, encode the JSON response.
 

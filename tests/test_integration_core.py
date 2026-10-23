@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 126. Coverage for `os` lives in test_integration_os.py.
+Cases: 130. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -309,9 +309,9 @@ CASES = [
         ),
         "7 30\n",
     ),
-    # enum stub — `class X(str, Enum):` form parses under nanopython
-    # even though __init_subclass__ doesn't fire. Members stay as
-    # class attributes (identical to CPython for str-valued enums).
+    # `class X(str, Enum):` makes members on full, where __init_subclass__
+    # runs. nano has no __init_subclass__, so the members stay plain
+    # class attributes there.
     (
         "enum_str_subclass",
         (
@@ -321,7 +321,96 @@ CASES = [
             "    B = 'beta'\n"
             "print(E.A, E.A == 'alpha', type(E.A).__name__)"
         ),
-        "alpha True str\n",
+        {"full": "E.A True E\n", "nano": "alpha True str\n"},
+    ),
+    # CPython's enum surface on full, short of iterating the class.
+    (
+        "enum_members",
+        (
+            "from enum import Enum, IntEnum, StrEnum, auto, unique\n"
+            "class Color(Enum):\n"
+            "    RED = 1\n"
+            "    GREEN = 2\n"
+            "    ALIAS = 1\n"
+            "print(Color.RED, repr(Color.GREEN), Color.RED.value, Color.RED.name, Color(2), Color.ALIAS is Color.RED, list(Color.__members__))\n"
+            "class Code(str, Enum):\n"
+            "    KERNEL = 'kernel_error'\n"
+            "print(Code.KERNEL.value, Code.KERNEL == 'kernel_error', Code('kernel_error'), repr(Code.KERNEL), f'{Code.KERNEL}')\n"
+            "class N(IntEnum):\n"
+            "    ONE = 1\n"
+            "    TWO = auto()\n"
+            "print(N.ONE, N.TWO + 1, N.ONE < N.TWO, f'{N.TWO:03d}', repr(N.TWO))\n"
+            "class S(StrEnum):\n"
+            "    A = auto()\n"
+            "print(S.A, repr(S.A))\n"
+            "try:\n"
+            "    Color(7)\n"
+            "except ValueError as e:\n"
+            "    print(e)\n"
+        ),
+        {
+            "full": (
+                "Color.RED <Color.GREEN: 2> 1 RED Color.GREEN True ['RED', 'GREEN', 'ALIAS']\n"
+                "kernel_error True Code.KERNEL <Code.KERNEL: 'kernel_error'> Code.KERNEL\n"
+                "1 3 True 002 <N.TWO: 2>\n"
+                "a <S.A: 'a'>\n"
+                "7 is not a valid Color\n"
+            ),
+            "nano": None,
+        },
+    ),
+    # PEP 487 on full: the first base with __init_subclass__ sees each new
+    # subclass. MicroPython never calls it.
+    (
+        "init_subclass",
+        (
+            "seen = []\n"
+            "class B:\n"
+            "    def __init_subclass__(cls):\n"
+            "        seen.append(cls.__name__)\n"
+            "class C(B): pass\n"
+            "class D(C): pass\n"
+            "class K:\n"
+            "    @classmethod\n"
+            "    def __init_subclass__(cls):\n"
+            "        seen.append('k:' + cls.__name__)\n"
+            "class L(K): pass\n"
+            "print(seen)\n"
+        ),
+        {"full": "['C', 'D', 'k:L']\n", "nano": "[]\n"},
+    ),
+    # An int, float or str subclass on the right of an operator, and in
+    # formatting, works as its value on full, as in CPython. MicroPython's
+    # int and str only take exactly an int or str.
+    (
+        "native_subclass_operands",
+        (
+            "class R(int): pass\n"
+            "class F(float): pass\n"
+            "class S(str): pass\n"
+            "class V(int):\n"
+            "    def __radd__(self, o): return 'radd'\n"
+            "print(1 + R(2), 1 < R(2), 2 > R(1), 3 // R(2), 1.5 + F(1.0), 'a' + S('b'), 'a' < S('b'), 1 + V(2))\n"
+            "print(sorted([R(3), 1, R(2)]), sum([R(1), R(2)]), ''.join([S('x'), 'y']))\n"
+            "class Q:\n"
+            "    def __format__(self, spec): return 'Q' + spec\n"
+            "print('{:03d}'.format(R(7)), '%d' % F(3.9), '%x' % R(255), f'{Q():z}', format(Q(), 'y'))\n"
+        ),
+        {
+            "full": (
+                "3 True True 1 2.5 ab True radd\n"
+                "[1, 2, 3] 3 xy\n"
+                "007 3 ff Qz Qy\n"
+            ),
+            "nano": None,
+        },
+    ),
+    # `"%d" % 3.7` formats the float's int value, as in vendor MicroPython
+    # and CPython.
+    (
+        "percent_d_takes_float",
+        "print('%d %i' % (3.7, -2.5))\n",
+        "3 -2\n",
     ),
     # @enum decorator — the full-featured path retains .name/.value.
     (
