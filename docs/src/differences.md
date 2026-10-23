@@ -31,7 +31,6 @@ There are two builds:
 |---|---|---|
 | Standard library | A subset: `json`, `re`, `math`, `itertools`, `functools`, `collections`, `dataclasses`, `datetime`, `pathlib`, `typing`, `enum`, `random`, `string`, `struct`, … ([what runs](COMPATIBILITY.md)). No `asyncio` (coroutines run, there is no event loop), `csv`, `decimal`, `fractions`, `unicodedata`, `sqlite3`, `ssl`. | The full library. |
 | `sys.platform` | `"petitpy"`. | `"linux"`, `"darwin"`, … |
-| `json.dumps` | Does not escape non-ASCII (`ensure_ascii` is not applied). | Escapes to `\u00e9` by default. |
 | Files (native) | A write is visible to a reread only after `close()` or `flush()`. | Same rule, but CPython closes a dropped file at once (reference counting). |
 | Files and `os` (browser) | No `open()` or `os`; programs see the files the page passes in. | Full file system and `os` module. |
 | Threads | `_thread` is a stub. | Available. |

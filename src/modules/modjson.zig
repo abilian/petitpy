@@ -1,14 +1,15 @@
 //! nanopython — Zig-native `_json` module, the fast paths of `json.dumps`
 //! and `json.loads`.
 //!
-//!   _json.encode(obj, item_sep, kv_sep) → str
+//!   _json.encode(obj, item_sep, kv_sep, ensure_ascii) → str
+//!   _json.string(s, ensure_ascii) → s as a JSON string literal
 //!   _json.decode(s) → value
 //!
-//! Encodes None, bool, int, float, str, list, tuple and dict of exactly
-//! those types, with the output of the pure-Python encoder in
-//! nanopython-lib/json.py. Anything else (a subclass, a non-str key, very
-//! deep nesting) raises TypeError, and json.py reruns its own encoder,
-//! which either handles the value or raises CPython's error.
+//! Encodes None, bool, int, finite float, str, list, tuple and dict of
+//! exactly those types, with the output of the pure-Python encoder in
+//! nanopython-lib/json.py. Anything else (a subclass, a non-str key, NaN,
+//! very deep nesting) raises TypeError, and json.py reruns its own
+//! encoder, which either handles the value or raises CPython's error.
 //!
 //! `decode` builds the same values as the pure-Python decoder for the
 //! documents it accepts. On anything else (invalid JSON, a surrogate
@@ -17,6 +18,7 @@
 //! the position.
 //!
 //! __qstr_shadow_begin__
+//! MP_QSTR_string
 //! MP_QSTR__json
 //! MP_QSTR_encode
 //! MP_QSTR_decode
@@ -27,6 +29,7 @@ const std = @import("std");
 const build_options = @import("build_options");
 const mirrors = @import("../mp_mirrors.zig");
 const pyerr = @import("../pyerr.zig");
+const opmethods = @import("../runtime/opmethods.zig");
 
 const Obj = mirrors.Obj;
 const Qstr = usize;
@@ -42,10 +45,12 @@ extern const mp_type_tuple: anyopaque;
 extern const mp_type_str: anyopaque;
 extern const mp_type_int: anyopaque;
 extern const mp_type_float: anyopaque;
-extern const mp_type_fun_builtin_3: anyopaque;
 extern const mp_type_TypeError: anyopaque;
 extern const mp_type_ValueError: anyopaque;
 extern const mp_type_fun_builtin_1: anyopaque;
+extern const mp_type_fun_builtin_2: anyopaque;
+extern const mp_type_fun_builtin_var: anyopaque;
+extern fn mp_obj_float_get(o: Obj) callconv(.c) f64;
 
 extern fn vstr_init_print(v: *Vstr, alloc: usize, print: *PrintT) callconv(.c) void;
 extern fn vstr_add_strn(v: *Vstr, s: [*]const u8, len: usize) callconv(.c) void;
@@ -89,6 +94,7 @@ const Encoder = struct {
     print: PrintT,
     item_sep: []const u8,
     kv_sep: []const u8,
+    ascii: bool,
 
     fn add(self: *Encoder, s: []const u8) void {
         vstr_add_strn(&self.out, s.ptr, s.len);
@@ -99,7 +105,9 @@ const Encoder = struct {
         const data = mp_obj_str_get_data(o, &len);
         vstr_add_byte(&self.out, '"');
         var run: usize = 0;
-        for (data[0..len], 0..) |c, i| {
+        var i: usize = 0;
+        while (i < len) {
+            const c = data[i];
             const esc: []const u8 = switch (c) {
                 '"' => "\\\"",
                 '\\' => "\\\\",
@@ -108,19 +116,41 @@ const Encoder = struct {
                 '\n' => "\\n",
                 0x0C => "\\f",
                 '\r' => "\\r",
-                else => if (c < 0x20) "" else continue,
+                else => if (c < 0x20 or (self.ascii and c >= 0x7F)) "" else {
+                    i += 1;
+                    continue;
+                },
             };
             self.add(data[run..i]);
-            run = i + 1;
             if (esc.len > 0) {
                 self.add(esc);
+                i += 1;
+            } else if (c < 0x80) {
+                self.hex(c);
+                i += 1;
             } else {
-                var buf: [6]u8 = undefined;
-                self.add(std.fmt.bufPrint(&buf, "\\u{x:0>4}", .{c}) catch unreachable);
+                // ensure_ascii: a UTF-8 sequence as a \u escape, or a
+                // surrogate pair above U+FFFF, as CPython writes them.
+                const n: usize = if (c >= 0xF0) 4 else if (c >= 0xE0) 3 else 2;
+                var cp: u32 = c & (@as(u8, 0x7F) >> @intCast(n));
+                for (data[i + 1 .. @min(i + n, len)]) |b| cp = (cp << 6) | (b & 0x3F);
+                if (cp >= 0x10000) {
+                    self.hex(0xD800 + ((cp - 0x10000) >> 10));
+                    self.hex(0xDC00 + ((cp - 0x10000) & 0x3FF));
+                } else {
+                    self.hex(cp);
+                }
+                i = @min(i + n, len);
             }
+            run = i;
         }
         self.add(data[run..len]);
         vstr_add_byte(&self.out, '"');
+    }
+
+    fn hex(self: *Encoder, cp: u32) void {
+        var buf: [6]u8 = undefined;
+        self.add(std.fmt.bufPrint(&buf, "\\u{x:0>4}", .{cp}) catch unreachable);
     }
 
     fn items(self: *Encoder, elems: []const Obj, depth: usize) Unsupported!void {
@@ -145,6 +175,7 @@ const Encoder = struct {
         if (!mirrors.isObj(o)) return error.Unsupported;
         const t = mirrors.objBaseType(o);
         if (t == &mp_type_str) return self.str(o);
+        if (t == &mp_type_float and !std.math.isFinite(mp_obj_float_get(o))) return error.Unsupported;
         if (t == &mp_type_int or t == &mp_type_float) {
             return mp_obj_print_helper(&self.print, o, PRINT_STR);
         }
@@ -183,18 +214,27 @@ fn sepArg(o: Obj) []const u8 {
     return data[0..len];
 }
 
-fn py_encode(obj: Obj, item_sep: Obj, kv_sep: Obj) callconv(.c) Obj {
+fn py_encode(_: usize, args: [*c]const Obj) callconv(.c) Obj {
     var enc: Encoder = .{
         .out = undefined,
         .print = undefined,
-        .item_sep = sepArg(item_sep),
-        .kv_sep = sepArg(kv_sep),
+        .item_sep = sepArg(args[1]),
+        .kv_sep = sepArg(args[2]),
+        .ascii = args[3] == mirrors.OBJ_TRUE,
     };
     vstr_init_print(&enc.out, 64, &enc.print);
-    enc.value(obj, 0) catch {
+    enc.value(args[0], 0) catch {
         pyerr.pending_exc = mp_obj_new_exception_msg(&mp_type_TypeError, "not handled by the native JSON encoder");
         return mirrors.OBJ_NULL;
     };
+    return mp_obj_new_str_from_vstr(&enc.out);
+}
+
+// A str, or a str subclass by its value, as a JSON string literal.
+fn py_string(s: Obj, ascii: Obj) callconv(.c) Obj {
+    var enc: Encoder = .{ .out = undefined, .print = undefined, .item_sep = "", .kv_sep = "", .ascii = ascii == mirrors.OBJ_TRUE };
+    vstr_init_print(&enc.out, 16, &enc.print);
+    enc.str(opmethods.nativeBase(s));
     return mp_obj_new_str_from_vstr(&enc.out);
 }
 
@@ -270,6 +310,7 @@ const Decoder = struct {
                 return mp_obj_new_str_from_vstr(&out);
             }
             if (c != '\\') {
+                if (c < 0x20) return error.Unsupported;
                 self.i += 1;
                 continue;
             }
@@ -374,7 +415,9 @@ fn py_decode(s: Obj) callconv(.c) Obj {
 
 pub export const mp_json_decode_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_1 }, .fun = @ptrCast(&py_decode) };
 
-pub export const mp_json_encode_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_3 }, .fun = @ptrCast(&py_encode) };
+pub export const mp_json_encode_obj: mirrors.MpObjFunBuiltinVar = .{ .base = .{ .type = &mp_type_fun_builtin_var }, .sig = mirrors.makeFunSig(4, 4, false), .fun = &py_encode };
+
+pub export const mp_json_string_obj: mirrors.MpObjFunBuiltinFixed = .{ .base = .{ .type = &mp_type_fun_builtin_2 }, .fun = @ptrCast(&py_string) };
 
 const RomEntry = extern struct {
     key: Obj,
@@ -389,6 +432,7 @@ const mp_module__json_globals_table = [_]RomEntry{
     .{ .key = qKey(mp.MP_QSTR___name__), .value = @ptrFromInt(qKey(mp.MP_QSTR__json)) },
     .{ .key = qKey(mp.MP_QSTR_encode), .value = &mp_json_encode_obj },
     .{ .key = qKey(mp.MP_QSTR_decode), .value = &mp_json_decode_obj },
+    .{ .key = qKey(mp.MP_QSTR_string), .value = &mp_json_string_obj },
 };
 
 pub export const mp_module__json_globals: mirrors.MpObjDict = .{

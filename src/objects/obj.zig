@@ -655,6 +655,9 @@ export fn mp_obj_get_float_maybe(arg_in: Obj, value: *f64) callconv(.c) bool {
         const converted = mp_unary_op(mp.MP_UNARY_OP_FLOAT_MAYBE, arg_in);
         if (converted != 0 and isFloat(converted)) {
             val = mp_obj_float_get(converted);
+        } else if (build_options.is_full and isFloat(@import("../runtime/opmethods.zig").nativeBase(arg_in))) {
+            // A float subclass without its own __float__.
+            val = mp_obj_float_get(@import("../runtime/opmethods.zig").nativeBase(arg_in));
         } else {
             return false;
         }

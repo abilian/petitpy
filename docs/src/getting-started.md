@@ -17,7 +17,7 @@ echo 'print(2**100)' | petitpy /dev/stdin        # read the program from stdin
 ppy                                              # interactive REPL (Ctrl-D to exit)
 ```
 
-The native build has arbitrary-precision integers, Unicode strings, files, `os`, `subprocess`, sockets and an everyday stdlib (`json`, `re`, `dataclasses`, `pathlib`, `datetime`, `logging`, `unittest.mock`, …). Read [Differences from CPython](differences.md) before porting a program: the main surprises are that dicts iterate in hash order and that `str.upper()` is ASCII-only.
+The native build has arbitrary-precision integers, Unicode strings, files, `os`, `subprocess`, sockets and an everyday stdlib (`json`, `re`, `dataclasses`, `pathlib`, `datetime`, `logging`, `unittest.mock`, …). Read [Differences from CPython](differences.md) before porting a program: the main surprises are that `str.upper()` is ASCII-only and that tracebacks have no line numbers.
 
 ## Python in the browser
 

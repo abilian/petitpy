@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 131. Coverage for `os` lives in test_integration_os.py.
+Cases: 132. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -444,6 +444,46 @@ CASES = [
             ),
             "nano": None,
         },
+    ),
+    # json follows CPython: ensure_ascii, non-str keys, NaN, hooks, and
+    # its error messages with their positions.
+    (
+        "json_cpython_behaviour",
+        (
+            'import json\n'
+            'from enum import IntEnum, Enum\n'
+            'class N(IntEnum):\n'
+            '    A = 1\n'
+            'class C(str, Enum):\n'
+            "    K = 'k'\n"
+            "print(json.dumps([{'é': '\\U0001f600'}, {1: 2.5}, {None: float('nan')}]), json.dumps('é', ensure_ascii=False))\n"
+            "print(json.dumps([N.A, C.K], default=str), json.dumps({(1,): 2, 'a': 1}, skipkeys=True), json.dumps({1, 2}, default=sorted))\n"
+            'print(json.loads(\'{"a": NaN}\'), json.loads(\'[1.5]\', parse_float=str), json.loads(\'{"a": 1}\', object_pairs_hook=list))\n'
+            'for doc in [\'[1, 2\', \'{"a" 1}\', \'[1,]\', \'01\', \'"a\\\\x"\', \'{1: 2}\']:\n'
+            '    try:\n'
+            '        json.loads(doc)\n'
+            '    except json.JSONDecodeError as e:\n'
+            '        print(e, e.pos, e.lineno, e.colno)\n'
+            "for o in [object(), {(1,): 2}, float('inf')]:\n"
+            '    try:\n'
+            '        json.dumps(o, allow_nan=False)\n'
+            '    except (TypeError, ValueError) as e:\n'
+            '        print(type(e).__name__, e)\n'
+        ),
+        (
+            '[{"\\u00e9": "\\ud83d\\ude00"}, {"1": 2.5}, {"null": NaN}] "é"\n'
+            '[1, "k"] {"a": 1} [1, 2]\n'
+            "{'a': nan} ['1.5'] [('a', 1)]\n"
+            "Expecting ',' delimiter: line 1 column 6 (char 5) 5 1 6\n"
+            "Expecting ':' delimiter: line 1 column 6 (char 5) 5 1 6\n"
+            'Illegal trailing comma before end of array: line 1 column 3 (char 2) 2 1 3\n'
+            'Extra data: line 1 column 2 (char 1) 1 1 2\n'
+            'Invalid \\escape: line 1 column 3 (char 2) 2 1 3\n'
+            'Expecting property name enclosed in double quotes: line 1 column 2 (char 1) 1 1 2\n'
+            'TypeError Object of type object is not JSON serializable\n'
+            'TypeError keys must be str, int, float, bool or None, not tuple\n'
+            'ValueError Out of range float values are not JSON compliant: inf\n'
+        ),
     ),
     # @enum decorator — the full-featured path retains .name/.value.
     (
