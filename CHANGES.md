@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use 
 
 - **An embedding API (experimental)**: a C program, or a Zig one through `@cImport`, can keep an interpreter alive, run code in it, exchange values and give Python functions of its own to call. `zig build lib -Dconfig=full -Dfrozen-tiny=true` builds `libpetitpy.a`, with the standard modules compiled in, and `petitpy.h`. Values cross the API as handles that keep them alive across collections, every call returns a status instead of ending the process, and calls from several host threads take turns. A function in the configuration can take Python's output. A process can hold several interpreters, each with its own modules, globals and heap; calls into different interpreters take turns rather than run in parallel. `make test-embed` checks it, and the docs have a guide, "Embedding in C".
 - **A long-lived interpreter for JavaScript, `petitpy/embed`** in the npm package (experimental): `loadInterpreter()` keeps one interpreter alive, and `exec`, `eval`, `call`, `get`, `set` and `define` run code, convert values both ways and let Python call JavaScript functions, where `run()` starts a fresh program each time. It runs on `petitpy-embed.wasm`, the embedding API built as a wasm module (`make web-embed`), 344 KB with the browser build's profile.
+- **A Homebrew formula** built from the PyPI wheels, for macOS and Linux: `make brew-formula` prints it for the tap `abilian/tap/petitpy`.
 
 ### Changed
 

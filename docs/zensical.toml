@@ -90,6 +90,7 @@ nav = [
         { "ADR 016 — distribution" = "adrs/016-distribution.md" },
         { "ADR 019 — garbage collector" = "adrs/019-garbage-collector.md" },
         { "ADR 020 — quickening" = "adrs/020-quickening.md" },
+        { "ADR 022 — embedding" = "adrs/022-embedding.md" },
     ]},
 
     # -------------------------------------------------------------------------

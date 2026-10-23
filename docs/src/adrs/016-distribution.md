@@ -1,6 +1,6 @@
 # ADR 016. Distribution: PyPI wheels and sdist, built by Zig from one machine
 
-- **Status**: Accepted (2026-10-19). Revision 3: prebuilt wheels beside the sdist, the binary itself as the installed command, releases built and published from the maintainer's machine, Homebrew deferred, published under the name petitpy.
+- **Status**: Accepted (2026-10-19). Revision 3: prebuilt wheels beside the sdist, the binary itself as the installed command, releases built and published from the maintainer's machine, Homebrew deferred, published under the name petitpy. Amended (2026-10-23): a Homebrew tap built from the wheels (§7).
 - **Decider**: project maintainer
 - **Branches from**: [ADR 003](003-library-and-module-loading.md) (the runtime's stdlib search path), [ADR 011](011-everyday-stdlib.md) (what the wheel ships), [ADR 012](012-profiles-and-feature-matrix.md) (the wheel ships the `full` profile).
 - **Consequences**: `pip install petitpy`, `uv tool install petitpy` and `uvx petitpy` install a prebuilt binary on macOS (arm64, x86_64) and Linux (x86_64, aarch64), and build from the sdist elsewhere; `make release-dist` builds every artifact on one machine and `make release-publish` uploads them; the runtime finds its stdlib next to its own executable.
@@ -72,6 +72,12 @@ The tags are `py3-none-<platform>`: the wheel holds no Python extension. On any 
 - Signed or notarised binaries; Windows wheels.
 - The wasm binary on PyPI: it is a browser artifact, distributed through npm and the hosted playground (W43 plan).
 
-## 7. See also
+## 7. Amendment (2026-10-23): a Homebrew tap
+
+v0.9 adds the tap that §6 deferred, for macOS users who do not use pip. `brew install abilian/tap/petitpy` installs the same files as the wheels, and comes from them: the formula downloads the PyPI wheel for the user's platform, macOS or Linux, arm64 or x86_64, puts the binary in `bin/` with `ppy` beside it, and the stdlib in `share/petitpy/lib`, where the binary finds it through the keg's symlink. The formula builds nothing, so it needs no Zig and no MicroPython checkout.
+
+`make brew-formula` prints the formula for the version being released, with each wheel's URL and checksum read from PyPI, so it runs after `make release-publish`. The maintainer commits it to `Formula/petitpy.rb` in the `abilian/homebrew-tap` repository on GitHub. Nothing pushes there automatically, so the tap needs no deploy key.
+
+## 8. See also
 
 - `scripts/hatch_build.py`, `python/petitpy/`, `pyproject.toml`, the `release-dist` and `release-publish` targets in the `Makefile`.

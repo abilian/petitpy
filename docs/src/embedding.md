@@ -2,7 +2,7 @@
 
 petitpy can run inside another program, the host. The host creates an interpreter, keeps it for as long as it needs it, runs Python code in it, passes values in and reads results back, and gives Python functions of its own to call. The API is a C header, `petitpy.h`, and a static library, `libpetitpy.a`. Zig hosts use the same header through `@cImport`.
 
-The API is experimental in this release: names and signatures may still change. The same API runs in the browser and Node as a wasm module, with a JavaScript wrapper: see [From JavaScript](#from-javascript).
+The API is experimental in this release: names and signatures may still change. The same API runs in the browser and Node as a wasm module, with a JavaScript wrapper: see [From JavaScript](#from-javascript). The design and its reasons are in [ADR 022](adrs/022-embedding.md).
 
 ## Building
 

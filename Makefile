@@ -796,6 +796,13 @@ release-publish:
 	uv publish dist/*.tar.gz dist/*.whl
 	npm publish ./npm/dist
 
+## brew-formula: print the Homebrew formula for the build.zig version,
+##               from its wheels on PyPI, so after release-publish. It
+##               goes to Formula/petitpy.rb in the abilian/homebrew-tap
+##               repository (`brew install abilian/tap/petitpy`).
+brew-formula:
+	@python3 scripts/brew_formula.py $$(sed -n 's/^pub const version = "\(.*\)";/\1/p' build.zig)
+
 ## publish: clean, rebuild dist/ and upload it to PyPI (not npm). Needs
 ##          PyPI credentials for twine.
 publish: clean

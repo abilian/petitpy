@@ -20,6 +20,7 @@ _Each ADR records one architectural decision: its context, the alternatives, the
 | [ADR 016](016-distribution.md) | Distribution: PyPI wheels and sdist, built by Zig from one machine | Accepted |
 | [ADR 019](019-garbage-collector.md) | A garbage collector: vendor's heap, conservative roots, safe points on wasm | Implemented |
 | [ADR 020](020-quickening.md) | Quickening and the interpreter's next speed step | Implemented |
+| [ADR 022](022-embedding.md) | Embedding: a small C API over a static library | Accepted |
 
 ## Reading order
 
@@ -27,3 +28,4 @@ _Each ADR records one architectural decision: its context, the alternatives, the
 - **A new feature**: ADR 002 (build flags), ADR 003 (module loading), ADR 008 (compatibility tracking).
 - **The browser build**: ADR 001, ADR 006 (JS bridge), ADR 007 (size).
 - **Performance**: ADR 004 (method), ADR 005, ADR 020.
+- **Embedding**: ADR 022, with ADR 019 (the collector) and ADR 013 (exceptions raised in C).
