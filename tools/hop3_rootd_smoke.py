@@ -578,39 +578,11 @@ def build_shim(shim_dir: Path, hop3_src: Path) -> None:
         dst.write_text(content)
 
     # hop3-rootd source itself — copy the whole `hop3_rootd/` package
-    # tree so it resolves as `import hop3_rootd`, applying the few text
-    # rewrites below for what the runtime does not support yet.
+    # tree so it resolves as `import hop3_rootd`.
     hop3_pkg = hop3_src / "hop3_rootd"
     if not hop3_pkg.exists():
         raise SystemExit(f"hop3-rootd source not found at {hop3_pkg}")
-    dest_pkg = shim_dir / "hop3_rootd"
-    shutil.copytree(hop3_pkg, dest_pkg)
-    for py in dest_pkg.rglob("*.py"):
-        try:
-            src = py.read_text()
-        except (OSError, UnicodeDecodeError):
-            continue
-        changed = False
-        if ": TypeAlias =" in src:
-            src = _erase_type_aliases(src)
-            changed = True
-        if changed:
-            py.write_text(src)
-
-
-def _erase_type_aliases(src: str) -> str:
-    """Replace the value of each ``X: TypeAlias = ...`` with ``object``:
-    the runtime does not evaluate ``list[...]`` or ``int | str`` yet."""
-    import ast as _ast
-
-    lines = src.splitlines(keepends=True)
-    for node in reversed(_ast.parse(src).body):
-        if isinstance(node, _ast.AnnAssign) and _ast.unparse(node.annotation) == "TypeAlias":
-            v = node.value
-            head = lines[v.lineno - 1][: v.col_offset]
-            tail = lines[v.end_lineno - 1][v.end_col_offset :]
-            lines[v.lineno - 1 : v.end_lineno] = [head + "object" + tail]
-    return "".join(lines)
+    shutil.copytree(hop3_pkg, shim_dir / "hop3_rootd")
 
 
 def run_probe(

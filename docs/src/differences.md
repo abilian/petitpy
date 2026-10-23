@@ -19,7 +19,7 @@ There are two builds:
 | Keyword arguments to built-ins | Native takes them where CPython does, except `int(x, base=)`, `int.to_bytes` and `int.from_bytes`, which take positional arguments only and ignore `signed`. The browser build takes them only where MicroPython does (`sorted(key=)`, `print(sep=)`, …). | Taken by name wherever the signature allows. |
 | `slice(a, b)` | The constructor is unavailable; slice syntax, including steps, works. | Available. |
 | Implicit exception chaining | `__context__` is always `None`; `raise ... from` works, with `__cause__` and a chained traceback. | Recorded and printed. |
-| Class `__annotations__` | An `OrderedDict` of the annotations' source text, as under `from __future__ import annotations`. | Evaluated objects (or lazy, 3.14). |
+| Annotations | A class's `__annotations__` is an `OrderedDict` of their source text, as under `from __future__ import annotations`; on native, `typing.get_type_hints()` evaluates them. Functions keep no annotations. The browser build cannot evaluate `list[str]` or `int \| None`. | Evaluated objects (or lazy, 3.14). |
 | Enum classes (native) | Members are real (`.name`, `.value`, `Color(1)`, `Color.__members__`), but the class itself cannot be iterated, measured or subscripted: `for c in Color`, `len(Color)` and `Color["RED"]` fail. There are no metaclasses. | Supported. |
 | `__mro__` | Not available on classes; multiple inheritance works. | Available. |
 | Exception text | MicroPython's: `ValueError('x',)` as repr, `KeyError: x` unquoted, `divide by zero`. | `ValueError('x')`, `KeyError: 'x'`, `division by zero`. |

@@ -59,6 +59,7 @@ Where MicroPython's stricter behaviour made real code awkward, petitpy follows C
 - `@dataclass` accepts `frozen`, `slots`, `kw_only`, `order`, `unsafe_hash` and `match_args`, though not all of them change behaviour. Upstream's `dataclass` is narrower.
 - `class Color(Enum)`, `IntEnum`, `StrEnum` and `auto()` make real members with `.name` and `.value`, through `__init_subclass__`, which petitpy calls and MicroPython does not.
 - An `int`, `float` or `str` subclass works where its base type does: `1 + R(2)`, `'a' + S('b')`, `''.join(...)`, `'{:d}'.format(...)`. `__format__` is honoured.
+- `list[str]`, `int | None` and `Optional[int]` evaluate at run time, `isinstance(x, int | None)` works, and `typing.get_type_hints()` evaluates a class's annotations.
 - PEP 448 unpacking (`{**a, **b}`, `[a, *b]`) works in more positions.
 - The PEP 570 positional-only marker `/` is accepted and has no effect, as in MicroPython.
 

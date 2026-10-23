@@ -215,18 +215,7 @@ def build_test_shim(shim_dir: Path, hop3_src: Path) -> None:
         # top-level import from within.
         if py.name == "__init__.py":
             continue
-        src = py.read_text()
-        # The str-Enum `.value` rewrite the smoke tool applies to the
-        # hop3-rootd sources: an Enum member here is its raw value.
-        if "ErrorCode." in src and ".value" in src:
-            import re as _re
-
-            src = _re.sub(
-                r"(ErrorCode\.[A-Z_][A-Z0-9_]*)\.value",
-                r"\1",
-                src,
-            )
-        (shim_dir / py.name).write_text(src)
+        (shim_dir / py.name).write_text(py.read_text())
     # Some test files spell the shared helper as
     # `from tests.a_unit._fakes import FakeExec`; replicate that dotted
     # path so those imports resolve without editing the test source.

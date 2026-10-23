@@ -60,6 +60,7 @@ extern const mp_type_bool: anyopaque;
 extern const mp_type_NoneType: anyopaque;
 extern const mp_type_tuple: anyopaque;
 extern const mp_type_list: anyopaque;
+extern const mp_type_type: anyopaque;
 extern const mp_type_TypeError: anyopaque;
 extern const mp_type_IndexError: anyopaque;
 extern const mp_type_fun_builtin_1: anyopaque;
@@ -585,6 +586,10 @@ fn mpObjSubscrImpl(base: Obj, index: Obj, value: Obj) PyError!Obj {
         if (ret != MP_OBJ_NULL) return ret;
         if (pyerr.pending_exc != 0) return error.PyRaise;
         // TODO: call base classes here?
+    }
+    // `list[str]` and a class's `__class_getitem__`, on full.
+    if (build_options.is_full and value == mirrors.OBJ_SENTINEL and typeOf(base) == @as(?*const anyopaque, &mp_type_type)) {
+        return @import("../runtime/runtime.zig").typingCall(mp.MP_QSTR__class_getitem, base, index);
     }
     if (value == MP_OBJ_NULL) {
         try raiseNoItemDeletion();

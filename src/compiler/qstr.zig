@@ -60,7 +60,7 @@ pub const N_STATIC: u16 = 228;
 /// 362 (+3) for `__cause__`, `__context__`, `__suppress_context__` (PEP 3134).
 /// 366 (+4) for `lseek`, `SEEK_SET`, `SEEK_CUR`, `SEEK_END` (modules/modos.zig).
 /// 367 (+1) for `_json` (modules/modjson.zig).
-pub const N_MAIN: u16 = 377;
+pub const N_MAIN: u16 = 382;
 
 /// Total compile-time qstr count. Dynamic pool ids start here.
 pub const N_TOTAL: u16 = N_STATIC + N_MAIN;
@@ -490,8 +490,8 @@ const testing = std.testing;
 
 test "comptime: pool fingerprint matches vendor" {
     try testing.expectEqual(@as(u16, 228), N_STATIC);
-    try testing.expectEqual(@as(u16, 377), N_MAIN);
-    try testing.expectEqual(@as(u16, 605), N_TOTAL);
+    try testing.expectEqual(@as(u16, 382), N_MAIN);
+    try testing.expectEqual(@as(u16, 610), N_TOTAL);
 }
 
 test "comptime: well-known qstr ids match vendor" {

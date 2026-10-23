@@ -7,6 +7,8 @@
 //!
 //! __qstr_shadow_begin__
 //! MP_QSTR___missing__
+//! MP_QSTR___args__
+//! MP_QSTR___origin__
 //! __qstr_shadow_end__
 //!
 //! Fns ported here:
@@ -504,6 +506,16 @@ fn raiseIssubclassArg2() PyError!void {
     return error.PyRaise;
 }
 
+/// The `__args__` tuple of a typing.UnionType, or null. A GenericAlias
+/// such as `list[int]` also has `__args__`, and `__origin__` besides.
+fn unionArgs(o: Obj) Obj {
+    var dest: [2]Obj = .{ MP_OBJ_NULL, MP_OBJ_NULL };
+    mp_load_method_maybe(o, mp.MP_QSTR___origin__, &dest);
+    if (dest[0] != MP_OBJ_NULL) return MP_OBJ_NULL;
+    mp_load_method_maybe(o, mp.MP_QSTR___args__, &dest);
+    return if (dest[0] != MP_OBJ_NULL and isTypeTuple(dest[0])) dest[0] else MP_OBJ_NULL;
+}
+
 fn isSubclassImpl(object: Obj, classinfo_in: Obj) PyError!Obj {
     var classinfo = classinfo_in;
     var len: usize = 0;
@@ -513,6 +525,9 @@ fn isSubclassImpl(object: Obj, classinfo_in: Obj) PyError!Obj {
         items = @ptrCast(&classinfo);
     } else if (isTypeTuple(classinfo)) {
         mp_obj_tuple_get(classinfo, &len, &items);
+    } else if (build_options.is_full and unionArgs(classinfo) != MP_OBJ_NULL) {
+        // `int | None`, as the tuple of its members.
+        mp_obj_tuple_get(unionArgs(classinfo), &len, &items);
     } else {
         try raiseIssubclassArg2();
         unreachable;

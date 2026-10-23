@@ -2,6 +2,9 @@
 //!
 //! __qstr_shadow_begin__
 //! MP_QSTR___path__
+//! MP_QSTR_typing
+//! MP_QSTR__union
+//! MP_QSTR__class_getitem
 //! __qstr_shadow_end__
 //!
 //! Whole-file strangle (40 exported fns, core-internal callers).
@@ -530,6 +533,20 @@ fn nativeSubclassOp(op: c_int, lhs: Obj, rhs: Obj) PyError!?Obj {
     return try mpBinaryOpImpl(op, lhs, native);
 }
 
+/// `typing.<name>(a, b)`, which builds the run-time forms of `list[str]`
+/// and `int | None` on full.
+pub fn typingCall(name: Qstr, a: Obj, b: Obj) PyError!Obj {
+    const mod = mp_import_name(mp.MP_QSTR_typing, mirrors.OBJ_NONE, mirrors.newSmallInt(0));
+    if (pyerr.pending_exc != 0) return error.PyRaise;
+    const r = mp_call_function_2(mp_load_attr(mod, name), a, b);
+    if (pyerr.pending_exc != 0) return error.PyRaise;
+    return r;
+}
+
+fn isTypeOrNone(o: Obj) bool {
+    return o == mirrors.OBJ_NONE or mirrors.isExactType(o, &mp_type_type);
+}
+
 fn mpBinaryOpImpl(op_in: c_int, lhs_in: Obj, rhs_in: Obj) PyError!Obj {
     var op = op_in;
     var lhs = lhs_in;
@@ -557,6 +574,9 @@ fn mpBinaryOpImpl(op_in: c_int, lhs_in: Obj, rhs_in: Obj) PyError!Obj {
             try binopUnsupported(op, lhs, rhs);
         }
         if (comptime build_options.is_full) {
+            if (op == mp.MP_BINARY_OP_OR and isTypeOrNone(lhs) and isTypeOrNone(rhs) and (lhs != mirrors.OBJ_NONE or rhs != mirrors.OBJ_NONE)) {
+                return typingCall(mp.MP_QSTR__union, lhs, rhs);
+            }
             if (try nativeSubclassOp(op, lhs, rhs)) |res| return res;
         }
         if (mirrors.isSmallInt(lhs)) {

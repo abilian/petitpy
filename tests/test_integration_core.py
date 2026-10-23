@@ -7,7 +7,7 @@ the shipped stdlib modules other than `os` (json, re, string,
 itertools, collections). Each case is small and readable; when a case
 commemorates a specific past bug the comment says which commit.
 
-Cases: 130. Coverage for `os` lives in test_integration_os.py.
+Cases: 131. Coverage for `os` lives in test_integration_os.py.
 """
 
 from __future__ import annotations
@@ -411,6 +411,39 @@ CASES = [
         "percent_d_takes_float",
         "print('%d %i' % (3.7, -2.5))\n",
         "3 -2\n",
+    ),
+    # `list[str]`, `int | None` and get_type_hints() on full, as in
+    # CPython. MicroPython types cannot be subscripted or or-ed.
+    (
+        "runtime_annotations",
+        (
+            'from typing import Optional, Union, TypeAlias, get_type_hints\n'
+            'class A: pass\n'
+            'Names: TypeAlias = list[str] | None\n'
+            'print(Names, list[A], dict[str, tuple[int, ...]], list[int]([1]))\n'
+            'print(int | str == str | int, int | int, Union[int, None] == Optional[int], None | int)\n'
+            "print(isinstance(1, int | None), isinstance('a', int | None))\n"
+            'class G:\n'
+            '    def __class_getitem__(cls, item): return (cls.__name__, item)\n'
+            'print(G[int])\n'
+            'class B:\n'
+            '    x: int\n'
+            '    y: "list[str]"\n'
+            'class C(B):\n'
+            '    z: Optional[A] = None\n'
+            "    w: 'Names'\n"
+            'print(get_type_hints(C))\n'
+        ),
+        {
+            "full": (
+                'list[str] | None list[__main__.A] dict[str, tuple[int, ...]] [1]\n'
+                "True <class 'int'> True None | int\n"
+                'True False\n'
+                "('G', <class 'int'>)\n"
+                "{'x': <class 'int'>, 'y': list[str], 'z': __main__.A | None, 'w': list[str] | None}\n"
+            ),
+            "nano": None,
+        },
     ),
     # @enum decorator — the full-featured path retains .name/.value.
     (
