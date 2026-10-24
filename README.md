@@ -6,13 +6,13 @@ petitpy builds on [MicroPython](https://micropython.org/): it shares MicroPython
 
 ```sh
 $ petitpy --version
-petitpy 0.7.1
+petitpy 0.9.0
 
 $ echo 'print("hello from", 0.1 + 0.2)' | petitpy /dev/stdin
 hello from 0.30000000000000004
 
 $ ppy                     # interactive REPL
-petitpy 0.7.1 — interactive REPL (Ctrl-D to exit)
+petitpy 0.9.0 — interactive REPL (Ctrl-D to exit)
 >>> def fib(n):
 ...     return n if n < 2 else fib(n-1) + fib(n-2)
 >>> [fib(i) for i in range(10)]
@@ -25,6 +25,7 @@ petitpy 0.7.1 — interactive REPL (Ctrl-D to exit)
 uvx petitpy script.py           # run once, no install
 uv tool install petitpy         # or pip install petitpy: installs `petitpy` and `ppy`
 npm install petitpy             # the browser build, see npm/README.md
+brew install abilian/tap/petitpy  # macOS and Linux, the same files as the wheels
 ```
 
 Prebuilt wheels cover macOS (arm64, x86_64) and Linux (x86_64, aarch64); elsewhere pip builds from the sdist with Zig, in about a minute. This is an alpha: see the [differences from CPython](docs/src/differences.md).
@@ -39,7 +40,7 @@ Three audiences are served, in priority order:
 
 ## Status
 
-The runtime works end to end on both native and wasm. Active work is on user experience, language and stdlib reach, size, and speed. The current roadmap is [`docs/src/adrs/010-roadmap-v06.md`](docs/src/adrs/010-roadmap-v06.md) (009 is the previous cycle).
+The runtime works end to end on both native and wasm. Active work is on user experience, language and stdlib reach, size, and speed. The last roadmap, [ADR 021](docs/src/adrs/021-roadmap-v09.md), was implemented in 0.9.0; the next cycle's is not written yet.
 
 | Headline | Value |
 |---|---|
@@ -47,9 +48,9 @@ The runtime works end to end on both native and wasm. Active work is on user exp
 | Native corpus, full | **545/552**, 7 documented known-fails |
 | WASM corpus (under wasmtime) | **536/541**, baseline + skip list green |
 | Integration smoke (native + wasm, hand-written) | **202/202** on both arms |
-| Real-world Python programs that work on both arms | **580** in `golden-programs/works/`; see [`docs/src/COMPATIBILITY.md`](docs/src/COMPATIBILITY.md) for the bucket-by-bucket breakdown |
+| Real-world Python programs that work on both arms | **584** in `golden-programs/works/`; see [`docs/src/COMPATIBILITY.md`](docs/src/COMPATIBILITY.md) for the bucket-by-bucket breakdown |
 | wasm32-wasi shipping size (`web/petitpy.wasm`) | **352 KB** (post-`wasm-opt -Oz`, integrated into `make web`) |
-| Native arm64 shipping size (ReleaseFast) | **1170 KB** |
+| Native arm64 shipping size (ReleaseFast) | **1245 KB** |
 
 ## Gate state
 
@@ -60,7 +61,7 @@ The harness has four independent gates plus an aggregate. Each answers a differe
 | `make check` | Does the full-arm binary match the corpus minus its documented baseline? | **545/552**, green |
 | `make check CONFIG=nano` | Does the nano binary match the frozen MicroPython reference byte-exact? | **541/541**, invariant |
 | `make wasm-check` | Does the wasm binary match the corpus minus the documented wasm baseline? | **GREEN** at 536/541 (5-test known-fails baseline matches exactly) |
-| `make test-integration` | Does the native binary actually start up and run real Python? | **189/189** |
+| `make test-integration` | Does the native binary actually start up and run real Python? | **202/202** |
 | `make test-integration-wasm` | Same question, against the wasm binary via wasmtime. | **202/202** |
 | `make check-capability` | Do both front-ends and both back-ends agree on 67 language constructs? | **GREEN**, 0 gaps; not in the aggregate (needs vendor MicroPython + uv) |
 | `make` (the aggregate) | Runs all of the above bar the last, both arms. The "I'm about to commit" gate. | exit 0 |
@@ -100,10 +101,11 @@ All measurements were taken on macOS arm64. wasm and native are co-primary distr
 | Build | Size | Notes |
 |---|---|---|
 | **wasm32-wasi `make web`** | **352 KB** | the shipping artifact (ReleaseSmall + frozen-tiny + post-`wasm-opt -Oz`); [ADR 007 §4 P6](docs/src/adrs/007-wasm-fat-loss.md) wires the optimizer into the release pipeline |
-| wasm32-wasi raw (pre-optimizer) | 384 KB | what `zig build` produces before `wasm-opt`, for inspection |
-| native `make build` (Debug) | 3.9 MB | dev default (`full` profile), with DWARF symbols and no DCE |
-| native `make build-release` (ReleaseFast) | 1170 KB | inlined, full optimization (`full` profile) |
-| native `make build-small` (ReleaseSmall) | 558 KB `full`, 492 KB `nano` | smallest native: the same arm with `-Doptimize=ReleaseSmall` |
+| wasm32-wasi `make web-embed` | 336 KB | the embedding API as a wasm module, for `petitpy/embed` |
+| wasm32-wasi raw (pre-optimizer) | 405 KB | what `zig build` produces before `wasm-opt`, for inspection |
+| native `make build` (Debug) | 4.3 MB | dev default (`full` profile), with DWARF symbols and no DCE |
+| native `make build-release` (ReleaseFast) | 1245 KB | inlined, full optimization (`full` profile) |
+| native `make build-small` (ReleaseSmall) | 594 KB `full`, 512 KB `nano` | smallest native: the same arm with `-Doptimize=ReleaseSmall` |
 | upstream MicroPython unix-standard | 652 KB | their default, a feature superset of nano |
 
 The wasm size is the metric that matters most: raw bytes drive both parse time and download cost. Trends are tracked over time in `metrics/history.ndjson` ([`tools/metrics.py`](tools/metrics.py)).
@@ -122,7 +124,7 @@ The wasm size is the metric that matters most: raw bytes drive both parse time a
 
 **Process semantics**: `petitpy script.py` and `petitpy -c CODE`; uncaught exceptions exit 1 (not 0); `sys.exit(N)` propagates correctly; SystemExit with no arg or None exits 0.
 
-**Embedding** (experimental): a C API, `petitpy.h`, over a static library, `libpetitpy.a`, to run Python inside another program: values cross as handles, host functions are callable from Python, and errors come back as statuses. See [`docs/src/embedding.md`](docs/src/embedding.md).
+**Embedding** (experimental): a C API, `petitpy.h`, over a static library, `libpetitpy.a`, to run Python inside another program: values cross as handles, host functions are callable from Python, errors come back as statuses, and a process can hold several interpreters. The same API runs in the browser and Node as `petitpy/embed`. See [`docs/src/embedding.md`](docs/src/embedding.md).
 
 ## What doesn't work yet
 
@@ -142,7 +144,7 @@ The full list, by build, is [Differences from CPython](docs/src/differences.md).
 
 | Document | Purpose |
 |---|---|
-| [`docs/src/adrs/`](docs/src/adrs/) | Architecture Decision Records; [`010-roadmap-v06.md`](docs/src/adrs/010-roadmap-v06.md) is the next-step plan |
+| [`docs/src/adrs/`](docs/src/adrs/) | Architecture Decision Records; [`021-roadmap-v09.md`](docs/src/adrs/021-roadmap-v09.md) is the last roadmap |
 | [`docs/src/case-study-daemon.md`](docs/src/case-study-daemon.md) | Case study: running hop3-rootd (6.7 KLOC Linux daemon) under petitpy: tests, memory, disk and speed vs CPython 3.11 |
 
 Built docs live under `docs/`. Render via [Zensical](https://zensical.org/):

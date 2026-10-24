@@ -1,6 +1,6 @@
 # ADR 010. v0.6 roadmap: closing the wall, broadening the surface
 
-- **Status**: Proposed (drafted 2026-06-11; awaiting maintainer review)
+- **Status**: Superseded by [ADR 021](021-roadmap-v09.md) (2026-10-23). Drafted 2026-06-11 and never accepted; ADR 021 says which of its items were done, restated or left out of scope.
 - **Decider**: project maintainers
 - **Supersedes**: ADR 009 §3-§7 open items (eval/exec wall, A3b multi-inheritance, A3c MPZ on wasm32, D1 P2-P4 size cuts, D2 timing harness, Lane C). v0.5's Phase α + first slice of Phase β shipped; the remainder is this ADR.
 - **Branches from**: the same lane decomposition ADR 009 §3-§6 introduced. **The lanes and their priority order do not change.** Only the specific commitments within them do.

@@ -3,7 +3,7 @@
 - **Status**: Accepted (2026-10-23). Implemented for v0.9: the static library, the wasm module with a JavaScript wrapper, and several interpreters per process, which take turns. Interpreters that run in parallel are a later step (2.3).
 - **Decider**: project maintainers
 - **Supersedes**: nothing
-- **Branches from**: ADR 021 §2.7 (embedding back in scope, ADR first), [ADR 019](019-garbage-collector.md) (the collector the API must work with), [ADR 013](013-exception-unwind-vendor-c.md) (catching exceptions raised in MicroPython's C code).
+- **Branches from**: [ADR 021](021-roadmap-v09.md) §2.7 (embedding back in scope, ADR first), [ADR 019](019-garbage-collector.md) (the collector the API must work with), [ADR 013](013-exception-unwind-vendor-c.md) (catching exceptions raised in MicroPython's C code).
 - **Consequences**: the project commits to a stable, versioned C API, shipped as a static library on native and as a wasm module; every API call names the interpreter it acts on, so a process can hold several; calls take turns behind a lock that petitpy takes, so a host may call from any thread; each interpreter has its own state, and no new process-wide variable may hold interpreter state unless it is saved per interpreter; host programs refer to Python values through handles that petitpy tracks, never through object pointers; no petitpy code path may end the host process.
 
 ## 1. Context

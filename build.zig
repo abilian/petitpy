@@ -13,7 +13,7 @@ const std = @import("std");
 
 const embed_root = "vendor/micropython_embed";
 
-pub const version = "0.8.0";
+pub const version = "0.9.0";
 
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});

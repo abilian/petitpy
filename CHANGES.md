@@ -5,10 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/); the entries use 
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-23
+
+This cycle was about fewer surprises for a CPython user. On `full`, the build that `pip` installs, dicts keep insertion order, and the differences from CPython that scripts meet most often are gone: keyword arguments on built-in methods, `os.environ`, enums, type hints at run time, `json`'s options and errors, and CPython's method resolution order. The browser build gets arbitrary-precision integers. The project now has one name, petitpy, everywhere. And petitpy can be embedded: a C API over a static library, the same API as a wasm module with a JavaScript wrapper, and several interpreters in one process.
+
+### Highlights
+
+- **Dicts keep insertion order on `full`**, as in CPython 3.7+, at the same speed on the benchmarks. `nano` keeps MicroPython's order and stays byte-exact.
+- **The CPython differences scripts hit most, closed on `full`**: `str.split(sep=",")` and other keyword arguments on built-in methods, a real `os.environ`, enum members with `.name` and `.value`, `list[str]` and `int | None` at run time, `json` with CPython's output, options and error messages, C3 method order, `sys.platform`, `ModuleNotFoundError` and `slice()`.
+- **Embedding (experimental).** `libpetitpy.a` and `petitpy.h` let a C or Zig program keep interpreters alive, run code, exchange values as handles, and give Python its own functions. `petitpy/embed` in the npm package does the same from JavaScript.
+- **Big integers in the browser**, for 9 KB of wasm, and errors raised in MicroPython's C code can be caught there.
+- **One name, petitpy**, for the binaries, the browser build and the sources as for the packages, and a Homebrew formula (`brew install abilian/tap/petitpy`).
+
 ### Added
 
 - **An embedding API (experimental)**: a C program, or a Zig one through `@cImport`, can keep an interpreter alive, run code in it, exchange values and give Python functions of its own to call. `zig build lib -Dconfig=full -Dfrozen-tiny=true` builds `libpetitpy.a`, with the standard modules compiled in, and `petitpy.h`. Values cross the API as handles that keep them alive across collections, every call returns a status instead of ending the process, and calls from several host threads take turns. A function in the configuration can take Python's output. A process can hold several interpreters, each with its own modules, globals and heap; calls into different interpreters take turns rather than run in parallel. `make test-embed` checks it, and the docs have a guide, "Embedding in C".
-- **A long-lived interpreter for JavaScript, `petitpy/embed`** in the npm package (experimental): `loadInterpreter()` keeps one interpreter alive, and `exec`, `eval`, `call`, `get`, `set` and `define` run code, convert values both ways and let Python call JavaScript functions, where `run()` starts a fresh program each time. It runs on `petitpy-embed.wasm`, the embedding API built as a wasm module (`make web-embed`), 344 KB with the browser build's profile.
+- **A long-lived interpreter for JavaScript, `petitpy/embed`** in the npm package (experimental): `loadInterpreter()` keeps one interpreter alive, and `exec`, `eval`, `call`, `get`, `set` and `define` run code, convert values both ways and let Python call JavaScript functions, where `run()` starts a fresh program each time. It runs on `petitpy-embed.wasm`, the embedding API built as a wasm module (`make web-embed`), 336 KB with the browser build's profile.
 - **A Homebrew formula** built from the PyPI wheels, for macOS and Linux: `make brew-formula` prints it for the tap `abilian/tap/petitpy`.
 
 ### Changed
